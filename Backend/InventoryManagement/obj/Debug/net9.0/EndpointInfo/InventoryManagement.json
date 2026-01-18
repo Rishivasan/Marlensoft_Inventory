@@ -1,0 +1,600 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "InventoryManagement",
+    "version": "1.0"
+  },
+  "paths": {
+    "/api/assets-consumables": {
+      "get": {
+        "tags": [
+          "AssetsConsumables"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/add-assets-consumables": {
+      "post": {
+        "tags": [
+          "AssetsConsumables"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetsConsumablesEntity"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetsConsumablesEntity"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetsConsumablesEntity"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/asset-full-details": {
+      "get": {
+        "tags": [
+          "AssetsConsumables"
+        ],
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/update-assets-consumables": {
+      "put": {
+        "tags": [
+          "AssetsConsumables"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetsConsumablesEntity"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetsConsumablesEntity"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetsConsumablesEntity"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/mmds": {
+      "get": {
+        "tags": [
+          "Mmds"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/addmmds": {
+      "post": {
+        "tags": [
+          "Mmds"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MmdsEntity"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MmdsEntity"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/MmdsEntity"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/updatemmds": {
+      "put": {
+        "tags": [
+          "Mmds"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MmdsEntity"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MmdsEntity"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/MmdsEntity"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/tools": {
+      "get": {
+        "tags": [
+          "Tools"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/addtools": {
+      "post": {
+        "tags": [
+          "Tools"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToolEntity"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToolEntity"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToolEntity"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AssetsConsumablesEntity": {
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "type": "string",
+            "nullable": true
+          },
+          "assetName": {
+            "type": "string",
+            "nullable": true
+          },
+          "product": {
+            "type": "string",
+            "nullable": true
+          },
+          "vendor": {
+            "type": "string",
+            "nullable": true
+          },
+          "specifications": {
+            "type": "string",
+            "nullable": true
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "storageLocation": {
+            "type": "string",
+            "nullable": true
+          },
+          "poNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "poDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "invoiceNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "invoiceDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "assetCost": {
+            "type": "number",
+            "format": "double"
+          },
+          "extraCharges": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalCost": {
+            "type": "number",
+            "format": "double"
+          },
+          "depreciationPeriod": {
+            "type": "string",
+            "nullable": true
+          },
+          "maintenanceFrequency": {
+            "type": "string",
+            "nullable": true
+          },
+          "responsibleTeam": {
+            "type": "string",
+            "nullable": true
+          },
+          "msiTeam": {
+            "type": "string",
+            "nullable": true
+          },
+          "remarks": {
+            "type": "string",
+            "nullable": true
+          },
+          "itemTypeKey": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "updatedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "status": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MmdsEntity": {
+        "type": "object",
+        "properties": {
+          "mmdId": {
+            "type": "string",
+            "nullable": true
+          },
+          "accuracyClass": {
+            "type": "string",
+            "nullable": true
+          },
+          "vendor": {
+            "type": "string",
+            "nullable": true
+          },
+          "calibratedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "specifications": {
+            "type": "string",
+            "nullable": true
+          },
+          "modelNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "serialNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "calibrationCertNo": {
+            "type": "string",
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "poNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "poDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "invoiceNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "invoiceDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "totalCost": {
+            "type": "number",
+            "format": "double"
+          },
+          "calibrationFrequency": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastCalibration": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "nextCalibration": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "warrantyYears": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "calibrationStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "responsibleTeam": {
+            "type": "string",
+            "nullable": true
+          },
+          "manualLink": {
+            "type": "string",
+            "nullable": true
+          },
+          "stockMsi": {
+            "type": "string",
+            "nullable": true
+          },
+          "remarks": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "updatedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "status": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ToolEntity": {
+        "type": "object",
+        "properties": {
+          "toolsId": {
+            "type": "string",
+            "nullable": true
+          },
+          "toolName": {
+            "type": "string",
+            "nullable": true
+          },
+          "toolType": {
+            "type": "string",
+            "nullable": true
+          },
+          "associatedProduct": {
+            "type": "string",
+            "nullable": true
+          },
+          "articleCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "vendorName": {
+            "type": "string",
+            "nullable": true
+          },
+          "specifications": {
+            "type": "string",
+            "nullable": true
+          },
+          "storageLocation": {
+            "type": "string",
+            "nullable": true
+          },
+          "poNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "poDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "invoiceNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "invoiceDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "toolCost": {
+            "type": "number",
+            "format": "double"
+          },
+          "extraCharges": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalCost": {
+            "type": "number",
+            "format": "double"
+          },
+          "lifespan": {
+            "type": "string",
+            "nullable": true
+          },
+          "maintainanceFrequency": {
+            "type": "string",
+            "nullable": true
+          },
+          "handlingCertificate": {
+            "type": "boolean"
+          },
+          "auditInterval": {
+            "type": "string",
+            "nullable": true
+          },
+          "maxOutput": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lastAuditDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastAuditNotes": {
+            "type": "string",
+            "nullable": true
+          },
+          "responsibleTeam": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "msiAsset": {
+            "type": "string",
+            "nullable": true
+          },
+          "kernAsset": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "updatedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

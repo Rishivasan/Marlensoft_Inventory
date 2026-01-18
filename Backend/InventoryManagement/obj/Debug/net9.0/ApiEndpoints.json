@@ -1,0 +1,133 @@
+[
+  {
+    "ContainingType": "InventoryManagement.Controllers.AssetsConsumablesController",
+    "Method": "Create",
+    "RelativePath": "api/add-assets-consumables",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "asset",
+        "Type": "InventoryManagement.Models.Entities.AssetsConsumablesEntity",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InventoryManagement.Controllers.MmdsController",
+    "Method": "CreateMmds",
+    "RelativePath": "api/addmmds",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "mmds",
+        "Type": "InventoryManagement.Models.Entities.MmdsEntity",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InventoryManagement.Controllers.ToolsController",
+    "Method": "CreateTool",
+    "RelativePath": "api/addtools",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "tool",
+        "Type": "InventoryManagement.Models.Entities.ToolEntity",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InventoryManagement.Controllers.AssetsConsumablesController",
+    "Method": "GetAssetFullDetails",
+    "RelativePath": "api/asset-full-details",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "assetId",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "assetType",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InventoryManagement.Controllers.AssetsConsumablesController",
+    "Method": "Get",
+    "RelativePath": "api/assets-consumables",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InventoryManagement.Controllers.MmdsController",
+    "Method": "GetMmds",
+    "RelativePath": "api/mmds",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InventoryManagement.Controllers.ToolsController",
+    "Method": "GetTools",
+    "RelativePath": "api/tools",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InventoryManagement.Controllers.AssetsConsumablesController",
+    "Method": "Update",
+    "RelativePath": "api/update-assets-consumables",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "asset",
+        "Type": "InventoryManagement.Models.Entities.AssetsConsumablesEntity",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InventoryManagement.Controllers.MmdsController",
+    "Method": "UpdateMmds",
+    "RelativePath": "api/updatemmds",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "mmds",
+        "Type": "InventoryManagement.Models.Entities.MmdsEntity",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]

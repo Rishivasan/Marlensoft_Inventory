@@ -1,0 +1,500 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\controllers\\mmdscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:controllers\\mmdscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\controllers\\toolscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:controllers\\toolscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\controllers\\assetsconsumablescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:controllers\\assetsconsumablescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\data\\dappercontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:data\\dappercontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\repositories\\assetsconsumablesrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:repositories\\assetsconsumablesrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\services\\assetsconsumablesservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:services\\assetsconsumablesservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\services\\interfaces\\iassetsconsumablesservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:services\\interfaces\\iassetsconsumablesservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\repositories\\interfaces\\iassetsconsumablesrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:repositories\\interfaces\\iassetsconsumablesrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\models\\dtos\\assetfulldetaildto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:models\\dtos\\assetfulldetaildto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\models\\entities\\allocationentity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:models\\entities\\allocationentity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\models\\entities\\maintenanceentity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:models\\entities\\maintenanceentity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\repositories\\mmdsrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:repositories\\mmdsrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\services\\toolsservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:services\\toolsservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\services\\mmdsservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:services\\mmdsservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\repositories\\toolrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:repositories\\toolrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\models\\entities\\toolentity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:models\\entities\\toolentity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\models\\entities\\mmdsentity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:models\\entities\\mmdsentity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\models\\entities\\assetsconsumablesentity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:models\\entities\\assetsconsumablesentity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\models\\dtos\\tooldto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:models\\dtos\\tooldto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\models\\dtos\\mmdsdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:models\\dtos\\mmdsdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\models\\dtos\\assetsconsumablesdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:models\\dtos\\assetsconsumablesdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\services\\interfaces\\immdsservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:services\\interfaces\\immdsservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\repositories\\interfaces\\immdsrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:repositories\\interfaces\\immdsrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\services\\interfaces\\itoolservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:services\\interfaces\\itoolservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\repositories\\interfaces\\itoolrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:repositories\\interfaces\\itoolrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\source\\repos\\inventorymanagement\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 5,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "AssetsConsumablesController.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Controllers\\AssetsConsumablesController.cs",
+              "RelativeDocumentMoniker": "Controllers\\AssetsConsumablesController.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Controllers\\AssetsConsumablesController.cs*",
+              "RelativeToolTip": "Controllers\\AssetsConsumablesController.cs*",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAGAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-14T04:40:27.889Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "DapperContext.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Data\\DapperContext.cs",
+              "RelativeDocumentMoniker": "Data\\DapperContext.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Data\\DapperContext.cs",
+              "RelativeToolTip": "Data\\DapperContext.cs",
+              "ViewState": "AgIAAAQAAAAAAAAAAAAhwA0AAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-12T05:29:54.013Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "AssetsConsumablesRepository.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Repositories\\AssetsConsumablesRepository.cs",
+              "RelativeDocumentMoniker": "Repositories\\AssetsConsumablesRepository.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Repositories\\AssetsConsumablesRepository.cs",
+              "RelativeToolTip": "Repositories\\AssetsConsumablesRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-14T04:38:53.55Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ToolsController.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Controllers\\ToolsController.cs",
+              "RelativeDocumentMoniker": "Controllers\\ToolsController.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Controllers\\ToolsController.cs",
+              "RelativeToolTip": "Controllers\\ToolsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-11T20:54:32.908Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MmdsController.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Controllers\\MmdsController.cs",
+              "RelativeDocumentMoniker": "Controllers\\MmdsController.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Controllers\\MmdsController.cs",
+              "RelativeToolTip": "Controllers\\MmdsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-14T04:29:10.829Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "AssetsConsumablesService.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Services\\AssetsConsumablesService.cs",
+              "RelativeDocumentMoniker": "Services\\AssetsConsumablesService.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Services\\AssetsConsumablesService.cs",
+              "RelativeToolTip": "Services\\AssetsConsumablesService.cs",
+              "ViewState": "AgIAAAcAAABAZmZmZmYSwA4AAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-14T04:40:00.892Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "IAssetsConsumablesService.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Services\\Interfaces\\IAssetsConsumablesService.cs",
+              "RelativeDocumentMoniker": "Services\\Interfaces\\IAssetsConsumablesService.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Services\\Interfaces\\IAssetsConsumablesService.cs",
+              "RelativeToolTip": "Services\\Interfaces\\IAssetsConsumablesService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAYAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-14T04:39:36.735Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "IAssetsConsumablesRepository.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Repositories\\Interfaces\\IAssetsConsumablesRepository.cs",
+              "RelativeDocumentMoniker": "Repositories\\Interfaces\\IAssetsConsumablesRepository.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Repositories\\Interfaces\\IAssetsConsumablesRepository.cs",
+              "RelativeToolTip": "Repositories\\Interfaces\\IAssetsConsumablesRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-14T04:38:16.086Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "AssetFullDetailDto.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Models\\DTOs\\AssetFullDetailDto.cs",
+              "RelativeDocumentMoniker": "Models\\DTOs\\AssetFullDetailDto.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Models\\DTOs\\AssetFullDetailDto.cs",
+              "RelativeToolTip": "Models\\DTOs\\AssetFullDetailDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-14T06:41:35.693Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "AllocationEntity.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Models\\Entities\\AllocationEntity.cs",
+              "RelativeDocumentMoniker": "Models\\Entities\\AllocationEntity.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Models\\Entities\\AllocationEntity.cs",
+              "RelativeToolTip": "Models\\Entities\\AllocationEntity.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-14T06:16:41.253Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "MaintenanceEntity.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Models\\Entities\\MaintenanceEntity.cs",
+              "RelativeDocumentMoniker": "Models\\Entities\\MaintenanceEntity.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Models\\Entities\\MaintenanceEntity.cs",
+              "RelativeToolTip": "Models\\Entities\\MaintenanceEntity.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-14T06:15:35.481Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "ToolsService.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Services\\ToolsService.cs",
+              "RelativeDocumentMoniker": "Services\\ToolsService.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Services\\ToolsService.cs",
+              "RelativeToolTip": "Services\\ToolsService.cs",
+              "ViewState": "AgIAAB4AAAAAZmZmZmYNwEQAAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-11T20:55:52.228Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "MmdsService.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Services\\MmdsService.cs",
+              "RelativeDocumentMoniker": "Services\\MmdsService.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Services\\MmdsService.cs",
+              "RelativeToolTip": "Services\\MmdsService.cs",
+              "ViewState": "AgIAABAAAAAAAAAAAAAuwC4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-14T04:28:38.635Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAA4AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-11T21:24:36.892Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "MmdsRepository.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Repositories\\MmdsRepository.cs",
+              "RelativeDocumentMoniker": "Repositories\\MmdsRepository.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Repositories\\MmdsRepository.cs",
+              "RelativeToolTip": "Repositories\\MmdsRepository.cs",
+              "ViewState": "AgIAADsAAABgZWZmZuYhwFIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-14T04:27:30.411Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "ToolRepository.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Repositories\\ToolRepository.cs",
+              "RelativeDocumentMoniker": "Repositories\\ToolRepository.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Repositories\\ToolRepository.cs",
+              "RelativeToolTip": "Repositories\\ToolRepository.cs",
+              "ViewState": "AgIAADYAAADwzMzMzMwUwFEAAAAbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-11T21:00:10.986Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "ToolEntity.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Models\\Entities\\ToolEntity.cs",
+              "RelativeDocumentMoniker": "Models\\Entities\\ToolEntity.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Models\\Entities\\ToolEntity.cs",
+              "RelativeToolTip": "Models\\Entities\\ToolEntity.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAiAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-11T21:05:17.045Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "MmdsEntity.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Models\\Entities\\MmdsEntity.cs",
+              "RelativeDocumentMoniker": "Models\\Entities\\MmdsEntity.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Models\\Entities\\MmdsEntity.cs",
+              "RelativeToolTip": "Models\\Entities\\MmdsEntity.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-14T04:25:46.169Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "AssetsConsumablesEntity.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Models\\Entities\\AssetsConsumablesEntity.cs",
+              "RelativeDocumentMoniker": "Models\\Entities\\AssetsConsumablesEntity.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Models\\Entities\\AssetsConsumablesEntity.cs",
+              "RelativeToolTip": "Models\\Entities\\AssetsConsumablesEntity.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-14T04:36:26.675Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "ToolDto.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Models\\DTOs\\ToolDto.cs",
+              "RelativeDocumentMoniker": "Models\\DTOs\\ToolDto.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Models\\DTOs\\ToolDto.cs",
+              "RelativeToolTip": "Models\\DTOs\\ToolDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAzAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-11T21:05:48.91Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "MmdsDto.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Models\\DTOs\\MmdsDto.cs",
+              "RelativeDocumentMoniker": "Models\\DTOs\\MmdsDto.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Models\\DTOs\\MmdsDto.cs",
+              "RelativeToolTip": "Models\\DTOs\\MmdsDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-14T04:26:24.047Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "AssetsConsumablesDto.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Models\\DTOs\\AssetsConsumablesDto.cs",
+              "RelativeDocumentMoniker": "Models\\DTOs\\AssetsConsumablesDto.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Models\\DTOs\\AssetsConsumablesDto.cs",
+              "RelativeToolTip": "Models\\DTOs\\AssetsConsumablesDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-14T04:36:51.155Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "IMmdsService.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Services\\Interfaces\\IMmdsService.cs",
+              "RelativeDocumentMoniker": "Services\\Interfaces\\IMmdsService.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Services\\Interfaces\\IMmdsService.cs",
+              "RelativeToolTip": "Services\\Interfaces\\IMmdsService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-14T04:28:14.986Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "IMmdsRepository.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Repositories\\Interfaces\\IMmdsRepository.cs",
+              "RelativeDocumentMoniker": "Repositories\\Interfaces\\IMmdsRepository.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Repositories\\Interfaces\\IMmdsRepository.cs",
+              "RelativeToolTip": "Repositories\\Interfaces\\IMmdsRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-14T04:26:56.858Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "Properties\\launchSettings.json",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Properties\\launchSettings.json",
+              "RelativeToolTip": "Properties\\launchSettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-01-14T04:13:20.951Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "IToolService.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Services\\Interfaces\\IToolService.cs",
+              "RelativeDocumentMoniker": "Services\\Interfaces\\IToolService.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Services\\Interfaces\\IToolService.cs",
+              "RelativeToolTip": "Services\\Interfaces\\IToolService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-11T20:56:17.596Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "IToolRepository.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Repositories\\Interfaces\\IToolRepository.cs",
+              "RelativeDocumentMoniker": "Repositories\\Interfaces\\IToolRepository.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\Repositories\\Interfaces\\IToolRepository.cs",
+              "RelativeToolTip": "Repositories\\Interfaces\\IToolRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-11T21:01:59.894Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\appsettings.json",
+              "RelativeDocumentMoniker": "appsettings.json",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\source\\repos\\InventoryManagement\\appsettings.json",
+              "RelativeToolTip": "appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-01-11T19:41:27.622Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
