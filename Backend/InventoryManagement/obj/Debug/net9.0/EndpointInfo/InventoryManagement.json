@@ -107,6 +107,52 @@
         }
       }
     },
+    "/api/AssetsConsumables/{id}": {
+      "delete": {
+        "tags": [
+          "AssetsConsumables"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/master-list": {
+      "get": {
+        "tags": [
+          "MasterRegister"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/enhanced-master-list": {
+      "get": {
+        "tags": [
+          "MasterRegister"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/mmds": {
       "get": {
         "tags": [
@@ -181,6 +227,28 @@
         }
       }
     },
+    "/api/Mmds/{id}": {
+      "delete": {
+        "tags": [
+          "Mmds"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/tools": {
       "get": {
         "tags": [
@@ -217,6 +285,28 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Tools/{id}": {
+      "delete": {
+        "tags": [
+          "Tools"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -488,7 +578,7 @@
             "type": "string",
             "nullable": true
           },
-          "vendorName": {
+          "vendor": {
             "type": "string",
             "nullable": true
           },

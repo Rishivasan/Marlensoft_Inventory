@@ -8,5 +8,6 @@ namespace InventoryManagement.Services.Interfaces
         Task<IEnumerable<MmdsDto>> GetMmdsAsync();
         Task<bool> CreateMmdsAsync(MmdsEntity mmds);
         Task<bool> UpdateMmdsAsync(MmdsEntity mmds);
+        Task<bool> DeleteMmdsAsync(string mmdId);
     }
 }

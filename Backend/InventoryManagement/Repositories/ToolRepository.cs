@@ -1,39 +1,38 @@
 ﻿using Dapper;
-    using InventoryManagement.Data;
-    using InventoryManagement.Models.Entities;
-    using InventoryManagement.Repositories.Interfaces;
-
+using InventoryManagement.Data;
+using InventoryManagement.Models.Entities;
+using InventoryManagement.Repositories.Interfaces;
 
 namespace InventoryManagement.Repositories
 {
     public class ToolRepository : IToolRepository
+    {
+        private readonly DapperContext _context;
+
+        public ToolRepository(DapperContext context)
         {
-            private readonly DapperContext _context;
+            _context = context;
+        }
 
-            public ToolRepository(DapperContext context)
-            {
-                _context = context;
-            }
-
-            public async Task<IEnumerable<ToolEntity>> GetAllToolsAsync()
-            {
+        public async Task<IEnumerable<ToolEntity>> GetAllToolsAsync()
+        {
             var query = @"
 SELECT *
 FROM ToolsMaster
- WHERE Status = 1;";
+WHERE Status = 1;";
 
             using var connection = _context.CreateConnection();
             var result = await connection.QueryAsync<ToolEntity>(query);
             return result;
-
         }
+
         public async Task<int> CreateToolAsync(ToolEntity tool)
         {
             var query = @"
 INSERT INTO ToolsMaster
 (
     ToolsId, ToolName, ToolType, AssociatedProduct, ArticleCode,
-    VendorName, Specifications, StorageLocation, PoNumber, PoDate,
+    Vendor, Specifications, StorageLocation, PoNumber, PoDate,
     InvoiceNumber, InvoiceDate, ToolCost, ExtraCharges, TotalCost,
     Lifespan, MaintainanceFrequency, HandlingCertificate, AuditInterval,
     MaxOutput, LastAuditDate, LastAuditNotes, ResponsibleTeam, Notes,
@@ -42,7 +41,7 @@ INSERT INTO ToolsMaster
 VALUES
 (
     @ToolsId, @ToolName, @ToolType, @AssociatedProduct, @ArticleCode,
-    @VendorName, @Specifications, @StorageLocation, @PoNumber, @PoDate,
+    @Vendor, @Specifications, @StorageLocation, @PoNumber, @PoDate,
     @InvoiceNumber, @InvoiceDate, @ToolCost, @ExtraCharges, @TotalCost,
     @Lifespan, @MaintainanceFrequency, @HandlingCertificate, @AuditInterval,
     @MaxOutput, @LastAuditDate, @LastAuditNotes, @ResponsibleTeam, @Notes,
@@ -85,6 +84,21 @@ WHERE ToolsId = @ToolsId;";
 
             using var connection = _context.CreateConnection();
             return await connection.ExecuteAsync(query, tool);
+        }
+
+        public async Task<int> DeleteToolAsync(string toolId)
+        {
+            var query = @"
+UPDATE ToolsMaster 
+SET Status = 0, UpdatedDate = GETDATE() 
+WHERE ToolsId = @ToolsId;
+
+UPDATE MasterRegister 
+SET IsActive = 0 
+WHERE RefId = @ToolsId AND ItemType = 'Tool';";
+
+            using var connection = _context.CreateConnection();
+            return await connection.ExecuteAsync(query, new { ToolsId = toolId });
         }
     }
 }

@@ -48,7 +48,14 @@ namespace InventoryManagement.Repositories
 
         public async Task<int> CreateAsync(AssetsConsumablesEntity asset)
         {
-            var query = @"
+            using var connection = _context.CreateConnection();
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
+
+            try
+            {
+                // First, insert into AssetsConsumablesMaster
+                var assetQuery = @"
 INSERT INTO AssetsConsumablesMaster
 (
     AssetId, Category, AssetName, Product, Vendor, Specifications,
@@ -67,8 +74,37 @@ VALUES
     @Remarks, @ItemTypeKey,
     @CreatedBy, GETDATE(), @Status
 )";
-            using var connection = _context.CreateConnection();
-            return await connection.ExecuteAsync(query, asset);
+
+                var assetResult = await connection.ExecuteAsync(assetQuery, asset, transaction);
+
+                // Then, insert into MasterRegister
+                var itemType = asset.ItemTypeKey == 1 ? "Asset" : "Consumable";
+                var masterQuery = @"
+INSERT INTO MasterRegister
+(
+    RefId, ItemType, CreatedDate, IsActive
+)
+VALUES
+(
+    @RefId, @ItemType, GETDATE(), 1
+)";
+
+                var masterParams = new
+                {
+                    RefId = asset.AssetId,
+                    ItemType = itemType
+                };
+
+                await connection.ExecuteAsync(masterQuery, masterParams, transaction);
+
+                transaction.Commit();
+                return assetResult;
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
 
         public async Task<int> UpdateAsync(AssetsConsumablesEntity asset)
@@ -97,6 +133,21 @@ SET
 WHERE AssetId = @AssetId";
             using var connection = _context.CreateConnection();
             return await connection.ExecuteAsync(query, asset);
+        }
+
+        public async Task<int> DeleteAsync(string assetId)
+        {
+            var query = @"
+UPDATE AssetsConsumablesMaster 
+SET Status = 0, UpdatedDate = GETDATE() 
+WHERE AssetId = @AssetId;
+
+UPDATE MasterRegister 
+SET IsActive = 0 
+WHERE RefId = @AssetId AND (ItemType = 'Asset' OR ItemType = 'Consumable');";
+
+            using var connection = _context.CreateConnection();
+            return await connection.ExecuteAsync(query, new { AssetId = assetId });
         }
     }
 }

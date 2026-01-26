@@ -1,20 +1,20 @@
 ﻿
-    using InventoryManagement.Models.DTOs;
-    using InventoryManagement.Repositories.Interfaces;
-    using InventoryManagement.Services.Interfaces;
-    using InventoryManagement.Models.Entities;
-
+using InventoryManagement.Models.DTOs;
+using InventoryManagement.Repositories.Interfaces;
+using InventoryManagement.Services.Interfaces;
+using InventoryManagement.Models.Entities;
 
 namespace InventoryManagement.Services
 {
     public class ToolService : IToolService
-        {
-            private readonly IToolRepository _repository;
+    {
+        private readonly IToolRepository _repository;
 
-            public ToolService(IToolRepository repository)
-            {
-                _repository = repository;
-            }
+        public ToolService(IToolRepository repository)
+        {
+            _repository = repository;
+        }
+
         public async Task<bool> CreateToolAsync(ToolEntity tool)
         {
             var result = await _repository.CreateToolAsync(tool);
@@ -27,9 +27,15 @@ namespace InventoryManagement.Services
             return result > 0;
         }
 
+        public async Task<bool> DeleteToolAsync(string toolId)
+        {
+            var result = await _repository.DeleteToolAsync(toolId);
+            return result > 0;
+        }
+
         public async Task<IEnumerable<ToolDto>> GetToolsAsync()
-            {
-                var tools = await _repository.GetAllToolsAsync();
+        {
+            var tools = await _repository.GetAllToolsAsync();
 
             return tools.Select(x => new ToolDto
             {
@@ -38,7 +44,7 @@ namespace InventoryManagement.Services
                 ToolType = x.ToolType,
                 AssociatedProduct = x.AssociatedProduct,
                 ArticleCode = x.ArticleCode,
-                VendorName = x.VendorName,
+                Vendor = x.Vendor,
                 Specifications = x.Specifications,
                 StorageLocation = x.StorageLocation,
                 PoNumber = x.PoNumber,
@@ -64,10 +70,9 @@ namespace InventoryManagement.Services
                 CreatedDate = x.CreatedDate,
                 UpdatedDate = x.UpdatedDate,
                 Status = x.Status
-            }
-);
-            }
+            });
         }
     }
+}
 
 

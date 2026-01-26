@@ -8,12 +8,8 @@ namespace InventoryManagement.Repositories.Interfaces
         Task<IEnumerable<AssetsConsumablesEntity>> GetAllAsync();
         Task<int> CreateAsync(AssetsConsumablesEntity asset);
         Task<int> UpdateAsync(AssetsConsumablesEntity asset);
-
-        Task<AssetFullDetailDto> GetAssetFullDetailsAsync(
-        string assetId,
-        string assetType
-);
-
+        Task<AssetFullDetailDto> GetAssetFullDetailsAsync(string assetId, string assetType);
+        Task<int> DeleteAsync(string assetId);
     }
 }
 

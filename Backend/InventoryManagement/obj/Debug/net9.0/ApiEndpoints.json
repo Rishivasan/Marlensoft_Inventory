@@ -79,6 +79,42 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "InventoryManagement.Controllers.AssetsConsumablesController",
+    "Method": "Delete",
+    "RelativePath": "api/AssetsConsumables/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InventoryManagement.Controllers.MasterRegisterController",
+    "Method": "GetEnhancedMasterList",
+    "RelativePath": "api/enhanced-master-list",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InventoryManagement.Controllers.MasterRegisterController",
+    "Method": "GetMasterList",
+    "RelativePath": "api/master-list",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "InventoryManagement.Controllers.MmdsController",
     "Method": "GetMmds",
     "RelativePath": "api/mmds",
@@ -89,6 +125,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "InventoryManagement.Controllers.MmdsController",
+    "Method": "DeleteMmds",
+    "RelativePath": "api/Mmds/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "InventoryManagement.Controllers.ToolsController",
     "Method": "GetTools",
     "RelativePath": "api/tools",
@@ -96,6 +148,22 @@
     "IsController": true,
     "Order": 0,
     "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InventoryManagement.Controllers.ToolsController",
+    "Method": "DeleteTool",
+    "RelativePath": "api/Tools/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
     "ReturnTypes": []
   },
   {

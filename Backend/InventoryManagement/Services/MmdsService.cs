@@ -42,5 +42,10 @@ namespace InventoryManagement.Services
         {
             return await _repository.UpdateMmdsAsync(mmds) > 0;
         }
+
+        public async Task<bool> DeleteMmdsAsync(string mmdId)
+        {
+            return await _repository.DeleteMmdsAsync(mmdId) > 0;
+        }
     }
 }

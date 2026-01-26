@@ -8,7 +8,7 @@
         public string ToolType { get; set; }
         public string AssociatedProduct { get; set; }
         public string ArticleCode { get; set; }
-        public string VendorName { get; set; }
+        public string Vendor { get; set; }
         public string Specifications { get; set; }
         public string StorageLocation { get; set; }
         public string PoNumber { get; set; }

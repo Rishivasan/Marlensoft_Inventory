@@ -33,6 +33,15 @@ namespace InventoryManagement.Controllers
             return Ok("Tool created successfully");
         }
 
+        [HttpDelete("api/Tools/{id}")]
+        public async Task<IActionResult> DeleteTool(string id)
+        {
+            var success = await _service.DeleteToolAsync(id);
+            if (!success) return NotFound("Tool not found or delete failed");
+
+            return Ok("Tool deleted successfully");
+        }
+
         //// PUT: api/tools/{id}
         //[HttpPut("{id}")("api/updatetools")]
        

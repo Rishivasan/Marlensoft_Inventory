@@ -40,3 +40,4 @@ class NavbarProfileWidget extends StatelessWidget {
     );
   }
 }
+

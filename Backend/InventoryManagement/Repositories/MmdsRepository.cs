@@ -29,7 +29,7 @@ INSERT INTO MmdsMaster
 (
     MmdId, AccuracyClass, Vendor, CalibratedBy, Specifications,
     ModelNumber, SerialNumber, Quantity, CalibrationCertNo,
-    Location, PoNumber, PoDate, InvoiceNumber, InvoiceDate,
+    StorageLocation, PoNumber, PoDate, InvoiceNumber, InvoiceDate,
     TotalCost, CalibrationFrequency, LastCalibration, NextCalibration,
     WarrantyYears, CalibrationStatus, ResponsibleTeam,
     ManualLink, StockMsi, Remarks,
@@ -61,7 +61,7 @@ SET
     ModelNumber = @ModelNumber,
     Quantity = @Quantity,
     CalibrationCertNo = @CalibrationCertNo,
-    Location = @Location,
+    StorageLocation = @Location,
     TotalCost = @TotalCost,
     CalibrationFrequency = @CalibrationFrequency,
     LastCalibration = @LastCalibration,
@@ -77,6 +77,21 @@ SET
 WHERE MmdId = @MmdId";
             using var connection = _context.CreateConnection();
             return await connection.ExecuteAsync(query, mmds);
+        }
+
+        public async Task<int> DeleteMmdsAsync(string mmdId)
+        {
+            var query = @"
+UPDATE MmdsMaster 
+SET Status = 0, UpdatedDate = GETDATE() 
+WHERE MmdId = @MmdId;
+
+UPDATE MasterRegister 
+SET IsActive = 0 
+WHERE RefId = @MmdId AND ItemType = 'MMD';";
+
+            using var connection = _context.CreateConnection();
+            return await connection.ExecuteAsync(query, new { MmdId = mmdId });
         }
     }
 }

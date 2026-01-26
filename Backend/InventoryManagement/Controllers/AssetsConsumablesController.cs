@@ -50,5 +50,14 @@ namespace InventoryManagement.Controllers
 
             return Ok("Asset / Consumable updated successfully");
         }
+
+        [HttpDelete("api/AssetsConsumables/{id}")]
+        public async Task<IActionResult> Delete(string id)
+        {
+            var success = await _service.DeleteAsync(id);
+            if (!success) return NotFound("Asset/Consumable not found or delete failed");
+
+            return Ok("Asset / Consumable deleted successfully");
+        }
     }
 }

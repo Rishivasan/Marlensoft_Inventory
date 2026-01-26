@@ -7,5 +7,6 @@ namespace InventoryManagement.Repositories.Interfaces
         Task<IEnumerable<MmdsEntity>> GetAllMmdsAsync();
         Task<int> CreateMmdsAsync(MmdsEntity mmds);
         Task<int> UpdateMmdsAsync(MmdsEntity mmds);
+        Task<int> DeleteMmdsAsync(string mmdId);
     }
 }

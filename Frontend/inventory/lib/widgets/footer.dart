@@ -24,3 +24,4 @@ class FooterWidget extends StatelessWidget {
     );
   }
 }
+

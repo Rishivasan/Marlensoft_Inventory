@@ -54,5 +54,10 @@ namespace InventoryManagement.Services
         {
             return await _repository.UpdateAsync(asset) > 0;
         }
+
+        public async Task<bool> DeleteAsync(string assetId)
+        {
+            return await _repository.DeleteAsync(assetId) > 0;
+        }
     }
 }

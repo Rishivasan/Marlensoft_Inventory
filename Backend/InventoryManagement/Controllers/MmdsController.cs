@@ -23,10 +23,17 @@ namespace InventoryManagement.Controllers
         [HttpPost("api/addmmds")]
         public async Task<IActionResult> CreateMmds([FromBody] MmdsEntity mmds)
         {
-            var success = await _service.CreateMmdsAsync(mmds);
-            if (!success) return BadRequest("Insert failed");
+            try
+            {
+                var success = await _service.CreateMmdsAsync(mmds);
+                if (!success) return BadRequest("Insert failed");
 
-            return Ok("MMDS created successfully");
+                return Ok("MMDS created successfully");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error creating MMD: {ex.Message}");
+            }
         }
 
         [HttpPut("api/updatemmds")]
@@ -36,6 +43,15 @@ namespace InventoryManagement.Controllers
             if (!success) return BadRequest("Update failed");
 
             return Ok("MMDS updated successfully");
+        }
+
+        [HttpDelete("api/Mmds/{id}")]
+        public async Task<IActionResult> DeleteMmds(string id)
+        {
+            var success = await _service.DeleteMmdsAsync(id);
+            if (!success) return NotFound("MMD not found or delete failed");
+
+            return Ok("MMD deleted successfully");
         }
     }
 }
