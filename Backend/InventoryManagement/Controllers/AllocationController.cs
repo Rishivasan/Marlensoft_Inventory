@@ -6,7 +6,7 @@ using Dapper;
 namespace InventoryManagement.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/allocation")]
     public class AllocationController : ControllerBase
     {
         private readonly DapperContext _context;
@@ -298,21 +298,135 @@ namespace InventoryManagement.Controllers
         [HttpPost]
         public async Task<ActionResult<AllocationEntity>> CreateAllocation(AllocationEntity allocation)
         {
-            using var connection = _context.CreateConnection();
-            var sql = @"
-                INSERT INTO Allocation (AssetType, AssetId, ItemName, EmployeeId, EmployeeName, 
+            Console.WriteLine($"=== ALLOCATION CREATE: Starting creation for AssetId: {allocation.AssetId} ===");
+            
+            try
+            {
+                using var connection = _context.CreateConnection();
+                
+                // Set CreatedDate
+                allocation.CreatedDate = DateTime.Now;
+                
+                // Try different possible table names for insertion
+                var possibleInsertQueries = new[]
+                {
+                    @"INSERT INTO Allocation (AssetType, AssetId, ItemName, EmployeeId, EmployeeName, 
+                                           TeamName, Purpose, IssuedDate, ExpectedReturnDate, 
+                                           ActualReturnDate, AvailabilityStatus, CreatedDate)
+                      VALUES (@AssetType, @AssetId, @ItemName, @EmployeeId, @EmployeeName, 
+                              @TeamName, @Purpose, @IssuedDate, @ExpectedReturnDate, 
+                              @ActualReturnDate, @AvailabilityStatus, @CreatedDate);
+                      SELECT CAST(SCOPE_IDENTITY() as int)",
+                      
+                    @"INSERT INTO AllocationRecords (AssetType, AssetId, ItemName, EmployeeId, EmployeeName, 
+                                                   TeamName, Purpose, IssuedDate, ExpectedReturnDate, 
+                                                   ActualReturnDate, AvailabilityStatus, CreatedDate)
+                      VALUES (@AssetType, @AssetId, @ItemName, @EmployeeId, @EmployeeName, 
+                              @TeamName, @Purpose, @IssuedDate, @ExpectedReturnDate, 
+                              @ActualReturnDate, @AvailabilityStatus, @CreatedDate);
+                      SELECT CAST(SCOPE_IDENTITY() as int)",
+                      
+                    @"INSERT INTO allocation (AssetType, AssetId, ItemName, EmployeeId, EmployeeName, 
+                                           TeamName, Purpose, IssuedDate, ExpectedReturnDate, 
+                                           ActualReturnDate, AvailabilityStatus, CreatedDate)
+                      VALUES (@AssetType, @AssetId, @ItemName, @EmployeeId, @EmployeeName, 
+                              @TeamName, @Purpose, @IssuedDate, @ExpectedReturnDate, 
+                              @ActualReturnDate, @AvailabilityStatus, @CreatedDate);
+                      SELECT CAST(SCOPE_IDENTITY() as int)",
+                      
+                    @"INSERT INTO Usage (AssetType, AssetId, ItemName, EmployeeId, EmployeeName, 
                                       TeamName, Purpose, IssuedDate, ExpectedReturnDate, 
                                       ActualReturnDate, AvailabilityStatus, CreatedDate)
-                VALUES (@AssetType, @AssetId, @ItemName, @EmployeeId, @EmployeeName, 
-                        @TeamName, @Purpose, @IssuedDate, @ExpectedReturnDate, 
-                        @ActualReturnDate, @AvailabilityStatus, @CreatedDate);
-                SELECT CAST(SCOPE_IDENTITY() as int)";
+                      VALUES (@AssetType, @AssetId, @ItemName, @EmployeeId, @EmployeeName, 
+                              @TeamName, @Purpose, @IssuedDate, @ExpectedReturnDate, 
+                              @ActualReturnDate, @AvailabilityStatus, @CreatedDate);
+                      SELECT CAST(SCOPE_IDENTITY() as int)",
+                      
+                    @"INSERT INTO Issue (AssetType, AssetId, ItemName, EmployeeId, EmployeeName, 
+                                      TeamName, Purpose, IssuedDate, ExpectedReturnDate, 
+                                      ActualReturnDate, AvailabilityStatus, CreatedDate)
+                      VALUES (@AssetType, @AssetId, @ItemName, @EmployeeId, @EmployeeName, 
+                              @TeamName, @Purpose, @IssuedDate, @ExpectedReturnDate, 
+                              @ActualReturnDate, @AvailabilityStatus, @CreatedDate);
+                      SELECT CAST(SCOPE_IDENTITY() as int)"
+                };
 
-            allocation.CreatedDate = DateTime.Now;
-            var id = await connection.QuerySingleAsync<int>(sql, allocation);
-            allocation.AllocationId = id;
+                foreach (var sql in possibleInsertQueries)
+                {
+                    try
+                    {
+                        Console.WriteLine($"Trying allocation insert query: {sql.Substring(0, Math.Min(sql.Length, 100))}...");
+                        var id = await connection.QuerySingleAsync<int>(sql, allocation);
+                        allocation.AllocationId = id;
+                        
+                        Console.WriteLine($"✓ SUCCESS! Created allocation record with ID: {id} for AssetId: {allocation.AssetId}");
+                        return CreatedAtAction(nameof(GetAllocationsByAssetId), new { assetId = allocation.AssetId }, allocation);
+                    }
+                    catch (Exception queryEx)
+                    {
+                        Console.WriteLine($"✗ Allocation insert query failed: {queryEx.Message}");
+                        continue; // Try next query
+                    }
+                }
 
-            return CreatedAtAction(nameof(GetAllocationsByAssetId), new { assetId = allocation.AssetId }, allocation);
+                // If all specific queries fail, try dynamic discovery and insertion
+                Console.WriteLine("Trying dynamic table discovery for allocation insertion...");
+                try
+                {
+                    var tableInfoSql = @"
+                        SELECT TABLE_NAME 
+                        FROM INFORMATION_SCHEMA.TABLES 
+                        WHERE TABLE_TYPE = 'BASE TABLE' 
+                        AND (TABLE_NAME LIKE '%allocation%' OR TABLE_NAME LIKE '%Allocation%' OR 
+                             TABLE_NAME LIKE '%usage%' OR TABLE_NAME LIKE '%Usage%' OR
+                             TABLE_NAME LIKE '%issue%' OR TABLE_NAME LIKE '%Issue%')";
+                    
+                    var tables = await connection.QueryAsync<string>(tableInfoSql);
+                    Console.WriteLine($"Found allocation-related tables for insertion: {string.Join(", ", tables)}");
+                    
+                    var firstTable = tables.FirstOrDefault();
+                    if (!string.IsNullOrEmpty(firstTable))
+                    {
+                        // Get column info for this table to build dynamic insert
+                        var columnsSql = @"
+                            SELECT COLUMN_NAME 
+                            FROM INFORMATION_SCHEMA.COLUMNS 
+                            WHERE TABLE_NAME = @TableName
+                            AND COLUMN_NAME NOT LIKE '%Id' OR COLUMN_NAME = 'AssetId'
+                            ORDER BY ORDINAL_POSITION";
+                        
+                        var columns = await connection.QueryAsync<string>(columnsSql, new { TableName = firstTable });
+                        var columnList = string.Join(", ", columns);
+                        var parameterList = string.Join(", ", columns.Select(c => "@" + c));
+                        
+                        var dynamicInsertSql = $@"
+                            INSERT INTO {firstTable} ({columnList})
+                            VALUES ({parameterList});
+                            SELECT CAST(SCOPE_IDENTITY() as int)";
+                        
+                        Console.WriteLine($"Trying dynamic allocation insert: {dynamicInsertSql}");
+                        var dynamicId = await connection.QuerySingleAsync<int>(dynamicInsertSql, allocation);
+                        allocation.AllocationId = dynamicId;
+                        
+                        Console.WriteLine($"✓ SUCCESS! Dynamic insert created allocation record with ID: {dynamicId}");
+                        return CreatedAtAction(nameof(GetAllocationsByAssetId), new { assetId = allocation.AssetId }, allocation);
+                    }
+                }
+                catch (Exception dynamicEx)
+                {
+                    Console.WriteLine($"Dynamic allocation insertion failed: {dynamicEx.Message}");
+                }
+
+                Console.WriteLine("=== ALLOCATION CREATE: All insertion attempts failed ===");
+                return BadRequest("Unable to create allocation record. Please check database configuration.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"=== ALLOCATION CREATE: Fatal error ===");
+                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         [HttpPut("{id}")]

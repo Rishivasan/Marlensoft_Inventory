@@ -98,6 +98,29 @@ class ApiService {
     }
   }
 
+  // Add new maintenance record
+  Future<Map<String, dynamic>> addMaintenanceRecord(Map<String, dynamic> maintenanceData) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/api/maintenance"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(maintenanceData),
+      );
+
+      print("DEBUG: Add Maintenance Response status: ${response.statusCode}");
+      print("DEBUG: Add Maintenance Response body: ${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception("Failed to add maintenance record: ${response.body}");
+      }
+    } catch (e) {
+      print("DEBUG: Error adding maintenance record: $e");
+      throw Exception("Failed to add maintenance record: $e");
+    }
+  }
+
   // Get allocation records for an asset
   Future<List<AllocationModel>> getAllocationsByAssetId(String assetId) async {
     try {
@@ -112,6 +135,32 @@ class ApiService {
     } catch (e) {
       print("Error loading allocation data: $e");
       return []; // Return empty list on error
+    }
+  }
+
+  // Add new allocation record
+  Future<Map<String, dynamic>> addAllocationRecord(Map<String, dynamic> allocationData) async {
+    try {
+      print("DEBUG: Sending allocation data to API: $allocationData");
+      
+      final response = await http.post(
+        Uri.parse("$baseUrl/api/allocation"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(allocationData),
+      );
+
+      print("DEBUG: Add Allocation Response status: ${response.statusCode}");
+      print("DEBUG: Add Allocation Response body: ${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return jsonDecode(response.body);
+      } else {
+        print("DEBUG: Allocation API error - Status: ${response.statusCode}, Body: ${response.body}");
+        throw Exception("Failed to add allocation record: ${response.body}");
+      }
+    } catch (e) {
+      print("DEBUG: Error adding allocation record: $e");
+      throw Exception("Failed to add allocation record: $e");
     }
   }
 
