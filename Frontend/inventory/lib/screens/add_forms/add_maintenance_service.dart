@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:inventory/services/api_service.dart';
+import 'package:inventory/model/maintenance_model.dart';
 
 class AddMaintenanceService extends StatefulWidget {
   final String assetId;
   final String? itemName;
   final String? assetType;
   final VoidCallback onServiceAdded;
+  final MaintenanceModel? existingMaintenance; // Add this for editing
 
   const AddMaintenanceService({
     super.key,
@@ -13,6 +15,7 @@ class AddMaintenanceService extends StatefulWidget {
     this.itemName,
     this.assetType,
     required this.onServiceAdded,
+    this.existingMaintenance, // Add this parameter
   });
 
   @override
@@ -49,6 +52,28 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
     super.initState();
     _toolCostController.addListener(_calculateTotal);
     _extraChargesController.addListener(_calculateTotal);
+    
+    // Pre-populate fields if editing existing maintenance record
+    if (widget.existingMaintenance != null) {
+      final maintenance = widget.existingMaintenance!;
+      if (maintenance.serviceDate != null) {
+        _serviceDateController.text = _formatDateForInput(maintenance.serviceDate!);
+      }
+      _serviceProviderController.text = maintenance.serviceProviderCompany;
+      _serviceEngineerController.text = maintenance.serviceEngineerName;
+      _selectedServiceType = maintenance.serviceType;
+      _responsibleTeamController.text = maintenance.responsibleTeam;
+      if (maintenance.nextServiceDue != null) {
+        _nextServiceDateController.text = _formatDateForInput(maintenance.nextServiceDue!);
+      }
+      _serviceNotesController.text = maintenance.serviceNotes ?? '';
+      _toolCostController.text = maintenance.cost.toStringAsFixed(2);
+      _extraChargesController.text = '0.00'; // Default since we don't store extra charges separately
+    }
+  }
+  
+  String _formatDateForInput(DateTime date) {
+    return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
   }
 
   @override
@@ -117,7 +142,7 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
       final apiService = ApiService();
       
       // Create maintenance data
-      final maintenanceData = {
+      final maintenanceData = <String, dynamic>{
         'assetId': widget.assetId,
         'assetType': widget.assetType ?? 'Unknown',
         'itemName': widget.itemName ?? 'Unknown',
@@ -132,15 +157,29 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
         'responsibleTeam': _responsibleTeamController.text,
       };
 
-      print('DEBUG: Submitting maintenance data: $maintenanceData');
+      // Only include ID and createdDate for updates, not for new records
+      if (widget.existingMaintenance != null) {
+        maintenanceData['maintenanceId'] = widget.existingMaintenance!.maintenanceId;
+        maintenanceData['createdDate'] = widget.existingMaintenance!.createdDate.toIso8601String();
+      }
 
-      // Call API to add maintenance record
-      final response = await apiService.addMaintenanceRecord(maintenanceData);
+      print('DEBUG: Submitting maintenance data: $maintenanceData');
+      print('DEBUG: Is update mode: ${widget.existingMaintenance != null}');
+      if (widget.existingMaintenance != null) {
+        print('DEBUG: Maintenance ID: ${widget.existingMaintenance!.maintenanceId}');
+      }
+
+      // Call API to add or update maintenance record
+      final response = widget.existingMaintenance != null
+          ? await apiService.updateMaintenanceRecord(widget.existingMaintenance!.maintenanceId, maintenanceData)
+          : await apiService.addMaintenanceRecord(maintenanceData);
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Maintenance service added successfully!'),
+          SnackBar(
+            content: Text(widget.existingMaintenance != null 
+                ? 'Maintenance service updated successfully!'
+                : 'Maintenance service added successfully!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -150,10 +189,13 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
         widget.onServiceAdded();
       }
     } catch (e) {
+      print('DEBUG: Error in _submitForm: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error adding maintenance service: $e'),
+            content: Text(widget.existingMaintenance != null 
+                ? 'Error updating maintenance service: $e'
+                : 'Error adding maintenance service: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -179,18 +221,22 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Add new tool for maintenance and service',
-                  style: TextStyle(
+                Text(
+                  widget.existingMaintenance != null 
+                      ? 'Edit maintenance service record'
+                      : 'Add new tool for maintenance and service',
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF111827),
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  'Please enter the details below and click submit to add a new tool',
-                  style: TextStyle(
+                Text(
+                  widget.existingMaintenance != null
+                      ? 'Update the details below and click submit to save changes'
+                      : 'Please enter the details below and click submit to add a new tool',
+                  style: const TextStyle(
                     fontSize: 14,
                     color: Color(0xFF6B7280),
                   ),
@@ -392,9 +438,9 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
                           valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
-                    : const Text(
-                        'Submit',
-                        style: TextStyle(
+                    : Text(
+                        widget.existingMaintenance != null ? 'Update' : 'Submit',
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),

@@ -432,28 +432,138 @@ namespace InventoryManagement.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateAllocation(int id, AllocationEntity allocation)
         {
+            Console.WriteLine($"=== ALLOCATION UPDATE: Starting update for ID: {id} ===");
+            
             if (id != allocation.AllocationId)
             {
-                return BadRequest();
+                Console.WriteLine($"ID mismatch: URL ID {id} != Entity ID {allocation.AllocationId}");
+                return BadRequest("ID mismatch");
             }
 
-            using var connection = _context.CreateConnection();
-            var sql = @"
-                UPDATE Allocation 
-                SET AssetType = @AssetType, AssetId = @AssetId, ItemName = @ItemName, 
-                    EmployeeId = @EmployeeId, EmployeeName = @EmployeeName, TeamName = @TeamName,
-                    Purpose = @Purpose, IssuedDate = @IssuedDate, ExpectedReturnDate = @ExpectedReturnDate,
-                    ActualReturnDate = @ActualReturnDate, AvailabilityStatus = @AvailabilityStatus
-                WHERE AllocationId = @AllocationId";
-
-            var affectedRows = await connection.ExecuteAsync(sql, allocation);
-
-            if (affectedRows == 0)
+            try
             {
-                return NotFound();
-            }
+                using var connection = _context.CreateConnection();
+                
+                // Try different possible table names for update
+                var possibleUpdateQueries = new[]
+                {
+                    @"UPDATE Allocation 
+                      SET AssetType = @AssetType, AssetId = @AssetId, ItemName = @ItemName, 
+                          EmployeeId = @EmployeeId, EmployeeName = @EmployeeName, TeamName = @TeamName,
+                          Purpose = @Purpose, IssuedDate = @IssuedDate, ExpectedReturnDate = @ExpectedReturnDate,
+                          ActualReturnDate = @ActualReturnDate, AvailabilityStatus = @AvailabilityStatus
+                      WHERE AllocationId = @AllocationId",
+                      
+                    @"UPDATE AllocationRecords 
+                      SET AssetType = @AssetType, AssetId = @AssetId, ItemName = @ItemName, 
+                          EmployeeId = @EmployeeId, EmployeeName = @EmployeeName, TeamName = @TeamName,
+                          Purpose = @Purpose, IssuedDate = @IssuedDate, ExpectedReturnDate = @ExpectedReturnDate,
+                          ActualReturnDate = @ActualReturnDate, AvailabilityStatus = @AvailabilityStatus
+                      WHERE AllocationId = @AllocationId",
+                      
+                    @"UPDATE allocation 
+                      SET AssetType = @AssetType, AssetId = @AssetId, ItemName = @ItemName, 
+                          EmployeeId = @EmployeeId, EmployeeName = @EmployeeName, TeamName = @TeamName,
+                          Purpose = @Purpose, IssuedDate = @IssuedDate, ExpectedReturnDate = @ExpectedReturnDate,
+                          ActualReturnDate = @ActualReturnDate, AvailabilityStatus = @AvailabilityStatus
+                      WHERE AllocationId = @AllocationId",
+                      
+                    @"UPDATE Usage 
+                      SET AssetType = @AssetType, AssetId = @AssetId, ItemName = @ItemName, 
+                          EmployeeId = @EmployeeId, EmployeeName = @EmployeeName, TeamName = @TeamName,
+                          Purpose = @Purpose, IssuedDate = @IssuedDate, ExpectedReturnDate = @ExpectedReturnDate,
+                          ActualReturnDate = @ActualReturnDate, AvailabilityStatus = @AvailabilityStatus
+                      WHERE AllocationId = @AllocationId",
+                      
+                    @"UPDATE Issue 
+                      SET AssetType = @AssetType, AssetId = @AssetId, ItemName = @ItemName, 
+                          EmployeeId = @EmployeeId, EmployeeName = @EmployeeName, TeamName = @TeamName,
+                          Purpose = @Purpose, IssuedDate = @IssuedDate, ExpectedReturnDate = @ExpectedReturnDate,
+                          ActualReturnDate = @ActualReturnDate, AvailabilityStatus = @AvailabilityStatus
+                      WHERE AllocationId = @AllocationId"
+                };
 
-            return NoContent();
+                foreach (var sql in possibleUpdateQueries)
+                {
+                    try
+                    {
+                        Console.WriteLine($"Trying allocation update query: {sql.Substring(0, Math.Min(sql.Length, 100))}...");
+                        var affectedRows = await connection.ExecuteAsync(sql, allocation);
+                        
+                        if (affectedRows > 0)
+                        {
+                            Console.WriteLine($"✓ SUCCESS! Updated allocation record ID: {id}, affected rows: {affectedRows}");
+                            return NoContent();
+                        }
+                        else
+                        {
+                            Console.WriteLine($"No rows affected for ID: {id}");
+                        }
+                    }
+                    catch (Exception queryEx)
+                    {
+                        Console.WriteLine($"✗ Update query failed: {queryEx.Message}");
+                        continue; // Try next query
+                    }
+                }
+
+                // If all specific queries fail, try dynamic discovery and update
+                Console.WriteLine("Trying dynamic table discovery for allocation update...");
+                try
+                {
+                    var tableInfoSql = @"
+                        SELECT TABLE_NAME 
+                        FROM INFORMATION_SCHEMA.TABLES 
+                        WHERE TABLE_TYPE = 'BASE TABLE' 
+                        AND (TABLE_NAME LIKE '%allocation%' OR TABLE_NAME LIKE '%Allocation%' OR
+                             TABLE_NAME LIKE '%usage%' OR TABLE_NAME LIKE '%Usage%' OR
+                             TABLE_NAME LIKE '%issue%' OR TABLE_NAME LIKE '%Issue%')";
+                    
+                    var tables = await connection.QueryAsync<string>(tableInfoSql);
+                    Console.WriteLine($"Found allocation-related tables for update: {string.Join(", ", tables)}");
+                    
+                    var firstTable = tables.FirstOrDefault();
+                    if (!string.IsNullOrEmpty(firstTable))
+                    {
+                        // Build dynamic update query
+                        var dynamicUpdateSql = $@"
+                            UPDATE {firstTable} 
+                            SET AssetType = @AssetType, AssetId = @AssetId, ItemName = @ItemName, 
+                                EmployeeId = @EmployeeId, EmployeeName = @EmployeeName, TeamName = @TeamName,
+                                Purpose = @Purpose, IssuedDate = @IssuedDate, ExpectedReturnDate = @ExpectedReturnDate,
+                                ActualReturnDate = @ActualReturnDate, AvailabilityStatus = @AvailabilityStatus
+                            WHERE AllocationId = @AllocationId";
+                        
+                        Console.WriteLine($"Trying dynamic allocation update: {dynamicUpdateSql}");
+                        var dynamicAffectedRows = await connection.ExecuteAsync(dynamicUpdateSql, allocation);
+                        
+                        if (dynamicAffectedRows > 0)
+                        {
+                            Console.WriteLine($"✓ SUCCESS! Dynamic update affected {dynamicAffectedRows} rows");
+                            return NoContent();
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Dynamic update: No rows affected for ID: {id}");
+                            return NotFound($"Allocation record with ID {id} not found");
+                        }
+                    }
+                }
+                catch (Exception dynamicEx)
+                {
+                    Console.WriteLine($"Dynamic allocation update failed: {dynamicEx.Message}");
+                }
+
+                Console.WriteLine("=== ALLOCATION UPDATE: All update attempts failed ===");
+                return NotFound($"Unable to update allocation record with ID {id}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"=== ALLOCATION UPDATE: Fatal error ===");
+                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         [HttpDelete("{id}")]

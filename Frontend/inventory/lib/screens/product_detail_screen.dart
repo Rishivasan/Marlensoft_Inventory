@@ -1067,7 +1067,21 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                       SizedBox(
                         width: 32, // Reduced from 40
                         child: IconButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            // Open edit dialog with existing maintenance data
+                            DialogPannelHelper().showAddPannel(
+                              context: context,
+                              addingItem: AddMaintenanceService(
+                                assetId: productData?.assetId ?? widget.id,
+                                itemName: productData?.name ?? 'Unknown',
+                                assetType: productData?.itemType ?? 'Unknown',
+                                existingMaintenance: record, // Pass the existing record for editing
+                                onServiceAdded: () {
+                                  _loadMaintenanceData(productData?.assetId ?? widget.id);
+                                },
+                              ),
+                            );
+                          },
                           icon: const Icon(
                             Icons.arrow_forward,
                             size: 14, // Reduced from 16
@@ -1216,9 +1230,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                 _buildTableHeaderWithFilter('Employee name', flex: 2),
                 _buildTableHeaderWithFilter('Team name', flex: 2),
                 _buildTableHeaderWithFilter('Purpose', flex: 2),
-                _buildTableHeaderWithFilter('Responsible Team', flex: 2),
-                _buildTableHeaderWithFilter('Next Service Due', flex: 2),
-                _buildTableHeaderWithFilter('Cost', flex: 1),
+                _buildTableHeaderWithFilter('Expected return date', flex: 2),
+                _buildTableHeaderWithFilter('Actual return date', flex: 2),
                 _buildTableHeaderWithFilter('Status', flex: 1),
                 const SizedBox(width: 32), // Reduced from 40
               ],
@@ -1252,12 +1265,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                       _buildTableCell(record.employeeName, flex: 2),
                       _buildTableCell(record.teamName, flex: 2),
                       _buildTableCell(record.purpose, flex: 2),
-                      _buildTableCell(record.teamName, flex: 2), // Using teamName as responsible team
                       _buildTableCell(
                         _formatDate(record.expectedReturnDate),
                         flex: 2,
                       ),
-                      _buildTableCell('N/A', flex: 1), // Cost not available in allocation
+                      _buildTableCell(
+                        _formatDate(record.actualReturnDate),
+                        flex: 2,
+                      ),
                       Expanded(
                         flex: 1,
                         child: Container(
@@ -1280,7 +1295,21 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                       SizedBox(
                         width: 32, // Reduced from 40
                         child: IconButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            // Open edit dialog with existing allocation data
+                            DialogPannelHelper().showAddPannel(
+                              context: context,
+                              addingItem: AddAllocation(
+                                assetId: productData?.assetId ?? widget.id,
+                                itemName: productData?.name ?? 'Unknown',
+                                assetType: productData?.itemType ?? 'Unknown',
+                                existingAllocation: record, // Pass the existing record for editing
+                                onAllocationAdded: () {
+                                  _loadAllocationData(productData?.assetId ?? widget.id);
+                                },
+                              ),
+                            );
+                          },
                           icon: const Icon(
                             Icons.arrow_forward,
                             size: 14, // Reduced from 16

@@ -120,6 +120,7 @@ class ApiService {
 
   // Add new maintenance record
   Future<Map<String, dynamic>> addMaintenanceRecord(Map<String, dynamic> maintenanceData) async {
+    print("DEBUG: Adding maintenance record: $maintenanceData");
     try {
       final response = await http.post(
         Uri.parse("$baseUrl/api/maintenance"),
@@ -131,13 +132,41 @@ class ApiService {
       print("DEBUG: Add Maintenance Response body: ${response.body}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return jsonDecode(response.body);
+        return response.body.isNotEmpty ? jsonDecode(response.body) : {'success': true};
       } else {
-        throw Exception("Failed to add maintenance record: ${response.body}");
+        print("DEBUG: Add failed with status ${response.statusCode}: ${response.body}");
+        throw Exception("Failed to add maintenance record: Status ${response.statusCode} - ${response.body}");
       }
     } catch (e) {
       print("DEBUG: Error adding maintenance record: $e");
+      print("DEBUG: Error type: ${e.runtimeType}");
       throw Exception("Failed to add maintenance record: $e");
+    }
+  }
+
+  // Update existing maintenance record
+  Future<Map<String, dynamic>> updateMaintenanceRecord(int maintenanceId, Map<String, dynamic> maintenanceData) async {
+    print("DEBUG: Updating maintenance record ID $maintenanceId: $maintenanceData");
+    try {
+      final response = await http.put(
+        Uri.parse("$baseUrl/api/maintenance/$maintenanceId"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(maintenanceData),
+      );
+
+      print("DEBUG: Update Maintenance Response status: ${response.statusCode}");
+      print("DEBUG: Update Maintenance Response body: ${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return response.body.isNotEmpty ? jsonDecode(response.body) : {'success': true};
+      } else {
+        print("DEBUG: Update failed with status ${response.statusCode}: ${response.body}");
+        throw Exception("Failed to update maintenance record: Status ${response.statusCode} - ${response.body}");
+      }
+    } catch (e) {
+      print("DEBUG: Error updating maintenance record: $e");
+      print("DEBUG: Error type: ${e.runtimeType}");
+      throw Exception("Failed to update maintenance record: $e");
     }
   }
 
@@ -194,14 +223,41 @@ class ApiService {
       print("DEBUG: Add Allocation Response body: ${response.body}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return jsonDecode(response.body);
+        return response.body.isNotEmpty ? jsonDecode(response.body) : {'success': true};
       } else {
         print("DEBUG: Allocation API error - Status: ${response.statusCode}, Body: ${response.body}");
-        throw Exception("Failed to add allocation record: ${response.body}");
+        throw Exception("Failed to add allocation record: Status ${response.statusCode} - ${response.body}");
       }
     } catch (e) {
       print("DEBUG: Error adding allocation record: $e");
+      print("DEBUG: Error type: ${e.runtimeType}");
       throw Exception("Failed to add allocation record: $e");
+    }
+  }
+
+  // Update existing allocation record
+  Future<Map<String, dynamic>> updateAllocationRecord(int allocationId, Map<String, dynamic> allocationData) async {
+    print("DEBUG: Updating allocation record ID $allocationId: $allocationData");
+    try {
+      final response = await http.put(
+        Uri.parse("$baseUrl/api/allocation/$allocationId"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(allocationData),
+      );
+
+      print("DEBUG: Update Allocation Response status: ${response.statusCode}");
+      print("DEBUG: Update Allocation Response body: ${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return response.body.isNotEmpty ? jsonDecode(response.body) : {'success': true};
+      } else {
+        print("DEBUG: Update failed with status ${response.statusCode}: ${response.body}");
+        throw Exception("Failed to update allocation record: Status ${response.statusCode} - ${response.body}");
+      }
+    } catch (e) {
+      print("DEBUG: Error updating allocation record: $e");
+      print("DEBUG: Error type: ${e.runtimeType}");
+      throw Exception("Failed to update allocation record: $e");
     }
   }
 

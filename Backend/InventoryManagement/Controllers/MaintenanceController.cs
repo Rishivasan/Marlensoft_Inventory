@@ -130,13 +130,22 @@ namespace InventoryManagement.Controllers
         public async Task<ActionResult<MaintenanceEntity>> CreateMaintenance(MaintenanceEntity maintenance)
         {
             Console.WriteLine($"=== MAINTENANCE CREATE: Starting creation for AssetId: {maintenance.AssetId} ===");
+            Console.WriteLine($"Received maintenance data: AssetType={maintenance.AssetType}, ItemName={maintenance.ItemName}, ServiceType={maintenance.ServiceType}");
             
             try
             {
                 using var connection = _context.CreateConnection();
                 
-                // Set CreatedDate
-                maintenance.CreatedDate = DateTime.Now;
+                // Set CreatedDate if not provided
+                if (maintenance.CreatedDate == default(DateTime))
+                {
+                    maintenance.CreatedDate = DateTime.Now;
+                }
+                
+                // Ensure MaintenanceId is 0 for new records (let database auto-generate)
+                maintenance.MaintenanceId = 0;
+                
+                Console.WriteLine($"Prepared maintenance data: ID={maintenance.MaintenanceId}, CreatedDate={maintenance.CreatedDate}");
                 
                 // Try different possible table names for insertion
                 var possibleInsertQueries = new[]
@@ -180,6 +189,7 @@ namespace InventoryManagement.Controllers
                     catch (Exception queryEx)
                     {
                         Console.WriteLine($"✗ Insert query failed: {queryEx.Message}");
+                        Console.WriteLine($"Query exception details: {queryEx}");
                         continue; // Try next query
                     }
                 }
@@ -228,10 +238,11 @@ namespace InventoryManagement.Controllers
                 catch (Exception dynamicEx)
                 {
                     Console.WriteLine($"Dynamic insertion failed: {dynamicEx.Message}");
+                    Console.WriteLine($"Dynamic exception details: {dynamicEx}");
                 }
 
                 Console.WriteLine("=== MAINTENANCE CREATE: All insertion attempts failed ===");
-                return BadRequest("Unable to create maintenance record. Please check database configuration.");
+                return BadRequest("Unable to create maintenance record. Please check database configuration and ensure maintenance table exists.");
             }
             catch (Exception ex)
             {
@@ -245,29 +256,126 @@ namespace InventoryManagement.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateMaintenance(int id, MaintenanceEntity maintenance)
         {
+            Console.WriteLine($"=== MAINTENANCE UPDATE: Starting update for ID: {id} ===");
+            
             if (id != maintenance.MaintenanceId)
             {
-                return BadRequest();
+                Console.WriteLine($"ID mismatch: URL ID {id} != Entity ID {maintenance.MaintenanceId}");
+                return BadRequest("ID mismatch");
             }
 
-            using var connection = _context.CreateConnection();
-            var sql = @"
-                UPDATE Maintenance 
-                SET AssetType = @AssetType, AssetId = @AssetId, ItemName = @ItemName, 
-                    ServiceDate = @ServiceDate, ServiceProviderCompany = @ServiceProviderCompany,
-                    ServiceEngineerName = @ServiceEngineerName, ServiceType = @ServiceType,
-                    NextServiceDue = @NextServiceDue, ServiceNotes = @ServiceNotes,
-                    MaintenanceStatus = @MaintenanceStatus, Cost = @Cost, ResponsibleTeam = @ResponsibleTeam
-                WHERE MaintenanceId = @MaintenanceId";
-
-            var affectedRows = await connection.ExecuteAsync(sql, maintenance);
-
-            if (affectedRows == 0)
+            try
             {
-                return NotFound();
-            }
+                using var connection = _context.CreateConnection();
+                
+                // Try different possible table names for update
+                var possibleUpdateQueries = new[]
+                {
+                    @"UPDATE Maintenance 
+                      SET AssetType = @AssetType, AssetId = @AssetId, ItemName = @ItemName, 
+                          ServiceDate = @ServiceDate, ServiceProviderCompany = @ServiceProviderCompany,
+                          ServiceEngineerName = @ServiceEngineerName, ServiceType = @ServiceType,
+                          NextServiceDue = @NextServiceDue, ServiceNotes = @ServiceNotes,
+                          MaintenanceStatus = @MaintenanceStatus, Cost = @Cost, ResponsibleTeam = @ResponsibleTeam
+                      WHERE MaintenanceId = @MaintenanceId",
+                      
+                    @"UPDATE MaintenanceRecords 
+                      SET AssetType = @AssetType, AssetId = @AssetId, ItemName = @ItemName, 
+                          ServiceDate = @ServiceDate, ServiceProviderCompany = @ServiceProviderCompany,
+                          ServiceEngineerName = @ServiceEngineerName, ServiceType = @ServiceType,
+                          NextServiceDue = @NextServiceDue, ServiceNotes = @ServiceNotes,
+                          MaintenanceStatus = @MaintenanceStatus, Cost = @Cost, ResponsibleTeam = @ResponsibleTeam
+                      WHERE MaintenanceId = @MaintenanceId",
+                      
+                    @"UPDATE maintenance 
+                      SET AssetType = @AssetType, AssetId = @AssetId, ItemName = @ItemName, 
+                          ServiceDate = @ServiceDate, ServiceProviderCompany = @ServiceProviderCompany,
+                          ServiceEngineerName = @ServiceEngineerName, ServiceType = @ServiceType,
+                          NextServiceDue = @NextServiceDue, ServiceNotes = @ServiceNotes,
+                          MaintenanceStatus = @MaintenanceStatus, Cost = @Cost, ResponsibleTeam = @ResponsibleTeam
+                      WHERE MaintenanceId = @MaintenanceId"
+                };
 
-            return NoContent();
+                foreach (var sql in possibleUpdateQueries)
+                {
+                    try
+                    {
+                        Console.WriteLine($"Trying maintenance update query: {sql.Substring(0, Math.Min(sql.Length, 100))}...");
+                        var affectedRows = await connection.ExecuteAsync(sql, maintenance);
+                        
+                        if (affectedRows > 0)
+                        {
+                            Console.WriteLine($"✓ SUCCESS! Updated maintenance record ID: {id}, affected rows: {affectedRows}");
+                            return NoContent();
+                        }
+                        else
+                        {
+                            Console.WriteLine($"No rows affected for ID: {id}");
+                        }
+                    }
+                    catch (Exception queryEx)
+                    {
+                        Console.WriteLine($"✗ Update query failed: {queryEx.Message}");
+                        continue; // Try next query
+                    }
+                }
+
+                // If all specific queries fail, try dynamic discovery and update
+                Console.WriteLine("Trying dynamic table discovery for update...");
+                try
+                {
+                    var tableInfoSql = @"
+                        SELECT TABLE_NAME 
+                        FROM INFORMATION_SCHEMA.TABLES 
+                        WHERE TABLE_TYPE = 'BASE TABLE' 
+                        AND (TABLE_NAME LIKE '%maintenance%' OR TABLE_NAME LIKE '%Maintenance%')";
+                    
+                    var tables = await connection.QueryAsync<string>(tableInfoSql);
+                    Console.WriteLine($"Found maintenance-related tables for update: {string.Join(", ", tables)}");
+                    
+                    var firstTable = tables.FirstOrDefault();
+                    if (!string.IsNullOrEmpty(firstTable))
+                    {
+                        // Build dynamic update query
+                        var dynamicUpdateSql = $@"
+                            UPDATE {firstTable} 
+                            SET AssetType = @AssetType, AssetId = @AssetId, ItemName = @ItemName, 
+                                ServiceDate = @ServiceDate, ServiceProviderCompany = @ServiceProviderCompany,
+                                ServiceEngineerName = @ServiceEngineerName, ServiceType = @ServiceType,
+                                NextServiceDue = @NextServiceDue, ServiceNotes = @ServiceNotes,
+                                MaintenanceStatus = @MaintenanceStatus, Cost = @Cost, ResponsibleTeam = @ResponsibleTeam
+                            WHERE MaintenanceId = @MaintenanceId";
+                        
+                        Console.WriteLine($"Trying dynamic update: {dynamicUpdateSql}");
+                        var dynamicAffectedRows = await connection.ExecuteAsync(dynamicUpdateSql, maintenance);
+                        
+                        if (dynamicAffectedRows > 0)
+                        {
+                            Console.WriteLine($"✓ SUCCESS! Dynamic update affected {dynamicAffectedRows} rows");
+                            return NoContent();
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Dynamic update: No rows affected for ID: {id}");
+                            return NotFound($"Maintenance record with ID {id} not found");
+                        }
+                    }
+                }
+                catch (Exception dynamicEx)
+                {
+                    Console.WriteLine($"Dynamic update failed: {dynamicEx.Message}");
+                }
+
+                Console.WriteLine("=== MAINTENANCE UPDATE: All update attempts failed ===");
+                return NotFound($"Unable to update maintenance record with ID {id}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"=== MAINTENANCE UPDATE: Fatal error ===");
+                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         [HttpDelete("{id}")]

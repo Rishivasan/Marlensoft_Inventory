@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:inventory/services/api_service.dart';
+import 'package:inventory/model/allocation_model.dart';
 
 class AddAllocation extends StatefulWidget {
   final String assetId;
   final String? itemName;
   final String? assetType;
   final VoidCallback onAllocationAdded;
+  final AllocationModel? existingAllocation; // Add this for editing
 
   const AddAllocation({
     super.key,
@@ -13,6 +15,7 @@ class AddAllocation extends StatefulWidget {
     this.itemName,
     this.assetType,
     required this.onAllocationAdded,
+    this.existingAllocation, // Add this parameter
   });
 
   @override
@@ -39,6 +42,33 @@ class _AddAllocationState extends State<AddAllocation> {
     'In Use',
     'Under Maintenance',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Pre-populate fields if editing existing allocation record
+    if (widget.existingAllocation != null) {
+      final allocation = widget.existingAllocation!;
+      if (allocation.issuedDate != null) {
+        _issueDateController.text = _formatDateForInput(allocation.issuedDate!);
+      }
+      _employeeNameController.text = allocation.employeeName;
+      _teamNameController.text = allocation.teamName;
+      _purposeController.text = allocation.purpose;
+      if (allocation.expectedReturnDate != null) {
+        _expectedReturnDateController.text = _formatDateForInput(allocation.expectedReturnDate!);
+      }
+      if (allocation.actualReturnDate != null) {
+        _actualReturnDateController.text = _formatDateForInput(allocation.actualReturnDate!);
+      }
+      _selectedStatus = allocation.availabilityStatus;
+    }
+  }
+  
+  String _formatDateForInput(DateTime date) {
+    return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+  }
 
   @override
   void dispose() {
@@ -96,11 +126,10 @@ class _AddAllocationState extends State<AddAllocation> {
       final apiService = ApiService();
       
       // Create allocation data
-      final allocationData = {
+      final allocationData = <String, dynamic>{
         'assetId': widget.assetId,
         'assetType': widget.assetType ?? 'Unknown',
         'itemName': widget.itemName ?? 'Unknown',
-        'employeeId': 'EMP${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}', // Generate employee ID
         'employeeName': _employeeNameController.text,
         'teamName': _teamNameController.text,
         'purpose': _purposeController.text,
@@ -110,15 +139,33 @@ class _AddAllocationState extends State<AddAllocation> {
         'availabilityStatus': _selectedStatus,
       };
 
-      print('DEBUG: Submitting allocation data: $allocationData');
+      // Only include ID, employeeId and createdDate for updates, not for new records
+      if (widget.existingAllocation != null) {
+        allocationData['allocationId'] = widget.existingAllocation!.allocationId;
+        allocationData['employeeId'] = widget.existingAllocation!.employeeId;
+        allocationData['createdDate'] = widget.existingAllocation!.createdDate.toIso8601String();
+      } else {
+        // Generate employee ID for new records
+        allocationData['employeeId'] = 'EMP${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
+      }
 
-      // Call API to add allocation record
-      final response = await apiService.addAllocationRecord(allocationData);
+      print('DEBUG: Submitting allocation data: $allocationData');
+      print('DEBUG: Is update mode: ${widget.existingAllocation != null}');
+      if (widget.existingAllocation != null) {
+        print('DEBUG: Allocation ID: ${widget.existingAllocation!.allocationId}');
+      }
+
+      // Call API to add or update allocation record
+      final response = widget.existingAllocation != null
+          ? await apiService.updateAllocationRecord(widget.existingAllocation!.allocationId, allocationData)
+          : await apiService.addAllocationRecord(allocationData);
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Allocation record added successfully!'),
+          SnackBar(
+            content: Text(widget.existingAllocation != null 
+                ? 'Allocation record updated successfully!'
+                : 'Allocation record added successfully!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -128,10 +175,13 @@ class _AddAllocationState extends State<AddAllocation> {
         widget.onAllocationAdded();
       }
     } catch (e) {
-      print('DEBUG: Full error details: $e');
+      print('DEBUG: Error in _submitForm: $e');
       if (mounted) {
         // Show more detailed error message
-        String errorMessage = 'Error adding allocation record: ';
+        String errorMessage = widget.existingAllocation != null 
+            ? 'Error updating allocation record: '
+            : 'Error adding allocation record: ';
+            
         if (e.toString().contains('connection')) {
           errorMessage += 'Cannot connect to server. Please check if backend is running.';
         } else if (e.toString().contains('404')) {
@@ -171,18 +221,22 @@ class _AddAllocationState extends State<AddAllocation> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Add new tool for usage & allocation',
-                  style: TextStyle(
+                Text(
+                  widget.existingAllocation != null 
+                      ? 'Edit allocation record'
+                      : 'Add new tool for usage & allocation',
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF111827),
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  'Please enter the details below and click submit to add a new tool',
-                  style: TextStyle(
+                Text(
+                  widget.existingAllocation != null
+                      ? 'Update the details below and click submit to save changes'
+                      : 'Please enter the details below and click submit to add a new tool',
+                  style: const TextStyle(
                     fontSize: 14,
                     color: Color(0xFF6B7280),
                   ),
@@ -349,9 +403,9 @@ class _AddAllocationState extends State<AddAllocation> {
                           valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
-                    : const Text(
-                        'Submit',
-                        style: TextStyle(
+                    : Text(
+                        widget.existingAllocation != null ? 'Update' : 'Submit',
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
