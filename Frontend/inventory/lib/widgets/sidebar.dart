@@ -66,8 +66,8 @@ class SidebarWidget extends ConsumerWidget {
                   padding: EdgeInsets.only(left: isExpanded ? 16 : 0),
                   child: SvgPicture.asset(
                     isExpanded
-                        ? "assets/images/inveon 1.svg" // ✅ 200 width logo
-                        : "assets/images/Group2.svg", // ✅ 70 width logo
+                        ? "assets/images/inveon 1.svg" //  200 width logo
+                        : "assets/images/Group2.svg", //  70 width logo
                     width: isExpanded ? 120 : 26,
                   ),
                 ),
@@ -146,8 +146,8 @@ class SidebarWidget extends ConsumerWidget {
                   padding: EdgeInsets.only(left: isExpanded ? 16 : 0),
                   child: SvgPicture.asset(
                     isExpanded
-                        ? "assets/images/New Logo with black subtext 1.svg" // ✅ 200 width logo
-                        : "assets/images/Frame2094.svg", // ✅ 70 width logo
+                        ? "assets/images/New Logo with black subtext 1.svg" //  200 width logo
+                        : "assets/images/Frame2094.svg", //  70 width logo
                     width: isExpanded ? 140 : 26,
                   ),
                 ),

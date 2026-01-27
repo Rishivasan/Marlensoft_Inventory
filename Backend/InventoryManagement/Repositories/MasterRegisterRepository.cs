@@ -163,7 +163,7 @@ SELECT
     END AS Type,
 
     CASE
-        WHEN m.ItemType = 'Tool' THEN tm.VendorName
+        WHEN m.ItemType = 'Tool' THEN tm.Vendor
         WHEN m.ItemType IN ('Asset','Consumable') THEN ac.Vendor
         WHEN m.ItemType = 'MMD' THEN mm.Vendor
         ELSE ''
@@ -172,7 +172,7 @@ SELECT
     CASE
         WHEN m.ItemType = 'Tool' THEN tm.StorageLocation
         WHEN m.ItemType IN ('Asset','Consumable') THEN ac.StorageLocation
-        WHEN m.ItemType = 'MMD' THEN mm.Location
+        WHEN m.ItemType = 'MMD' THEN mm.StorageLocation
         ELSE ''
     END AS Location
 

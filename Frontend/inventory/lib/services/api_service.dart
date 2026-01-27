@@ -5,7 +5,14 @@ import 'package:inventory/model/maintenance_model.dart';
 import 'package:inventory/model/allocation_model.dart';
 
 class ApiService {
-  static const String baseUrl = "http://localhost:5069";
+  // Try multiple possible backend URLs
+  static const List<String> possibleUrls = [
+    "http://localhost:5069",      // Command line / Project profile
+    "http://localhost:38234",     // IIS Express
+    "http://localhost:7294",      // HTTPS Project profile
+  ];
+  
+  static String baseUrl = "http://localhost:5069"; // Default
 
   // Get item by ID (for product detail screen)
   Future<MasterListModel?> getMasterListById(String id) async {
@@ -79,7 +86,11 @@ class ApiService {
     try {
       final url = "$baseUrl/api/maintenance/$assetId";
       print('DEBUG: API - Calling URL: $url');
-      final response = await http.get(Uri.parse(url));
+      
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+      ).timeout(const Duration(seconds: 10));
       
       print('DEBUG: API - Maintenance response status: ${response.statusCode}');
       print('DEBUG: API - Maintenance response body: ${response.body}');
@@ -87,13 +98,22 @@ class ApiService {
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         print('DEBUG: API - Parsed ${data.length} maintenance records');
-        return data.map((json) => MaintenanceModel.fromJson(json)).toList();
+        
+        if (data.isNotEmpty) {
+          print('DEBUG: API - Sample maintenance record: ${data.first}');
+        }
+        
+        final maintenanceList = data.map((json) => MaintenanceModel.fromJson(json)).toList();
+        print('DEBUG: API - Successfully converted to ${maintenanceList.length} MaintenanceModel objects');
+        return maintenanceList;
       } else {
         print('DEBUG: API - No maintenance records found (status: ${response.statusCode})');
+        print('DEBUG: API - Error response: ${response.body}');
         return []; // Return empty list if no maintenance records found
       }
     } catch (e) {
       print("DEBUG: API - Error loading maintenance data: $e");
+      print("DEBUG: API - Error type: ${e.runtimeType}");
       return []; // Return empty list on error
     }
   }
@@ -123,17 +143,38 @@ class ApiService {
 
   // Get allocation records for an asset
   Future<List<AllocationModel>> getAllocationsByAssetId(String assetId) async {
+    print('DEBUG: API - getAllocationsByAssetId called with: $assetId');
     try {
-      final response = await http.get(Uri.parse("$baseUrl/api/allocation/$assetId"));
+      final url = "$baseUrl/api/allocation/$assetId";
+      print('DEBUG: API - Calling URL: $url');
+      
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+      ).timeout(const Duration(seconds: 10));
+      
+      print('DEBUG: API - Allocation response status: ${response.statusCode}');
+      print('DEBUG: API - Allocation response body: ${response.body}');
       
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        return data.map((json) => AllocationModel.fromJson(json)).toList();
+        print('DEBUG: API - Parsed ${data.length} allocation records');
+        
+        if (data.isNotEmpty) {
+          print('DEBUG: API - Sample allocation record: ${data.first}');
+        }
+        
+        final allocationList = data.map((json) => AllocationModel.fromJson(json)).toList();
+        print('DEBUG: API - Successfully converted to ${allocationList.length} AllocationModel objects');
+        return allocationList;
       } else {
+        print('DEBUG: API - No allocation records found (status: ${response.statusCode})');
+        print('DEBUG: API - Error response: ${response.body}');
         return []; // Return empty list if no allocation records found
       }
     } catch (e) {
-      print("Error loading allocation data: $e");
+      print("DEBUG: API - Error loading allocation data: $e");
+      print("DEBUG: API - Error type: ${e.runtimeType}");
       return []; // Return empty list on error
     }
   }

@@ -513,14 +513,14 @@ class TopLayer extends ConsumerWidget {
   }
 
   void _handleDelete(BuildContext context, WidgetRef ref) async {
-    print('🔥 _handleDelete called');
+    print(' _handleDelete called');
     final selectedItems = ref.read(selectedItemsProvider);
     final masterListAsync = ref.read(masterListProvider);
     
-    print('🔥 Selected items: $selectedItems');
+    print(' Selected items: $selectedItems');
     
     if (selectedItems.isEmpty) {
-      print('🔥 No items selected, returning');
+      print(' No items selected, returning');
       return;
     }
 
@@ -544,7 +544,7 @@ class TopLayer extends ConsumerWidget {
       ),
     );
 
-    print('🔥 Confirmation result: $confirmed');
+    print(' Confirmation result: $confirmed');
     if (confirmed != true) return;
 
     // Use a completer to control dialog lifecycle

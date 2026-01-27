@@ -10,8 +10,7 @@ class DioClient {
         sendTimeout: const Duration(seconds: 8),
         headers: {
           "Content-Type": "application/json",
-        },
-      ),
+        },      ),
     );
 
     // Add interceptor for better logging (only in debug mode)
