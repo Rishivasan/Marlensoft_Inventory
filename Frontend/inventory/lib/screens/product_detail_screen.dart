@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:inventory/model/master_list_model.dart';
 import 'package:inventory/model/maintenance_model.dart';
 import 'package:inventory/model/allocation_model.dart';
@@ -7,6 +8,10 @@ import 'package:inventory/services/api_service.dart';
 import 'package:inventory/dialogs/dialog_pannel_helper.dart';
 import 'package:inventory/screens/add_forms/add_maintenance_service.dart';
 import 'package:inventory/screens/add_forms/add_allocation.dart';
+import 'package:inventory/screens/add_forms/add_mmd.dart';
+import 'package:inventory/screens/add_forms/add_tool.dart';
+import 'package:inventory/screens/add_forms/add_asset.dart';
+import 'package:inventory/screens/add_forms/add_consumable.dart';
 import 'package:inventory/providers/header_state.dart';
 import 'package:auto_route/auto_route.dart';
 
@@ -65,7 +70,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
       final data = await apiService.getMasterListById(widget.id);
       
       if (data != null) {
-        print('DEBUG: Product data loaded successfully: ${data.name}');
+        print('DEBUG: Product data loaded successfully:');
+        print('  - Name: ${data.name}');
+        print('  - Type: ${data.type}');
+        print('  - ItemType: ${data.itemType}');
+        print('  - Supplier: ${data.supplier}');
+        print('  - Location: ${data.location}');
+        print('  - ResponsibleTeam: ${data.responsibleTeam}');
+        print('  - AvailabilityStatus: ${data.availabilityStatus}');
+        
         setState(() {
           productData = data;
           loading = false;
@@ -237,7 +250,111 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
       });
     }
   }
+  
+  void _openEditDialog() {
+    if (productData == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Product data not loaded yet. Please wait.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
 
+    final itemType = productData!.itemType.toLowerCase();
+    final assetType = productData!.type.toLowerCase();
+    final itemName = productData!.name.toLowerCase();
+    final assetId = productData!.assetId.toLowerCase();
+    
+    print('DEBUG: Opening edit dialog for item type: $itemType, asset type: $assetType, name: $itemName, assetId: $assetId');
+
+    Widget? editForm;
+    String dialogType = '';
+    
+    // Enhanced item type detection with priority order
+    if (_isMMDType(itemType, assetType, itemName, assetId)) {
+      dialogType = 'MMD';
+      editForm = AddMmd(
+        submit: () => _loadProductData(),
+        existingData: productData, // Pass existing data
+      );
+    } else if (_isToolType(itemType, assetType, itemName, assetId)) {
+      dialogType = 'Tool';
+      editForm = AddTool(
+        submit: () => _loadProductData(),
+        existingData: productData, // Pass existing data
+      );
+    } else if (_isConsumableType(itemType, assetType, itemName, assetId)) {
+      dialogType = 'Consumable';
+      editForm = AddConsumable(
+        submit: () => _loadProductData(),
+        existingData: productData, // Pass existing data
+      );
+    } else if (_isAssetType(itemType, assetType, itemName, assetId)) {
+      dialogType = 'Asset';
+      editForm = AddAsset(
+        submit: () => _loadProductData(),
+        existingData: productData, // Pass existing data
+      );
+    } else {
+      // Default to Tool if no specific type is detected
+      print('DEBUG: Could not determine specific item type. Defaulting to Tool. ItemType: $itemType, AssetType: $assetType');
+      dialogType = 'Tool';
+      editForm = AddTool(
+        submit: () => _loadProductData(),
+        existingData: productData, // Pass existing data
+      );
+    }
+
+    print('DEBUG: Opening $dialogType dialog for item: ${productData!.name}');
+    
+    DialogPannelHelper().showAddPannel(
+      context: context,
+      addingItem: editForm,
+    );
+  }
+
+  bool _isMMDType(String itemType, String assetType, String itemName, String assetId) {
+    const mmdKeywords = ['mmd', 'measuring', 'monitoring', 'device', 'calibration', 'meter', 'gauge'];
+    return mmdKeywords.any((keyword) => 
+      itemType.contains(keyword) || 
+      assetType.contains(keyword) || 
+      itemName.contains(keyword) || 
+      assetId.contains(keyword)
+    );
+  }
+
+  bool _isToolType(String itemType, String assetType, String itemName, String assetId) {
+    const toolKeywords = ['tool', 'equipment', 'instrument', 'wrench', 'drill', 'hammer'];
+    return toolKeywords.any((keyword) => 
+      itemType.contains(keyword) || 
+      assetType.contains(keyword) || 
+      itemName.contains(keyword) || 
+      assetId.contains(keyword)
+    );
+  }
+
+  bool _isConsumableType(String itemType, String assetType, String itemName, String assetId) {
+    const consumableKeywords = ['consumable', 'material', 'supply', 'chemical', 'reagent', 'disposable'];
+    return consumableKeywords.any((keyword) => 
+      itemType.contains(keyword) || 
+      assetType.contains(keyword) || 
+      itemName.contains(keyword) || 
+      assetId.contains(keyword)
+    );
+  }
+
+  bool _isAssetType(String itemType, String assetType, String itemName, String assetId) {
+    const assetKeywords = ['asset', 'machine', 'equipment', 'furniture', 'computer', 'vehicle'];
+    return assetKeywords.any((keyword) => 
+      itemType.contains(keyword) || 
+      assetType.contains(keyword) || 
+      itemName.contains(keyword) || 
+      assetId.contains(keyword)
+    );
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -385,16 +502,19 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                     ),
                     const SizedBox(width: 8), // Reduced from 12
                     // Edit Icon
-                    Container(
-                      padding: const EdgeInsets.all(6), // Reduced from 8
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF3F4F6),
-                        borderRadius: BorderRadius.circular(4), // Reduced from 6
-                      ),
-                      child: const Icon(
-                        Icons.edit_outlined,
-                        size: 14, // Reduced from 16
-                        color: Color(0xFF6B7280),
+                    GestureDetector(
+                      onTap: () => _openEditDialog(),
+                      child: Container(
+                        padding: const EdgeInsets.all(6), // Reduced from 8
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF3F4F6),
+                          borderRadius: BorderRadius.circular(4), // Reduced from 6
+                        ),
+                        child: const Icon(
+                          Icons.edit_outlined,
+                          size: 14, // Reduced from 16
+                          color: Color(0xFF6B7280),
+                        ),
                       ),
                     ),
                   ],
@@ -725,10 +845,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                   trailing: [
                     IconButton(
                       onPressed: () {},
-                      icon: const Icon(
-                        Icons.search,
-                        color: Color(0xFF9CA3AF),
-                        size: 12,
+                      icon: SvgPicture.asset(
+                        "assets/images/Vector.svg",
+                        width: 12,
                       ),
                     ),
                   ],
@@ -816,10 +935,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                   trailing: [
                     IconButton(
                       onPressed: () {},
-                      icon: const Icon(
-                        Icons.search,
-                        color: Color(0xFF9CA3AF),
-                        size: 12,
+                      icon: SvgPicture.asset(
+                        "assets/images/Vector.svg",
+                        width: 12,
                       ),
                     ),
                   ],

@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:inventory/providers/master_list_provider.dart';
 import 'package:inventory/services/api_service.dart';
+import 'package:inventory/model/master_list_model.dart';
 
 class AddAsset extends StatefulWidget {
-  const AddAsset({super.key, required this.submit});
+  const AddAsset({
+    super.key, 
+    required this.submit,
+    this.existingData, // Add parameter for existing Asset data
+  });
 
   final VoidCallback submit;
+  final MasterListModel? existingData; // Existing data for editing
 
   @override
   State<AddAsset> createState() => _AddAssetState();
@@ -14,6 +19,7 @@ class AddAsset extends StatefulWidget {
 
 class _AddAssetState extends State<AddAsset> {
   final _formKey = GlobalKey<FormState>();
+  bool _isSubmitting = false; // Add submission state tracking
 
   // Asset information
   final _assetIdCtrl = TextEditingController();
@@ -74,6 +80,84 @@ class _AddAssetState extends State<AddAsset> {
     super.initState();
     _assetCostCtrl.addListener(_calculateTotalCost);
     _extraChargesCtrl.addListener(_calculateTotalCost);
+    
+    // Pre-populate form if existing data is provided
+    if (widget.existingData != null) {
+      _populateFormWithExistingData();
+    }
+  }
+  
+  void _populateFormWithExistingData() {
+    final data = widget.existingData!;
+    
+    // Basic information from MasterListModel
+    _assetIdCtrl.text = data.assetId;
+    _assetNameCtrl.text = data.name;
+    _supplierNameCtrl.text = data.supplier;
+    _storageLocationCtrl.text = data.location;
+    
+    print('DEBUG: Pre-populated Asset form with basic data: ${data.name}');
+    
+    // Fetch complete Asset details from the Asset table
+    _fetchCompleteAssetDetails(data.assetId);
+  }
+  
+  Future<void> _fetchCompleteAssetDetails(String assetId) async {
+    print('DEBUG: Fetching complete Asset details for ID: $assetId');
+    try {
+      final apiService = ApiService();
+      final completeData = await apiService.getCompleteItemDetails(assetId, 'Asset');
+      
+      if (completeData != null) {
+        print('DEBUG: Complete Asset data received: $completeData');
+        
+        // Populate all Asset-specific fields
+        setState(() {
+          // Basic fields
+          _assetIdCtrl.text = completeData['AssetId']?.toString() ?? _assetIdCtrl.text;
+          _assetNameCtrl.text = completeData['AssetName']?.toString() ?? _assetNameCtrl.text;
+          _supplierNameCtrl.text = completeData['Vendor']?.toString() ?? _supplierNameCtrl.text;
+          _storageLocationCtrl.text = completeData['StorageLocation']?.toString() ?? _storageLocationCtrl.text;
+          
+          // Asset-specific fields
+          selectedCategory = completeData['Category']?.toString();
+          _productsCtrl.text = completeData['Product']?.toString() ?? '';
+          _toolSpecificationsCtrl.text = completeData['Specifications']?.toString() ?? '';
+          _quantityCtrl.text = completeData['Quantity']?.toString() ?? '';
+          
+          // Purchase information
+          _poNumberCtrl.text = completeData['PoNumber']?.toString() ?? '';
+          _invoiceNumberCtrl.text = completeData['InvoiceNumber']?.toString() ?? '';
+          _assetCostCtrl.text = completeData['AssetCost']?.toString() ?? '';
+          _extraChargesCtrl.text = completeData['ExtraCharges']?.toString() ?? '';
+          
+          // Dates
+          if (completeData['PoDate'] != null) {
+            selectedPoDate = DateTime.tryParse(completeData['PoDate'].toString());
+          }
+          if (completeData['InvoiceDate'] != null) {
+            selectedInvoiceDate = DateTime.tryParse(completeData['InvoiceDate'].toString());
+          }
+          
+          // Maintenance info
+          _depreciationPeriodCtrl.text = completeData['DepreciationPeriod']?.toString() ?? '';
+          selectedMaintenanceFrequency = completeData['MaintenanceFrequency']?.toString();
+          selectedAssetStatus = completeData['Status'] == true ? 'Active' : 'Inactive';
+          _responsiblePersonCtrl.text = completeData['ResponsibleTeam']?.toString() ?? '';
+          _stockMsiAssetCtrl.text = completeData['MsiTeam']?.toString() ?? '';
+          _additionalNotesCtrl.text = completeData['Remarks']?.toString() ?? '';
+        });
+        
+        // Recalculate total cost
+        _calculateTotalCost();
+        
+        print('DEBUG: Successfully populated all Asset fields');
+      } else {
+        print('DEBUG: No complete Asset data found, using basic data only');
+      }
+    } catch (e) {
+      print('DEBUG: Error fetching complete Asset details: $e');
+    }
   }
 
   @override
@@ -195,19 +279,38 @@ class _AddAssetState extends State<AddAsset> {
 
   // Method to collect form data and submit to API
   Future<void> _submitAsset() async {
+    print('DEBUG: _submitAsset called - Current submitting state: $_isSubmitting');
+    
+    // Prevent multiple submissions
+    if (_isSubmitting) {
+      print('DEBUG: Submission already in progress, ignoring duplicate call');
+      return;
+    }
+    
     if (!_formKey.currentState!.validate()) {
+      print('DEBUG: Form validation failed');
       return;
     }
 
+    print('DEBUG: Form validation passed, setting submitting state');
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
     try {
+      print('DEBUG: Proceeding with asset submission');
+
       // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      }
 
       // Collect form data
       final assetData = {
@@ -232,15 +335,19 @@ class _AddAssetState extends State<AddAsset> {
         "MsiTeam": _stockMsiAssetCtrl.text.trim(),
         "Remarks": _additionalNotesCtrl.text.trim(),
         "ItemTypeKey": 1, // 1 for Asset, 2 for Consumable
-        "CreatedBy": "User", // You can get this from user session
+        "CreatedBy": "User",
         "UpdatedBy": "User",
         "CreatedDate": DateTime.now().toIso8601String(),
         "UpdatedDate": null,
         "Status": selectedAssetStatus == "Active",
       };
 
+      print('DEBUG: Asset data prepared: $assetData');
+
       // Call API to add asset
+      print('DEBUG: Calling API to add asset');
       await ApiService().addAssetConsumable(assetData);
+      print('DEBUG: API call successful');
 
       // Close loading dialog
       if (mounted) Navigator.of(context).pop();
@@ -254,18 +361,44 @@ class _AddAssetState extends State<AddAsset> {
       // Show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Asset added successfully")),
+          const SnackBar(
+            content: Text("Asset added successfully"),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
         );
       }
+      
+      print('DEBUG: Asset creation completed successfully');
     } catch (e) {
-      // Close loading dialog
-      if (mounted) Navigator.of(context).pop();
+      print('DEBUG: Error in _submitAsset: $e');
+      
+      // Close loading dialog if still open
+      if (mounted) {
+        try {
+          Navigator.of(context).pop();
+        } catch (popError) {
+          print('DEBUG: Error closing loading dialog: $popError');
+        }
+      }
 
       // Show error message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to add asset: $e")),
+          SnackBar(
+            content: Text("Failed to add asset: $e"),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
         );
+      }
+    } finally {
+      // Reset submitting state
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+        print('DEBUG: Submitting state reset to false');
       }
     }
   }
@@ -277,10 +410,10 @@ class _AddAssetState extends State<AddAsset> {
       child: Column(
         children: [
           // HEADER
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              "Add new asset",
+              widget.existingData != null ? "Edit Asset" : "Add new asset",
               style: TextStyle(
                 color: Color.fromRGBO(0, 0, 0, 1),
                 fontSize: 16,
@@ -289,10 +422,12 @@ class _AddAssetState extends State<AddAsset> {
             ),
           ),
           const SizedBox(height: 4),
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              "Please enter the details below and click submit to add a new asset",
+              widget.existingData != null 
+                ? "Please update the details below and click submit to save changes"
+                : "Please enter the details below and click submit to add a new asset",
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
@@ -837,22 +972,33 @@ class _AddAssetState extends State<AddAsset> {
                 width: 120,
                 height: 36,
                 child: ElevatedButton(
-                  onPressed: _submitAsset,
+                  onPressed: _isSubmitting ? null : _submitAsset,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xff00599A),
+                    backgroundColor: _isSubmitting 
+                        ? Colors.grey 
+                        : const Color(0xff00599A),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    "Submit",
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text(
+                          "Submit",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
               ),
             ],

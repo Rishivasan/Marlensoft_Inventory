@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:inventory/services/api_service.dart';
+import 'package:inventory/model/master_list_model.dart';
 
 class AddTool extends StatefulWidget {
-  const AddTool({super.key, required this.submit});
+  const AddTool({
+    super.key, 
+    required this.submit,
+    this.existingData, // Add parameter for existing Tool data
+  });
 
   final VoidCallback submit;
+  final MasterListModel? existingData; // Existing data for editing
 
   @override
   State<AddTool> createState() => _AddToolState();
@@ -13,6 +19,7 @@ class AddTool extends StatefulWidget {
 
 class _AddToolState extends State<AddTool> {
   final _formKey = GlobalKey<FormState>();
+  bool _isSubmitting = false; // Add submission state tracking
 
   // Tool information
   final _toolIdCtrl = TextEditingController();
@@ -79,19 +86,38 @@ class _AddToolState extends State<AddTool> {
 
   // Method to collect form data and submit to API
   Future<void> _submitTool() async {
+    print('DEBUG: _submitTool called - Current submitting state: $_isSubmitting');
+    
+    // Prevent multiple submissions
+    if (_isSubmitting) {
+      print('DEBUG: Tool submission already in progress, ignoring duplicate call');
+      return;
+    }
+    
     if (!_formKey.currentState!.validate()) {
+      print('DEBUG: Tool Form validation failed');
       return;
     }
 
+    print('DEBUG: Tool Form validation passed, setting submitting state');
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
     try {
+      print('DEBUG: Proceeding with Tool submission');
+
       // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      }
 
       // Collect form data
       final toolData = {
@@ -121,15 +147,19 @@ class _AddToolState extends State<AddTool> {
         "Notes": _additionalNotesCtrl.text.trim(),
         "MsiAsset": _stockMsiAssetCtrl.text.trim(),
         "KernAsset": _kermAssetCtrl.text.trim(),
-        "CreatedBy": "User", // You can get this from user session
+        "CreatedBy": "User",
         "UpdatedBy": "User",
         "CreatedDate": DateTime.now().toIso8601String(),
         "UpdatedDate": null,
-        "Status": selectedToolStatus == "Active" ? 1 : 0, // Convert to int: 1 for active, 0 for inactive
+        "Status": selectedToolStatus == "Active" ? 1 : 0,
       };
 
+      print('DEBUG: Tool data prepared: $toolData');
+
       // Call API to add tool
+      print('DEBUG: Calling API to add tool');
       await ApiService().addTool(toolData);
+      print('DEBUG: Tool API call successful');
 
       // Close loading dialog
       if (mounted) Navigator.of(context).pop();
@@ -146,12 +176,23 @@ class _AddToolState extends State<AddTool> {
           const SnackBar(
             content: Text("Tool added successfully!"),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
           ),
         );
       }
+      
+      print('DEBUG: Tool creation completed successfully');
     } catch (e) {
-      // Close loading dialog
-      if (mounted) Navigator.of(context).pop();
+      print('DEBUG: Error in _submitTool: $e');
+      
+      // Close loading dialog if still open
+      if (mounted) {
+        try {
+          Navigator.of(context).pop();
+        } catch (popError) {
+          print('DEBUG: Error closing loading dialog: $popError');
+        }
+      }
 
       // Show error message
       if (mounted) {
@@ -159,8 +200,17 @@ class _AddToolState extends State<AddTool> {
           SnackBar(
             content: Text("Failed to add tool: ${e.toString()}"),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
           ),
         );
+      }
+    } finally {
+      // Reset submitting state
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+        print('DEBUG: Tool submitting state reset to false');
       }
     }
   }
@@ -170,6 +220,92 @@ class _AddToolState extends State<AddTool> {
     super.initState();
     _toolCostCtrl.addListener(_calculateTotalCost);
     _extraChargesCtrl.addListener(_calculateTotalCost);
+    
+    // Pre-populate form if existing data is provided
+    if (widget.existingData != null) {
+      _populateFormWithExistingData();
+    }
+  }
+  
+  void _populateFormWithExistingData() {
+    final data = widget.existingData!;
+    
+    // Basic information from MasterListModel
+    _toolIdCtrl.text = data.assetId;
+    _toolNameCtrl.text = data.name;
+    _supplierNameCtrl.text = data.supplier;
+    _storageLocationCtrl.text = data.location;
+    
+    print('DEBUG: Pre-populated Tool form with basic data: ${data.name}');
+    
+    // Fetch complete Tool details from the Tool table
+    _fetchCompleteToolDetails(data.assetId);
+  }
+  
+  Future<void> _fetchCompleteToolDetails(String toolId) async {
+    print('DEBUG: Fetching complete Tool details for ID: $toolId');
+    try {
+      final apiService = ApiService();
+      final completeData = await apiService.getCompleteItemDetails(toolId, 'Tool');
+      
+      if (completeData != null) {
+        print('DEBUG: Complete Tool data received: $completeData');
+        
+        // Populate all Tool-specific fields
+        setState(() {
+          // Basic fields
+          _toolIdCtrl.text = completeData['ToolsId']?.toString() ?? _toolIdCtrl.text;
+          _toolNameCtrl.text = completeData['ToolName']?.toString() ?? _toolNameCtrl.text;
+          _supplierNameCtrl.text = completeData['Vendor']?.toString() ?? _supplierNameCtrl.text;
+          _storageLocationCtrl.text = completeData['StorageLocation']?.toString() ?? _storageLocationCtrl.text;
+          
+          // Tool-specific fields
+          selectedToolType = completeData['ToolType']?.toString();
+          _associatedProductNameCtrl.text = completeData['AssociatedProduct']?.toString() ?? '';
+          _articleCodeCtrl.text = completeData['ArticleCode']?.toString() ?? '';
+          _toolSpecificationsCtrl.text = completeData['Specifications']?.toString() ?? '';
+          
+          // Purchase information
+          _poNumberCtrl.text = completeData['PoNumber']?.toString() ?? '';
+          _invoiceNumberCtrl.text = completeData['InvoiceNumber']?.toString() ?? '';
+          _toolCostCtrl.text = completeData['ToolCost']?.toString() ?? '';
+          _extraChargesCtrl.text = completeData['ExtraCharges']?.toString() ?? '';
+          
+          // Dates
+          if (completeData['PoDate'] != null) {
+            selectedPoDate = DateTime.tryParse(completeData['PoDate'].toString());
+          }
+          if (completeData['InvoiceDate'] != null) {
+            selectedInvoiceDate = DateTime.tryParse(completeData['InvoiceDate'].toString());
+          }
+          if (completeData['LastAuditDate'] != null) {
+            selectedLastAuditDate = DateTime.tryParse(completeData['LastAuditDate'].toString());
+          }
+          
+          // Maintenance & Audit info
+          _toolLifespanCtrl.text = completeData['Lifespan']?.toString() ?? '';
+          _auditIntervalCtrl.text = completeData['AuditInterval']?.toString() ?? '';
+          selectedMaintenanceFrequency = completeData['MaintainanceFrequency']?.toString();
+          toolHandlingCertificateAvailable = completeData['HandlingCertificate'] == true;
+          _lastAuditNotesCtrl.text = completeData['LastAuditNotes']?.toString() ?? '';
+          _maximumToolOutputCtrl.text = completeData['MaxOutput']?.toString() ?? '';
+          selectedToolStatus = completeData['Status'] == 1 ? 'Active' : 'Inactive';
+          _responsiblePersonCtrl.text = completeData['ResponsibleTeam']?.toString() ?? '';
+          _stockMsiAssetCtrl.text = completeData['MsiAsset']?.toString() ?? '';
+          _kermAssetCtrl.text = completeData['KernAsset']?.toString() ?? '';
+          _additionalNotesCtrl.text = completeData['Notes']?.toString() ?? '';
+        });
+        
+        // Recalculate total cost
+        _calculateTotalCost();
+        
+        print('DEBUG: Successfully populated all Tool fields');
+      } else {
+        print('DEBUG: No complete Tool data found, using basic data only');
+      }
+    } catch (e) {
+      print('DEBUG: Error fetching complete Tool details: $e');
+    }
   }
 
   @override
@@ -300,11 +436,11 @@ class _AddToolState extends State<AddTool> {
       child: Column(
         children: [
           // HEADER
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              "Add new tool",
-              style: TextStyle(
+              widget.existingData != null ? "Edit Tool" : "Add new tool",
+              style: const TextStyle(
                 color: Color.fromRGBO(0, 0, 0, 1),
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -312,11 +448,13 @@ class _AddToolState extends State<AddTool> {
             ),
           ),
           const SizedBox(height: 4),
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              "Please enter the details below and click submit to add a new tool",
-              style: TextStyle(
+              widget.existingData != null 
+                ? "Please update the details below and click submit to save changes"
+                : "Please enter the details below and click submit to add a new tool",
+              style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
                 color: Color.fromRGBO(88, 88, 88, 1),
@@ -670,8 +808,8 @@ class _AddToolState extends State<AddTool> {
                   ),
                   const SizedBox(height: 22),
 
-                  // Maintenance and Audit information
-                  _sectionTitle("Maintenance and Audit information"),
+                  // Maintenance & Audit information
+                  _sectionTitle("Maintenance & Audit information"),
 
                   Row(
                     children: [
@@ -722,7 +860,7 @@ class _AddToolState extends State<AddTool> {
                             });
                           },
                           hint: const Text(
-                            "Enter the maintenance frequency",
+                            "Select the maintenance frequency",
                             style: TextStyle(
                               fontSize: 12,
                               color: Color.fromRGBO(144, 144, 144, 1),
@@ -730,7 +868,7 @@ class _AddToolState extends State<AddTool> {
                           ),
                           decoration: _inputDecoration(
                             label: _requiredLabel("Maintenance frequency"),
-                            hint: "Enter the maintenance frequency",
+                            hint: "Select the maintenance frequency",
                             suffixIcon: const Icon(
                               Icons.keyboard_arrow_down,
                               size: 16,
@@ -744,80 +882,42 @@ class _AddToolState extends State<AddTool> {
                         ),
                       ),
                       const SizedBox(width: 24),
-                      const Expanded(child: SizedBox()),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-
-                  Row(
-                    children: [
-                      Transform.scale(
-                        scale: 0.9,
-                        child: Checkbox(
+                      Expanded(
+                        child: CheckboxListTile(
+                          title: const Text(
+                            "Tool handling certificate available",
+                            style: TextStyle(fontSize: 12),
+                          ),
                           value: toolHandlingCertificateAvailable,
                           onChanged: (v) {
                             setState(() {
                               toolHandlingCertificateAvailable = v ?? false;
                             });
                           },
+                          controlAffinity: ListTileControlAffinity.leading,
+                          contentPadding: EdgeInsets.zero,
                         ),
-                      ),
-                      const Text(
-                        "Tool handling certificate available",
-                        style: TextStyle(fontSize: 12),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 10),
-
-                  Container(
-                    width: double.infinity,
-                    height: 90,
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: const Color.fromRGBO(210, 210, 210, 1),
-                      ),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Center(
-                      child: RichText(
-                        text: const TextSpan(
-                          text: "Click to upload",
-                          style: TextStyle(
-                            color: Colors.blue,
-                            fontSize: 12,
-                            decoration: TextDecoration.underline,
-                          ),
-                          children: [
-                            TextSpan(
-                              text: " or drag and drop",
-                              style: TextStyle(
-                                color: Colors.black54,
-                                decoration: TextDecoration.none,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-
-                  TextFormField(
-                    controller: _lastAuditNotesCtrl,
-                    decoration: _inputDecoration(
-                      label: _requiredLabel("Last audit notes"),
-                      hint: "Enter the last audit notes",
-                    ),
-                    style: const TextStyle(fontSize: 12),
-                    validator: (v) => (v == null || v.isEmpty)
-                        ? "The field cannot be empty"
-                        : null,
                   ),
                   const SizedBox(height: 14),
 
                   Row(
                     children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _lastAuditNotesCtrl,
+                          decoration: _inputDecoration(
+                            label: _requiredLabel("Last audit notes"),
+                            hint: "Enter the last audit notes",
+                          ),
+                          style: const TextStyle(fontSize: 12),
+                          validator: (v) => (v == null || v.isEmpty)
+                              ? "The field cannot be empty"
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(width: 24),
                       Expanded(
                         child: TextFormField(
                           readOnly: true,
@@ -850,26 +950,33 @@ class _AddToolState extends State<AddTool> {
                               : null,
                         ),
                       ),
-                      const SizedBox(width: 24),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _maximumToolOutputCtrl,
-                          decoration: _inputDecoration(
-                            label: _requiredLabel("Maximum tool output"),
-                            hint: "Enter the maximum tool output",
-                          ),
-                          style: const TextStyle(fontSize: 12),
-                          validator: (v) => (v == null || v.isEmpty)
-                              ? "The field cannot be empty"
-                              : null,
-                        ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 14),
 
                   Row(
                     children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _maximumToolOutputCtrl,
+                          keyboardType: TextInputType.number,
+                          decoration: _inputDecoration(
+                            label: _requiredLabel("Maximum tool output"),
+                            hint: "Enter the maximum tool output",
+                          ),
+                          style: const TextStyle(fontSize: 12),
+                          validator: (v) {
+                            if (v == null || v.isEmpty) {
+                              return "The field cannot be empty";
+                            }
+                            if (int.tryParse(v) == null) {
+                              return "Enter only numbers";
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 24),
                       Expanded(
                         child: DropdownButtonFormField<String>(
                           value: selectedToolStatus,
@@ -905,13 +1012,32 @@ class _AddToolState extends State<AddTool> {
                               : null,
                         ),
                       ),
-                      const SizedBox(width: 24),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  Row(
+                    children: [
                       Expanded(
                         child: TextFormField(
                           controller: _responsiblePersonCtrl,
                           decoration: _inputDecoration(
                             label: _requiredLabel("Responsible person/team"),
                             hint: "Enter the responsible person/team",
+                          ),
+                          style: const TextStyle(fontSize: 12),
+                          validator: (v) => (v == null || v.isEmpty)
+                              ? "The field cannot be empty"
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(width: 24),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _stockMsiAssetCtrl,
+                          decoration: _inputDecoration(
+                            label: _requiredLabel("Stock MSI asset"),
+                            hint: "Enter the stock MSI asset",
                           ),
                           style: const TextStyle(fontSize: 12),
                           validator: (v) => (v == null || v.isEmpty)
@@ -927,20 +1053,6 @@ class _AddToolState extends State<AddTool> {
                     children: [
                       Expanded(
                         child: TextFormField(
-                          controller: _stockMsiAssetCtrl,
-                          decoration: _inputDecoration(
-                            label: _requiredLabel("Stock MSI asset"),
-                            hint: "Enter the stock MSI asset",
-                          ),
-                          style: const TextStyle(fontSize: 12),
-                          validator: (v) => (v == null || v.isEmpty)
-                              ? "The field cannot be empty"
-                              : null,
-                        ),
-                      ),
-                      const SizedBox(width: 24),
-                      Expanded(
-                        child: TextFormField(
                           controller: _kermAssetCtrl,
                           decoration: _inputDecoration(
                             label: _requiredLabel("KERM asset"),
@@ -952,6 +1064,8 @@ class _AddToolState extends State<AddTool> {
                               : null,
                         ),
                       ),
+                      const SizedBox(width: 24),
+                      const Expanded(child: SizedBox()),
                     ],
                   ),
                   const SizedBox(height: 14),
@@ -1005,24 +1119,33 @@ class _AddToolState extends State<AddTool> {
                 width: 120,
                 height: 36,
                 child: ElevatedButton(
-                  onPressed: () async {
-                    await _submitTool();
-                  },
+                  onPressed: _isSubmitting ? null : _submitTool,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xff00599A),
+                    backgroundColor: _isSubmitting 
+                        ? Colors.grey 
+                        : const Color(0xff00599A),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    "Submit",
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text(
+                          "Submit",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
               ),
             ],
@@ -1032,4 +1155,3 @@ class _AddToolState extends State<AddTool> {
     );
   }
 }
-

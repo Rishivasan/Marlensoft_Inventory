@@ -124,8 +124,8 @@ class MasterListModel {
     return MasterListModel(
       sno: int.tryParse(json["sNo"].toString()) ?? 0,
       itemType: itemType,
-      refId: (json["refId"] ?? json["itemID"] ?? "").toString(),
-      assetId: (json["displayId"] ?? json["refId"] ?? json["itemID"] ?? "").toString(),
+      refId: (json["refId"] ?? json["itemID"] ?? json["ItemID"] ?? "").toString(),
+      assetId: (json["displayId"] ?? json["refId"] ?? json["itemID"] ?? json["ItemID"] ?? "").toString(),
 
       type: (json["type"] ??
               json["toolType"] ??
@@ -135,6 +135,7 @@ class MasterListModel {
 
       name: (json["name"] ??
               json["itemName"] ??
+              json["ItemName"] ??
               json["toolName"] ??
               json["assetName"] ??
               json["modelNumber"] ??
@@ -142,18 +143,25 @@ class MasterListModel {
           .toString(),
 
       supplier:
-          (json["supplier"] ?? json["vendor"] ?? json["vendorName"] ?? "")
+          (json["supplier"] ?? 
+           json["vendor"] ?? 
+           json["Vendor"] ??
+           json["vendorName"] ?? 
+           "")
               .toString(),
 
-      location: (json["location"] ?? json["storageLocation"] ?? "").toString(),
+      location: (json["location"] ?? 
+                 json["storageLocation"] ?? 
+                 json["StorageLocation"] ??
+                 "").toString(),
       
       // New enhanced fields
-      createdDate: DateTime.tryParse(json["createdDate"]?.toString() ?? "") ?? DateTime.now(),
-      responsibleTeam: (json["responsibleTeam"] ?? "").toString(),
-      nextServiceDue: json["nextServiceDue"] != null 
-          ? DateTime.tryParse(json["nextServiceDue"].toString()) 
+      createdDate: DateTime.tryParse(json["createdDate"]?.toString() ?? json["CreatedDate"]?.toString() ?? "") ?? DateTime.now(),
+      responsibleTeam: (json["responsibleTeam"] ?? json["ResponsibleTeam"] ?? "").toString(),
+      nextServiceDue: json["nextServiceDue"] != null || json["NextServiceDue"] != null
+          ? DateTime.tryParse((json["nextServiceDue"] ?? json["NextServiceDue"]).toString()) 
           : null,
-      availabilityStatus: (json["availabilityStatus"] ?? "Available").toString(),
+      availabilityStatus: (json["availabilityStatus"] ?? json["AvailabilityStatus"] ?? "Available").toString(),
     );
   }
 

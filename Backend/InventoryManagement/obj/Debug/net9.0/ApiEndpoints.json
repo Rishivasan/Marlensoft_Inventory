@@ -214,6 +214,43 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "InventoryManagement.Controllers.ItemDetailsController",
+    "Method": "GetItemDetails",
+    "RelativePath": "api/item-details/{itemId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "itemId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InventoryManagement.Controllers.ItemDetailsController",
+    "Method": "UpdateItemDetails",
+    "RelativePath": "api/item-details/{itemId}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "itemId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "updateData",
+        "Type": "System.Text.Json.JsonElement",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "InventoryManagement.Controllers.MaintenanceController",
     "Method": "GetAllMaintenance",
     "RelativePath": "api/maintenance",

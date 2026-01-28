@@ -24,7 +24,23 @@ namespace InventoryManagement.Repositories
 
         public async Task<int> CreateMmdsAsync(MmdsEntity mmds)
         {
-            var query = @"
+            using var connection = _context.CreateConnection();
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
+
+            try
+            {
+                // Check if MmdId already exists to prevent duplicates
+                var existsQuery = @"SELECT COUNT(1) FROM MmdsMaster WHERE MmdId = @MmdId";
+                var exists = await connection.QuerySingleAsync<int>(existsQuery, new { MmdId = mmds.MmdId }, transaction);
+                
+                if (exists > 0)
+                {
+                    throw new InvalidOperationException($"MMD with ID '{mmds.MmdId}' already exists.");
+                }
+
+                // First, insert into MmdsMaster
+                var mmdQuery = @"
 INSERT INTO MmdsMaster
 (
     MmdId, AccuracyClass, Vendor, CalibratedBy, Specifications,
@@ -45,8 +61,36 @@ VALUES
     @ManualLink, @StockMsi, @Remarks,
     @CreatedBy, GETDATE(), @Status
 )";
-            using var connection = _context.CreateConnection();
-            return await connection.ExecuteAsync(query, mmds);
+
+                var mmdResult = await connection.ExecuteAsync(mmdQuery, mmds, transaction);
+
+                // Then, insert into MasterRegister
+                var masterQuery = @"
+INSERT INTO MasterRegister
+(
+    RefId, ItemType, CreatedDate, IsActive
+)
+VALUES
+(
+    @RefId, @ItemType, GETDATE(), 1
+)";
+
+                var masterParams = new
+                {
+                    RefId = mmds.MmdId,
+                    ItemType = "MMD"
+                };
+
+                await connection.ExecuteAsync(masterQuery, masterParams, transaction);
+
+                transaction.Commit();
+                return mmdResult;
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
 
         public async Task<int> UpdateMmdsAsync(MmdsEntity mmds)

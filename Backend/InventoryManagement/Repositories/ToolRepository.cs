@@ -28,7 +28,23 @@ WHERE Status = 1;";
 
         public async Task<int> CreateToolAsync(ToolEntity tool)
         {
-            var query = @"
+            using var connection = _context.CreateConnection();
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
+
+            try
+            {
+                // Check if ToolsId already exists to prevent duplicates
+                var existsQuery = @"SELECT COUNT(1) FROM ToolsMaster WHERE ToolsId = @ToolsId";
+                var exists = await connection.QuerySingleAsync<int>(existsQuery, new { ToolsId = tool.ToolsId }, transaction);
+                
+                if (exists > 0)
+                {
+                    throw new InvalidOperationException($"Tool with ID '{tool.ToolsId}' already exists.");
+                }
+
+                // First, insert into ToolsMaster
+                var toolQuery = @"
 INSERT INTO ToolsMaster
 (
     ToolsId, ToolName, ToolType, AssociatedProduct, ArticleCode,
@@ -48,8 +64,35 @@ VALUES
     @MsiAsset, @KernAsset, @CreatedBy, GETDATE(), @Status
 );";
 
-            using var connection = _context.CreateConnection();
-            return await connection.ExecuteAsync(query, tool);
+                var toolResult = await connection.ExecuteAsync(toolQuery, tool, transaction);
+
+                // Then, insert into MasterRegister
+                var masterQuery = @"
+INSERT INTO MasterRegister
+(
+    RefId, ItemType, CreatedDate, IsActive
+)
+VALUES
+(
+    @RefId, @ItemType, GETDATE(), 1
+)";
+
+                var masterParams = new
+                {
+                    RefId = tool.ToolsId,
+                    ItemType = "Tool"
+                };
+
+                await connection.ExecuteAsync(masterQuery, masterParams, transaction);
+
+                transaction.Commit();
+                return toolResult;
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
 
         public async Task<int> UpdateToolAsync(ToolEntity tool)

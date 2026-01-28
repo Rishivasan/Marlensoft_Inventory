@@ -26,8 +26,16 @@ namespace InventoryManagement.Controllers
         [HttpGet("enhanced-master-list")]
         public async Task<IActionResult> GetEnhancedMasterList()
         {
-            var data = await _service.GetEnhancedMasterListAsync();
-            return Ok(data);
+            try
+            {
+                var data = await _service.GetEnhancedMasterListAsync();
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Database connection failed: {ex.Message}");
+                return StatusCode(500, new { error = "Database connection failed", message = ex.Message });
+            }
         }
     }
 }

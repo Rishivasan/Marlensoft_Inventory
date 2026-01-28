@@ -243,7 +243,7 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:html' as html;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -375,8 +375,9 @@ class TopLayer extends ConsumerWidget {
                               DialogPannelHelper().showAddPannel(
                                 context: context,
                                 addingItem: AddTool(
-                                  submit: () {
-                                    ref.invalidate(masterListProvider);
+                                  submit: () async {
+                                    print('DEBUG: TopLayer - Tool submitted, refreshing master list');
+                                    await ref.read(refreshMasterListProvider)();
                                   },
                                 ),
                               );
@@ -384,8 +385,9 @@ class TopLayer extends ConsumerWidget {
                               DialogPannelHelper().showAddPannel(
                                 context: context,
                                 addingItem: AddAsset(
-                                  submit: () {
-                                    ref.invalidate(masterListProvider);
+                                  submit: () async {
+                                    print('DEBUG: TopLayer - Asset submitted, refreshing master list');
+                                    await ref.read(refreshMasterListProvider)();
                                   },
                                 ),
                               );
@@ -393,8 +395,9 @@ class TopLayer extends ConsumerWidget {
                               DialogPannelHelper().showAddPannel(
                                 context: context,
                                 addingItem: AddMmd(
-                                  submit: () {
-                                    ref.invalidate(masterListProvider);
+                                  submit: () async {
+                                    print('DEBUG: TopLayer - MMD submitted, refreshing master list');
+                                    await ref.read(refreshMasterListProvider)();
                                   },
                                 ),
                               );
@@ -402,8 +405,9 @@ class TopLayer extends ConsumerWidget {
                               DialogPannelHelper().showAddPannel(
                                 context: context,
                                 addingItem: AddConsumable(
-                                  submit: () {
-                                    ref.invalidate(masterListProvider);
+                                  submit: () async {
+                                    print('DEBUG: TopLayer - Consumable submitted, refreshing master list');
+                                    await ref.read(refreshMasterListProvider)();
                                   },
                                 ),
                               );
@@ -706,7 +710,7 @@ class TopLayer extends ConsumerWidget {
     final masterListAsync = ref.read(masterListProvider);
     
     try {
-      print('🔥 Starting export without dialog');
+      print('🔥 Starting export');
 
       // Get the current state of masterListAsync
       final asyncValue = masterListAsync;
@@ -716,52 +720,30 @@ class TopLayer extends ConsumerWidget {
         final items = asyncValue.value!;
         print('🔥 Found ${items.length} items to export');
         
-        // Create simple CSV content directly
-        print('🔥 Starting CSV creation...');
+        // Use the ExportService
+        final result = await ExportService.exportToExcel(items);
         
-        List<String> csvLines = [];
-        csvLines.add('Item ID,Type,Item Name,Vendor,Created Date,Responsible Team,Storage Location');
-        
-        for (var item in items) {
-          csvLines.add([
-            item.assetId,
-            item.type,
-            item.assetName,
-            item.supplier,
-            "${item.createdDate.day}/${item.createdDate.month}/${item.createdDate.year}",
-            item.responsibleTeam,
-            item.location,
-          ].join(','));
+        if (result != null) {
+          print('🔥 Export successful: $result');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(kIsWeb 
+                ? 'CSV file downloaded successfully! (${items.length} items)'
+                : 'CSV file saved successfully! (${items.length} items)'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        } else {
+          print('🔥 Export failed');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Export failed. Please try again.'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 2),
+            ),
+          );
         }
-        
-        String csvContent = csvLines.join('\n');
-        String fileName = 'inventory_export_${DateTime.now().millisecondsSinceEpoch}.csv';
-        
-        // Create and trigger download
-        final bytes = utf8.encode(csvContent);
-        final blob = html.Blob([bytes]);
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..style.display = 'none';
-        
-        html.document.body?.children.add(anchor);
-        anchor.click();
-        html.document.body?.children.remove(anchor);
-        html.Url.revokeObjectUrl(url);
-        
-        print('🔥 CSV download triggered: $fileName');
-
-        // Show success message immediately
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('CSV file downloaded successfully! (${items.length} items)'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-        print('🔥 Export success message shown');
         
       } else if (asyncValue.isLoading) {
         print('🔥 Data is still loading');

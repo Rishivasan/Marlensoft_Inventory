@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:inventory/services/api_service.dart';
+import 'package:inventory/model/master_list_model.dart';
 
 class AddConsumable extends StatefulWidget {
-  const AddConsumable({super.key, required this.submit});
+  const AddConsumable({
+    super.key, 
+    required this.submit,
+    this.existingData, // Add parameter for existing Consumable data
+  });
 
   final VoidCallback submit;
+  final MasterListModel? existingData; // Existing data for editing
 
   @override
   State<AddConsumable> createState() => _AddConsumableState();
@@ -13,6 +19,7 @@ class AddConsumable extends StatefulWidget {
 
 class _AddConsumableState extends State<AddConsumable> {
   final _formKey = GlobalKey<FormState>();
+  bool _isSubmitting = false; // Add submission state tracking
 
   // -------------------------
   // Consumables information
@@ -79,6 +86,84 @@ class _AddConsumableState extends State<AddConsumable> {
     super.initState();
     _assetCostCtrl.addListener(_calculateTotalCost);
     _extraChargesCtrl.addListener(_calculateTotalCost);
+    
+    // Pre-populate form if existing data is provided
+    if (widget.existingData != null) {
+      _populateFormWithExistingData();
+    }
+  }
+  
+  void _populateFormWithExistingData() {
+    final data = widget.existingData!;
+    
+    // Basic information from MasterListModel
+    _assetIdCtrl.text = data.assetId;
+    _assetNameCtrl.text = data.name;
+    _supplierNameCtrl.text = data.supplier;
+    _storageLocationCtrl.text = data.location;
+    
+    print('DEBUG: Pre-populated Consumable form with basic data: ${data.name}');
+    
+    // Fetch complete Consumable details from the Consumable table
+    _fetchCompleteConsumableDetails(data.assetId);
+  }
+  
+  Future<void> _fetchCompleteConsumableDetails(String consumableId) async {
+    print('DEBUG: Fetching complete Consumable details for ID: $consumableId');
+    try {
+      final apiService = ApiService();
+      final completeData = await apiService.getCompleteItemDetails(consumableId, 'Consumable');
+      
+      if (completeData != null) {
+        print('DEBUG: Complete Consumable data received: $completeData');
+        
+        // Populate all Consumable-specific fields
+        setState(() {
+          // Basic fields
+          _assetIdCtrl.text = completeData['AssetId']?.toString() ?? _assetIdCtrl.text;
+          _assetNameCtrl.text = completeData['AssetName']?.toString() ?? _assetNameCtrl.text;
+          _supplierNameCtrl.text = completeData['Vendor']?.toString() ?? _supplierNameCtrl.text;
+          _storageLocationCtrl.text = completeData['StorageLocation']?.toString() ?? _storageLocationCtrl.text;
+          
+          // Consumable-specific fields
+          selectedCategory = completeData['Category']?.toString();
+          _productsCtrl.text = completeData['Product']?.toString() ?? '';
+          _toolSpecificationsCtrl.text = completeData['Specifications']?.toString() ?? '';
+          _quantityCtrl.text = completeData['Quantity']?.toString() ?? '';
+          
+          // Purchase information
+          _poNumberCtrl.text = completeData['PoNumber']?.toString() ?? '';
+          _invoiceNumberCtrl.text = completeData['InvoiceNumber']?.toString() ?? '';
+          _assetCostCtrl.text = completeData['AssetCost']?.toString() ?? '';
+          _extraChargesCtrl.text = completeData['ExtraCharges']?.toString() ?? '';
+          
+          // Dates
+          if (completeData['PoDate'] != null) {
+            selectedPoDate = DateTime.tryParse(completeData['PoDate'].toString());
+          }
+          if (completeData['InvoiceDate'] != null) {
+            selectedInvoiceDate = DateTime.tryParse(completeData['InvoiceDate'].toString());
+          }
+          
+          // Maintenance info
+          _depreciationPeriodCtrl.text = completeData['DepreciationPeriod']?.toString() ?? '';
+          selectedMaintenanceFrequency = completeData['MaintenanceFrequency']?.toString();
+          selectedConsumableStatus = completeData['Status'] == true ? 'Available' : 'Out of stock';
+          _responsiblePersonCtrl.text = completeData['ResponsibleTeam']?.toString() ?? '';
+          _stockMsiAssetCtrl.text = completeData['MsiTeam']?.toString() ?? '';
+          _additionalNotesCtrl.text = completeData['Remarks']?.toString() ?? '';
+        });
+        
+        // Recalculate total cost
+        _calculateTotalCost();
+        
+        print('DEBUG: Successfully populated all Consumable fields');
+      } else {
+        print('DEBUG: No complete Consumable data found, using basic data only');
+      }
+    } catch (e) {
+      print('DEBUG: Error fetching complete Consumable details: $e');
+    }
   }
 
   @override
@@ -200,19 +285,38 @@ class _AddConsumableState extends State<AddConsumable> {
 
   // Method to collect form data and submit to API
   Future<void> _submitConsumable() async {
+    print('DEBUG: _submitConsumable called - Current submitting state: $_isSubmitting');
+    
+    // Prevent multiple submissions
+    if (_isSubmitting) {
+      print('DEBUG: Consumable submission already in progress, ignoring duplicate call');
+      return;
+    }
+    
     if (!_formKey.currentState!.validate()) {
+      print('DEBUG: Consumable Form validation failed');
       return;
     }
 
+    print('DEBUG: Consumable Form validation passed, setting submitting state');
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
     try {
+      print('DEBUG: Proceeding with Consumable submission');
+
       // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      }
 
       // Collect form data
       final consumableData = {
@@ -237,15 +341,19 @@ class _AddConsumableState extends State<AddConsumable> {
         "MsiTeam": _stockMsiAssetCtrl.text.trim(),
         "Remarks": _additionalNotesCtrl.text.trim(),
         "ItemTypeKey": 2, // 1 for Asset, 2 for Consumable
-        "CreatedBy": "User", // You can get this from user session
+        "CreatedBy": "User",
         "UpdatedBy": "User",
         "CreatedDate": DateTime.now().toIso8601String(),
         "UpdatedDate": null,
         "Status": selectedConsumableStatus == "Available",
       };
 
+      print('DEBUG: Consumable data prepared: $consumableData');
+
       // Call API to add consumable
+      print('DEBUG: Calling API to add consumable');
       await ApiService().addAssetConsumable(consumableData);
+      print('DEBUG: Consumable API call successful');
 
       // Close loading dialog
       if (mounted) Navigator.of(context).pop();
@@ -259,18 +367,44 @@ class _AddConsumableState extends State<AddConsumable> {
       // Show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Consumable added successfully")),
+          const SnackBar(
+            content: Text("Consumable added successfully"),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
         );
       }
+      
+      print('DEBUG: Consumable creation completed successfully');
     } catch (e) {
-      // Close loading dialog
-      if (mounted) Navigator.of(context).pop();
+      print('DEBUG: Error in _submitConsumable: $e');
+      
+      // Close loading dialog if still open
+      if (mounted) {
+        try {
+          Navigator.of(context).pop();
+        } catch (popError) {
+          print('DEBUG: Error closing loading dialog: $popError');
+        }
+      }
 
       // Show error message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to add consumable: $e")),
+          SnackBar(
+            content: Text("Failed to add consumable: $e"),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
         );
+      }
+    } finally {
+      // Reset submitting state
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+        print('DEBUG: Consumable submitting state reset to false');
       }
     }
   }
@@ -282,10 +416,10 @@ class _AddConsumableState extends State<AddConsumable> {
       child: Column(
         children: [
           // HEADER
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              "Add new consumables",
+              widget.existingData != null ? "Edit Consumable" : "Add new consumables",
               style: TextStyle(
                 color: Color.fromRGBO(0, 0, 0, 1),
                 fontSize: 16,
@@ -294,10 +428,12 @@ class _AddConsumableState extends State<AddConsumable> {
             ),
           ),
           const SizedBox(height: 4),
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              "Please enter the details below and click submit to add a new consumables",
+              widget.existingData != null 
+                ? "Please update the details below and click submit to save changes"
+                : "Please enter the details below and click submit to add a new consumables",
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
@@ -851,22 +987,33 @@ class _AddConsumableState extends State<AddConsumable> {
                 width: 120,
                 height: 36,
                 child: ElevatedButton(
-                  onPressed: _submitConsumable,
+                  onPressed: _isSubmitting ? null : _submitConsumable,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xff00599A),
+                    backgroundColor: _isSubmitting 
+                        ? Colors.grey 
+                        : const Color(0xff00599A),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    "Submit",
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text(
+                          "Submit",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
               ),
             ],

@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:inventory/services/api_service.dart';
+import 'package:inventory/model/master_list_model.dart';
 
 class AddMmd extends StatefulWidget {
-  const AddMmd({super.key, required this.submit});
+  const AddMmd({
+    super.key, 
+    required this.submit,
+    this.existingData, // Add parameter for existing MMD data
+  });
 
   final VoidCallback submit;
+  final MasterListModel? existingData; // Existing data for editing
 
   @override
   State<AddMmd> createState() => _AddMmdState();
@@ -13,6 +19,7 @@ class AddMmd extends StatefulWidget {
 
 class _AddMmdState extends State<AddMmd> {
   final _formKey = GlobalKey<FormState>();
+  bool _isSubmitting = false; // Add submission state tracking
 
   // Measuring and monitoring device information
   // -------------------------
@@ -81,6 +88,97 @@ class _AddMmdState extends State<AddMmd> {
     super.initState();
     _costCtrl.addListener(_calculateTotalCost);
     _extraChargesCtrl.addListener(_calculateTotalCost);
+    
+    // Pre-populate form if existing data is provided
+    if (widget.existingData != null) {
+      _populateFormWithExistingData();
+    }
+  }
+  
+  void _populateFormWithExistingData() {
+    final data = widget.existingData!;
+    
+    // Basic information from MasterListModel
+    _assetIdCtrl.text = data.assetId;
+    _assetNameCtrl.text = data.name;
+    _supplierNameCtrl.text = data.supplier;
+    _locationCtrl.text = data.location;
+    
+    print('DEBUG: Pre-populated MMD form with basic data: ${data.name}');
+    
+    // Fetch complete MMD details from the MMD table
+    _fetchCompleteMMDDetails(data.assetId);
+  }
+  
+  Future<void> _fetchCompleteMMDDetails(String mmdId) async {
+    print('DEBUG: Fetching complete MMD details for ID: $mmdId');
+    try {
+      final apiService = ApiService();
+      final completeData = await apiService.getCompleteItemDetails(mmdId, 'MMD');
+      
+      if (completeData != null) {
+        print('DEBUG: Complete MMD data received: $completeData');
+        
+        // Populate all MMD-specific fields
+        setState(() {
+          // Basic fields (already set, but update if different)
+          _assetIdCtrl.text = completeData['MmdId']?.toString() ?? _assetIdCtrl.text;
+          _assetNameCtrl.text = completeData['ModelNumber']?.toString() ?? _assetNameCtrl.text;
+          _supplierNameCtrl.text = completeData['Vendor']?.toString() ?? _supplierNameCtrl.text;
+          _locationCtrl.text = completeData['Location']?.toString() ?? _locationCtrl.text;
+          
+          // MMD-specific fields
+          _brandNameCtrl.text = completeData['BrandName']?.toString() ?? '';
+          _accuracyClassCtrl.text = completeData['AccuracyClass']?.toString() ?? '';
+          _calibratedByCtrl.text = completeData['CalibratedBy']?.toString() ?? '';
+          _toolSpecificationsCtrl.text = completeData['Specifications']?.toString() ?? '';
+          _modelNumberCtrl.text = completeData['ModelNumber']?.toString() ?? '';
+          _serialNumberCtrl.text = completeData['SerialNumber']?.toString() ?? '';
+          _quantityAvailableCtrl.text = completeData['Quantity']?.toString() ?? '';
+          _calibrationCertificateNumberCtrl.text = completeData['CalibrationCertNo']?.toString() ?? '';
+          
+          // Purchase information
+          _poNumberCtrl.text = completeData['PoNumber']?.toString() ?? '';
+          _invoiceNumberCtrl.text = completeData['InvoiceNumber']?.toString() ?? '';
+          _costCtrl.text = completeData['TotalCost']?.toString() ?? '';
+          _extraChargesCtrl.text = completeData['ExtraCharges']?.toString() ?? '';
+          
+          // Dates
+          if (completeData['PoDate'] != null) {
+            selectedPoDate = DateTime.tryParse(completeData['PoDate'].toString());
+          }
+          if (completeData['InvoiceDate'] != null) {
+            selectedInvoiceDate = DateTime.tryParse(completeData['InvoiceDate'].toString());
+          }
+          if (completeData['LastCalibration'] != null) {
+            selectedLastCalibrationDate = DateTime.tryParse(completeData['LastCalibration'].toString());
+          }
+          if (completeData['NextCalibration'] != null) {
+            selectedNextCalibrationDate = DateTime.tryParse(completeData['NextCalibration'].toString());
+          }
+          
+          // Dropdowns
+          selectedCalibrationFrequency = completeData['CalibrationFrequency']?.toString();
+          selectedCalibrationStatus = completeData['CalibrationStatus']?.toString();
+          
+          // Other fields
+          _warrantyPeriodCtrl.text = completeData['WarrantyYears']?.toString() ?? '';
+          _operatingInstructionsManualCtrl.text = completeData['ManualLink']?.toString() ?? '';
+          _responsiblePersonCtrl.text = completeData['ResponsibleTeam']?.toString() ?? '';
+          _stockMsiAssetCtrl.text = completeData['StockMsi']?.toString() ?? '';
+          _additionalNotesCtrl.text = completeData['Remarks']?.toString() ?? '';
+        });
+        
+        // Recalculate total cost
+        _calculateTotalCost();
+        
+        print('DEBUG: Successfully populated all MMD fields');
+      } else {
+        print('DEBUG: No complete MMD data found, using basic data only');
+      }
+    } catch (e) {
+      print('DEBUG: Error fetching complete MMD details: $e');
+    }
   }
 
   @override
@@ -208,19 +306,38 @@ class _AddMmdState extends State<AddMmd> {
 
   // Method to collect form data and submit to API
   Future<void> _submitMmd() async {
+    print('DEBUG: _submitMmd called - Current submitting state: $_isSubmitting');
+    
+    // Prevent multiple submissions
+    if (_isSubmitting) {
+      print('DEBUG: MMD submission already in progress, ignoring duplicate call');
+      return;
+    }
+    
     if (!_formKey.currentState!.validate()) {
+      print('DEBUG: MMD Form validation failed');
       return;
     }
 
+    print('DEBUG: MMD Form validation passed, setting submitting state');
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
     try {
+      print('DEBUG: Proceeding with MMD submission');
+
       // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      }
 
       // Collect form data (using PascalCase to match MmdsEntity properties)
       final mmdData = {
@@ -248,14 +365,18 @@ class _AddMmdState extends State<AddMmd> {
         "ManualLink": _operatingInstructionsManualCtrl.text.trim(),
         "StockMsi": _stockMsiAssetCtrl.text.trim(),
         "Remarks": _additionalNotesCtrl.text.trim(),
-        "CreatedBy": "User", // You can get this from user session
-        "UpdatedBy": "User", // Required field
-        "CreatedDate": DateTime.now().toIso8601String(), // Required field
+        "CreatedBy": "User",
+        "UpdatedBy": "User",
+        "CreatedDate": DateTime.now().toIso8601String(),
         "Status": selectedCalibrationStatus == "Calibrated",
       };
 
+      print('DEBUG: MMD data prepared: $mmdData');
+
       // Call API to add MMD
+      print('DEBUG: Calling API to add MMD');
       await ApiService().addMmd(mmdData);
+      print('DEBUG: MMD API call successful');
 
       // Close loading dialog
       if (mounted) Navigator.of(context).pop();
@@ -269,18 +390,44 @@ class _AddMmdState extends State<AddMmd> {
       // Show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("MMD added successfully")),
+          const SnackBar(
+            content: Text("MMD added successfully"),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
         );
       }
+      
+      print('DEBUG: MMD creation completed successfully');
     } catch (e) {
-      // Close loading dialog
-      if (mounted) Navigator.of(context).pop();
+      print('DEBUG: Error in _submitMmd: $e');
+      
+      // Close loading dialog if still open
+      if (mounted) {
+        try {
+          Navigator.of(context).pop();
+        } catch (popError) {
+          print('DEBUG: Error closing loading dialog: $popError');
+        }
+      }
 
       // Show error message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to add MMD: $e")),
+          SnackBar(
+            content: Text("Failed to add MMD: $e"),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
         );
+      }
+    } finally {
+      // Reset submitting state
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+        print('DEBUG: MMD submitting state reset to false');
       }
     }
   }
@@ -292,10 +439,10 @@ class _AddMmdState extends State<AddMmd> {
       child: Column(
         children: [
           // HEADER
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              "Add new MMDs",
+              widget.existingData != null ? "Edit MMD" : "Add new MMDs",
               style: TextStyle(
                 color: Color.fromRGBO(0, 0, 0, 1),
                 fontSize: 16,
@@ -304,10 +451,12 @@ class _AddMmdState extends State<AddMmd> {
             ),
           ),
           const SizedBox(height: 4),
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              "Please enter the details below and click submit to add a new MMDs",
+              widget.existingData != null 
+                ? "Please update the details below and click submit to save changes"
+                : "Please enter the details below and click submit to add a new MMDs",
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
@@ -980,22 +1129,33 @@ class _AddMmdState extends State<AddMmd> {
                 width: 120,
                 height: 36,
                 child: ElevatedButton(
-                  onPressed: _submitMmd,
+                  onPressed: _isSubmitting ? null : _submitMmd,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xff00599A),
+                    backgroundColor: _isSubmitting 
+                        ? Colors.grey 
+                        : const Color(0xff00599A),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    "Submit",
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text(
+                          "Submit",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
               ),
             ],

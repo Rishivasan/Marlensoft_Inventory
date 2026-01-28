@@ -39,15 +39,45 @@ import 'package:inventory/services/master_list_service.dart';
 
 final masterListServiceProvider = Provider((ref) => MasterListService());
 
-// final masterListProvider = FutureProvider<List<MasterListModel>>((ref) async {
-//   final service = ref.read(masterListServiceProvider);
-//   return service.getMasterList();
+// Use AsyncNotifier for Riverpod 3.x
+class MasterListNotifier extends AsyncNotifier<List<MasterListModel>> {
+  @override
+  Future<List<MasterListModel>> build() async {
+    return await loadMasterList();
+  }
 
-  
-// });
+  Future<List<MasterListModel>> loadMasterList() async {
+    try {
+      print('DEBUG: MasterListNotifier - Loading master list');
+      final masterList = await MasterListService().getMasterList();
+      print('DEBUG: MasterListNotifier - Loaded ${masterList.length} items');
+      return masterList;
+    } catch (error, stackTrace) {
+      print('DEBUG: MasterListNotifier - Error loading: $error');
+      throw error;
+    }
+  }
 
-final masterListProvider =
-    FutureProvider<List<MasterListModel>>((ref) async {
-  return MasterListService().getMasterList();
-  
+  Future<void> refresh() async {
+    print('DEBUG: MasterListNotifier - Refreshing master list');
+    state = const AsyncValue.loading();
+    try {
+      final masterList = await loadMasterList();
+      state = AsyncValue.data(masterList);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+    }
+  }
+}
+
+final masterListProvider = AsyncNotifierProvider<MasterListNotifier, List<MasterListModel>>(() {
+  return MasterListNotifier();
+});
+
+// Helper provider to trigger refresh
+final refreshMasterListProvider = Provider((ref) {
+  return () async {
+    print('DEBUG: Triggering master list refresh');
+    await ref.read(masterListProvider.notifier).refresh();
+  };
 });

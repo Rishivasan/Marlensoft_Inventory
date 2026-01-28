@@ -54,6 +54,15 @@ namespace InventoryManagement.Repositories
 
             try
             {
+                // Check if AssetId already exists to prevent duplicates
+                var existsQuery = @"SELECT COUNT(1) FROM AssetsConsumablesMaster WHERE AssetId = @AssetId";
+                var exists = await connection.QuerySingleAsync<int>(existsQuery, new { AssetId = asset.AssetId }, transaction);
+                
+                if (exists > 0)
+                {
+                    throw new InvalidOperationException($"Asset with ID '{asset.AssetId}' already exists.");
+                }
+
                 // First, insert into AssetsConsumablesMaster
                 var assetQuery = @"
 INSERT INTO AssetsConsumablesMaster

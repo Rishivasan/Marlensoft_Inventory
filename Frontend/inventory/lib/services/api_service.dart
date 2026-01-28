@@ -8,41 +8,102 @@ class ApiService {
   // Try multiple possible backend URLs
   static const List<String> possibleUrls = [
     "http://localhost:5069",      // Command line / Project profile
+    "http://localhost:5071",      // Command line / Project profile
+    "http://localhost:5070",      // Command line / Project profile
     "http://localhost:38234",     // IIS Express
     "http://localhost:7294",      // HTTPS Project profile
   ];
   
   static String baseUrl = "http://localhost:5069"; // Default
 
-  // Get item by ID (for product detail screen)
+  // Get complete item details by ID and type for editing
+  Future<Map<String, dynamic>?> getCompleteItemDetails(String itemId, String itemType) async {
+    print('DEBUG: API - Getting complete details for item: $itemId');
+    try {
+      final endpoint = '$baseUrl/api/item-details/$itemId';
+      
+      print('DEBUG: API - Calling endpoint: $endpoint');
+      final response = await http.get(
+        Uri.parse(endpoint),
+        headers: {"Content-Type": "application/json"},
+      ).timeout(const Duration(seconds: 10));
+      
+      print('DEBUG: API - Response status: ${response.statusCode}');
+      print('DEBUG: API - Response body: ${response.body}');
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print('DEBUG: API - Successfully fetched complete item details');
+        
+        // Return the detailed data part
+        return data['DetailedData'] as Map<String, dynamic>?;
+      } else {
+        print('DEBUG: API - Failed to fetch item details: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print("DEBUG: API - Error fetching complete item details: $e");
+      return null;
+    }
+  }
   Future<MasterListModel?> getMasterListById(String id) async {
     print('DEBUG: API - Looking for item with ID: $id');
     try {
-      // First, try to get the item from the master list and find by refId
+      // First, try to get the item from the enhanced master list
       print('DEBUG: API - Fetching enhanced master list');
       final response = await http.get(Uri.parse("$baseUrl/api/enhanced-master-list"));
       
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        print('DEBUG: API - Master list loaded, ${data.length} items found');
+        print('DEBUG: API - Enhanced master list loaded, ${data.length} items found');
         
-        // Find the item with matching refId
+        // Find the item with matching ItemID
         final itemData = data.firstWhere(
-          (item) => item['refId']?.toString() == id,
+          (item) => item['ItemID']?.toString() == id || item['itemID']?.toString() == id,
           orElse: () => null,
         );
         
         if (itemData != null) {
-          print('DEBUG: API - Found item in master list: ${itemData['name'] ?? itemData['itemName']}');
+          print('DEBUG: API - Found item in enhanced master list:');
+          print('  - ItemID: ${itemData['ItemID']}');
+          print('  - ItemName: ${itemData['ItemName']}');
+          print('  - Type: ${itemData['Type']}');
+          print('  - Vendor: ${itemData['Vendor']}');
+          print('  - StorageLocation: ${itemData['StorageLocation']}');
+          print('  - ResponsibleTeam: ${itemData['ResponsibleTeam']}');
+          print('  - AvailabilityStatus: ${itemData['AvailabilityStatus']}');
+          
           return MasterListModel.fromJson(itemData);
         } else {
-          print('DEBUG: API - Item not found in master list, trying asset-full-details');
+          print('DEBUG: API - Item not found in enhanced master list, trying regular master list');
         }
       } else {
-        print('DEBUG: API - Master list request failed: ${response.statusCode}');
+        print('DEBUG: API - Enhanced master list request failed: ${response.statusCode}');
       }
       
-      // If not found in master list, try the asset-full-details endpoint
+      // If not found in enhanced master list, try the regular master list
+      print('DEBUG: API - Trying regular master list');
+      final regularResponse = await http.get(Uri.parse("$baseUrl/api/master-list"));
+      
+      if (regularResponse.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(regularResponse.body);
+        print('DEBUG: API - Regular master list loaded, ${data.length} items found');
+        
+        // Find the item with matching refId
+        final itemData = data.firstWhere(
+          (item) => item['refId']?.toString() == id || item['RefId']?.toString() == id,
+          orElse: () => null,
+        );
+        
+        if (itemData != null) {
+          print('DEBUG: API - Found item in regular master list: ${itemData['name'] ?? itemData['Name']}');
+          return MasterListModel.fromJson(itemData);
+        } else {
+          print('DEBUG: API - Item not found in regular master list, trying asset-full-details');
+        }
+      }
+      
+      // If not found in master lists, try the asset-full-details endpoint
       return await _tryAssetFullDetails(id);
       
     } catch (e) {
@@ -273,8 +334,8 @@ class ApiService {
   }
 
   Future<void> addTool(Map<String, dynamic> data) async {
-    print("DEBUG: Calling API at: $baseUrl/api/addtools");
-    print("DEBUG: Data being sent: $data");
+    print("DEBUG: API - Calling Tool API at: $baseUrl/api/addtools");
+    print("DEBUG: API - Tool Data being sent: $data");
     
     final response = await http.post(
       Uri.parse("$baseUrl/api/addtools"),
@@ -282,8 +343,8 @@ class ApiService {
       body: jsonEncode(data),
     );
 
-    print("DEBUG: Response status: ${response.statusCode}");
-    print("DEBUG: Response body: ${response.body}");
+    print("DEBUG: API - Tool Response status: ${response.statusCode}");
+    print("DEBUG: API - Tool Response body: ${response.body}");
 
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception("Failed to add tool: ${response.body}");
@@ -302,8 +363,8 @@ class ApiService {
   }
 
   Future<void> addAssetConsumable(Map<String, dynamic> data) async {
-    print("DEBUG: Calling Asset/Consumable API at: $baseUrl/api/add-assets-consumables");
-    print("DEBUG: Asset/Consumable Data being sent: $data");
+    print("DEBUG: API - Calling Asset/Consumable API at: $baseUrl/api/add-assets-consumables");
+    print("DEBUG: API - Asset/Consumable Data being sent: $data");
     
     final response = await http.post(
       Uri.parse("$baseUrl/api/add-assets-consumables"),
@@ -311,8 +372,8 @@ class ApiService {
       body: jsonEncode(data),
     );
 
-    print("DEBUG: Asset/Consumable Response status: ${response.statusCode}");
-    print("DEBUG: Asset/Consumable Response body: ${response.body}");
+    print("DEBUG: API - Asset/Consumable Response status: ${response.statusCode}");
+    print("DEBUG: API - Asset/Consumable Response body: ${response.body}");
 
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception("Failed to add asset/consumable: ${response.body}");
@@ -331,8 +392,8 @@ class ApiService {
   }
 
   Future<void> addMmd(Map<String, dynamic> data) async {
-    print("DEBUG: Calling MMD API at: $baseUrl/api/addmmds");
-    print("DEBUG: MMD Data being sent: $data");
+    print("DEBUG: API - Calling MMD API at: $baseUrl/api/addmmds");
+    print("DEBUG: API - MMD Data being sent: $data");
     
     final response = await http.post(
       Uri.parse("$baseUrl/api/addmmds"),
@@ -340,8 +401,8 @@ class ApiService {
       body: jsonEncode(data),
     );
 
-    print("DEBUG: MMD Response status: ${response.statusCode}");
-    print("DEBUG: MMD Response body: ${response.body}");
+    print("DEBUG: API - MMD Response status: ${response.statusCode}");
+    print("DEBUG: API - MMD Response body: ${response.body}");
 
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception("Failed to add MMD: ${response.body}");

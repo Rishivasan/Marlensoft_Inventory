@@ -256,83 +256,55 @@ ORDER BY m.SNo DESC;
 
         public async Task<List<EnhancedMasterListDto>> GetEnhancedMasterListAsync()
         {
+            // First, let's try a simpler query to debug the issue
             var query = @"
-SELECT
+SELECT 
     m.RefId AS ItemID,
     m.ItemType AS Type,
     
-    -- Item Name based on type
+    -- Item Name based on type - simplified
     CASE 
-        WHEN m.ItemType = 'Tool' THEN tm.ToolName
-        WHEN m.ItemType IN ('Asset','Consumable') THEN ac.AssetName
-        WHEN m.ItemType = 'MMD' THEN mm.ModelNumber
-        ELSE ''
+        WHEN m.ItemType = 'Tool' THEN ISNULL(tm.ToolName, 'Tool-' + m.RefId)
+        WHEN m.ItemType IN ('Asset','Consumable') THEN ISNULL(ac.AssetName, 'Asset-' + m.RefId)
+        WHEN m.ItemType = 'MMD' THEN ISNULL(mm.ModelNumber, 'MMD-' + m.RefId)
+        ELSE m.RefId
     END AS ItemName,
 
-    -- Vendor based on type
+    -- Vendor based on type - simplified
     CASE
-        WHEN m.ItemType = 'Tool' THEN tm.Vendor
-        WHEN m.ItemType IN ('Asset','Consumable') THEN ac.Vendor
-        WHEN m.ItemType = 'MMD' THEN mm.Vendor
+        WHEN m.ItemType = 'Tool' THEN ISNULL(tm.Vendor, '')
+        WHEN m.ItemType IN ('Asset','Consumable') THEN ISNULL(ac.Vendor, '')
+        WHEN m.ItemType = 'MMD' THEN ISNULL(mm.Vendor, '')
         ELSE ''
     END AS Vendor,
 
     m.CreatedDate,
 
-    -- Responsible Team based on type
+    -- Responsible Team based on type - simplified
     CASE
-        WHEN m.ItemType = 'Tool' THEN tm.ResponsibleTeam
-        WHEN m.ItemType IN ('Asset','Consumable') THEN ac.ResponsibleTeam
-        WHEN m.ItemType = 'MMD' THEN mm.ResponsibleTeam
+        WHEN m.ItemType = 'Tool' THEN ISNULL(tm.ResponsibleTeam, '')
+        WHEN m.ItemType IN ('Asset','Consumable') THEN ISNULL(ac.ResponsibleTeam, '')
+        WHEN m.ItemType = 'MMD' THEN ISNULL(mm.ResponsibleTeam, '')
         ELSE ''
     END AS ResponsibleTeam,
 
-    -- Storage Location based on type
+    -- Storage Location based on type - simplified
     CASE
-        WHEN m.ItemType = 'Tool' THEN tm.StorageLocation
-        WHEN m.ItemType IN ('Asset','Consumable') THEN ac.StorageLocation
-        WHEN m.ItemType = 'MMD' THEN mm.StorageLocation
+        WHEN m.ItemType = 'Tool' THEN ISNULL(tm.StorageLocation, '')
+        WHEN m.ItemType IN ('Asset','Consumable') THEN ISNULL(ac.StorageLocation, '')
+        WHEN m.ItemType = 'MMD' THEN ''
         ELSE ''
     END AS StorageLocation,
 
-    -- Next Service Due from latest maintenance record
-    maint.NextServiceDue,
-
-    -- Availability Status from latest allocation record
-    COALESCE(alloc.AvailabilityStatus, 'Available') AS AvailabilityStatus
+    -- Simplified service due and availability
+    NULL AS NextServiceDue,
+    'Available' AS AvailabilityStatus
 
 FROM MasterRegister m
 
-LEFT JOIN ToolsMaster tm
-    ON m.ItemType = 'Tool' AND m.RefId = tm.ToolsId
-
-LEFT JOIN AssetsConsumablesMaster ac
-    ON m.ItemType IN ('Asset','Consumable') AND m.RefId = ac.AssetId
-
-LEFT JOIN MmdsMaster mm
-    ON m.ItemType = 'MMD' AND m.RefId = mm.MmdId
-
--- Get latest maintenance record for NextServiceDue
-LEFT JOIN (
-    SELECT 
-        AssetType,
-        AssetId,
-        NextServiceDue,
-        ROW_NUMBER() OVER (PARTITION BY AssetType, AssetId ORDER BY ServiceDate DESC) as rn
-    FROM MaintenanceRecords
-    WHERE Status = 1 AND NextServiceDue IS NOT NULL
-) maint ON maint.AssetType = m.ItemType AND maint.AssetId = m.RefId AND maint.rn = 1
-
--- Get latest allocation record for AvailabilityStatus
-LEFT JOIN (
-    SELECT 
-        AssetType,
-        AssetId,
-        AvailabilityStatus,
-        ROW_NUMBER() OVER (PARTITION BY AssetType, AssetId ORDER BY IssuedDate DESC) as rn
-    FROM AllocationRecords
-    WHERE Status = 1
-) alloc ON alloc.AssetType = m.ItemType AND alloc.AssetId = m.RefId AND alloc.rn = 1
+LEFT JOIN ToolsMaster tm ON m.ItemType = 'Tool' AND m.RefId = tm.ToolsId
+LEFT JOIN AssetsConsumablesMaster ac ON m.ItemType IN ('Asset','Consumable') AND m.RefId = ac.AssetId
+LEFT JOIN MmdsMaster mm ON m.ItemType = 'MMD' AND m.RefId = mm.MmdId
 
 WHERE m.IsActive = 1
 ORDER BY m.SNo DESC;

@@ -939,7 +939,9 @@ import 'package:flutter_svg/svg.dart';
 import 'package:inventory/providers/master_list_provider.dart';
 import 'package:inventory/providers/selection_provider.dart';
 import 'package:inventory/widgets/top_layer.dart';
+import 'package:inventory/widgets/generic_paginated_table.dart';
 import 'package:inventory/routers/app_router.dart';
+import 'package:inventory/model/master_list_model.dart';
 
 @RoutePage()
 class MasterListScreen extends ConsumerWidget {
@@ -948,9 +950,7 @@ class MasterListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final masterAsync = ref.watch(masterListProvider);
-    final selectedItems = ref.watch(selectedItemsProvider);
-    final selectAll = ref.watch(selectAllProvider);
-
+    
     return Container(
       padding: const EdgeInsets.only(top: 12),
       decoration: BoxDecoration(
@@ -964,294 +964,227 @@ class MasterListScreen extends ConsumerWidget {
           Expanded(
             child: masterAsync.when(
               data: (items) {
-                return Container(
-                  width: double.infinity,
+                return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: SingleChildScrollView(
-                    child: DataTable(
-                      headingRowHeight: 50,
-                      dataRowMaxHeight: 54,
-                      columns: [
-                        DataColumn(
-                          label: Transform.scale(
-                            scale: 0.7,
-                            child: Checkbox(
-                              value: selectAll,
-                              onChanged: (val) {
-                                ref.read(selectAllProvider.notifier).toggle();
-                                if (val == true) {
-                                  ref.read(selectedItemsProvider.notifier).selectAll(items);
-                                } else {
-                                  ref.read(selectedItemsProvider.notifier).clearAll();
-                                }
-                              },
+                  child: GenericPaginatedTable<MasterListModel>(
+                    data: items,
+                    rowsPerPage: 7, // Following your pattern
+                    minWidth: 1800,
+                    showCheckboxColumn: true,
+                    onSelectionChanged: (selectedItems) {
+                      // Handle selection changes if needed
+                      print("Selected ${selectedItems.length} items");
+                    },
+                    headers: [
+                      Container(
+                        width: 150,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text("Item ID", style: Theme.of(context).textTheme.titleSmall),
+                      ),
+                      Container(
+                        width: 120,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text("Type", style: Theme.of(context).textTheme.titleSmall),
+                      ),
+                      Container(
+                        width: 200,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text("Item Name", style: Theme.of(context).textTheme.titleSmall),
+                      ),
+                      Container(
+                        width: 150,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text("Vendor", style: Theme.of(context).textTheme.titleSmall),
+                      ),
+                      Container(
+                        width: 150,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text("Created Date", style: Theme.of(context).textTheme.titleSmall),
+                      ),
+                      Container(
+                        width: 180,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text("Responsible Team", style: Theme.of(context).textTheme.titleSmall),
+                      ),
+                      Container(
+                        width: 180,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text("Storage Location", style: Theme.of(context).textTheme.titleSmall),
+                      ),
+                      Container(
+                        width: 150,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text("Next Service Due", style: Theme.of(context).textTheme.titleSmall),
+                      ),
+                      Container(
+                        width: 180,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text("Availability Status", style: Theme.of(context).textTheme.titleSmall),
+                      ),
+                      Container(
+                        width: 50,
+                        alignment: Alignment.center,
+                        child: const Text(""),
+                      ),
+                    ],
+                    rowBuilder: (item, isSelected, onChanged) => [
+                      Container(
+                        width: 150,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          item.assetId,
+                          style: Theme.of(context).textTheme.displayMedium!.copyWith(
+                            fontWeight: FontWeight.w400, 
+                            fontSize: 11
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: 120,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          item.type,
+                          style: Theme.of(context).textTheme.displayMedium!.copyWith(
+                            fontWeight: FontWeight.w400, 
+                            fontSize: 11
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: 200,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          item.assetName,
+                          style: Theme.of(context).textTheme.displayMedium!.copyWith(
+                            fontWeight: FontWeight.w400, 
+                            fontSize: 11
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: 150,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          item.supplier,
+                          style: Theme.of(context).textTheme.displayMedium!.copyWith(
+                            fontWeight: FontWeight.w400, 
+                            fontSize: 11
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: 150,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          "${item.createdDate.day}/${item.createdDate.month}/${item.createdDate.year}",
+                          style: Theme.of(context).textTheme.displayMedium!.copyWith(
+                            fontWeight: FontWeight.w400, 
+                            fontSize: 11
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: 180,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          item.responsibleTeam,
+                          style: Theme.of(context).textTheme.displayMedium!.copyWith(
+                            fontWeight: FontWeight.w400, 
+                            fontSize: 11
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: 180,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          item.location,
+                          style: Theme.of(context).textTheme.displayMedium!.copyWith(
+                            fontWeight: FontWeight.w400, 
+                            fontSize: 11
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: 150,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          item.nextServiceDue != null 
+                              ? "${item.nextServiceDue!.day}/${item.nextServiceDue!.month}/${item.nextServiceDue!.year}"
+                              : "N/A",
+                          style: Theme.of(context).textTheme.displayMedium!.copyWith(
+                            fontWeight: FontWeight.w400, 
+                            fontSize: 11
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: 180,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.all(8.0),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: item.availabilityStatus.toLowerCase() == 'available' 
+                                ? Colors.green.withOpacity(0.1)
+                                : Colors.orange.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: item.availabilityStatus.toLowerCase() == 'available' 
+                                  ? Colors.green
+                                  : Colors.orange,
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            item.availabilityStatus,
+                            style: Theme.of(context).textTheme.displayMedium!.copyWith(
+                              fontWeight: FontWeight.w500, 
+                              fontSize: 10,
+                              color: item.availabilityStatus.toLowerCase() == 'available' 
+                                  ? Colors.green.shade700
+                                  : Colors.orange.shade700,
                             ),
                           ),
                         ),
-                        DataColumn(
-                          label: SizedBox(
-                            width: 100,
-                            child: Text("Item ID",
-                                style: Theme.of(context).textTheme.titleSmall),
+                      ),
+                      Container(
+                        width: 50,
+                        alignment: Alignment.center,
+                        child: GestureDetector(
+                          onTap: () {
+                            context.router.push(ProductDetailRoute(id: item.refId));
+                          },
+                          child: SvgPicture.asset(
+                            "assets/images/Select_arrow.svg",
+                            width: 12,
                           ),
                         ),
-                        DataColumn(
-                          label: SizedBox(
-                            width: 80,
-                            child: Text("Type",
-                                style: Theme.of(context).textTheme.titleSmall),
-                          ),
-                        ),
-                        DataColumn(
-                          label: SizedBox(
-                            width: 150,
-                            child: Text("Item Name",
-                                style: Theme.of(context).textTheme.titleSmall),
-                          ),
-                        ),
-                        DataColumn(
-                          label: SizedBox(
-                            width: 100,
-                            child: Text("Vendor",
-                                style: Theme.of(context).textTheme.titleSmall),
-                          ),
-                        ),
-                        DataColumn(
-                          label: SizedBox(
-                            width: 100,
-                            child: Text("Created Date",
-                                style: Theme.of(context).textTheme.titleSmall),
-                          ),
-                        ),
-                        DataColumn(
-                          label: SizedBox(
-                            width: 120,
-                            child: Text("Responsible Team",
-                                style: Theme.of(context).textTheme.titleSmall),
-                          ),
-                        ),
-                        DataColumn(
-                          label: SizedBox(
-                            width: 100,
-                            child: Text("Storage Location",
-                                style: Theme.of(context).textTheme.titleSmall),
-                          ),
-                        ),
-                        DataColumn(
-                          label: SizedBox(
-                            width: 100,
-                            child: Text("Next Service Due",
-                                style: Theme.of(context).textTheme.titleSmall),
-                          ),
-                        ),
-                        DataColumn(
-                          label: SizedBox(
-                            width: 120,
-                            child: Text("Availability Status",
-                                style: Theme.of(context).textTheme.titleSmall),
-                          ),
-                        ),
-                        const DataColumn(label: Text("")),
-                      ],
-                      rows: items.map((e) {
-                        final isSelected = ref.read(selectedItemsProvider.notifier).isSelected(e.refId);
-                        
-                        return DataRow(
-                          cells: [
-                            DataCell(
-                              Transform.scale(
-                                scale: 0.7,
-                                child: Checkbox(
-                                  value: isSelected,
-                                  onChanged: (val) {
-                                    ref.read(selectedItemsProvider.notifier).toggleItem(e.refId);
-                                    
-                                    // Update select all state
-                                    final selectedCount = ref.read(selectedItemsProvider).length;
-                                    if (selectedCount == items.length) {
-                                      ref.read(selectAllProvider.notifier).set(true);
-                                    } else {
-                                      ref.read(selectAllProvider.notifier).set(false);
-                                    }
-                                  },
-                                ),
-                              ),
-                            ),
-                            // Item ID
-                            DataCell(
-                              SizedBox(
-                                width: 100,
-                                child: Text(
-                                  e.assetId,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .displayMedium!
-                                      .copyWith(fontWeight: FontWeight.w400, fontSize: 11),
-                                ),
-                              ),
-                            ),
-                            // Type
-                            DataCell(
-                              SizedBox(
-                                width: 80,
-                                child: Text(
-                                  e.type,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .displayMedium!
-                                      .copyWith(fontWeight: FontWeight.w400, fontSize: 11),
-                                ),
-                              ),
-                            ),
-                            // Item Name
-                            DataCell(
-                              SizedBox(
-                                width: 150,
-                                child: Text(
-                                  e.assetName,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .displayMedium!
-                                      .copyWith(fontWeight: FontWeight.w400, fontSize: 11),
-                                ),
-                              ),
-                            ),
-                            // Vendor
-                            DataCell(
-                              SizedBox(
-                                width: 100,
-                                child: Text(
-                                  e.supplier,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .displayMedium!
-                                      .copyWith(fontWeight: FontWeight.w400, fontSize: 11),
-                                ),
-                              ),
-                            ),
-                            // Created Date
-                            DataCell(
-                              SizedBox(
-                                width: 100,
-                                child: Text(
-                                  "${e.createdDate.day}/${e.createdDate.month}/${e.createdDate.year}",
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .displayMedium!
-                                      .copyWith(fontWeight: FontWeight.w400, fontSize: 11),
-                                ),
-                              ),
-                            ),
-                            // Responsible Team
-                            DataCell(
-                              SizedBox(
-                                width: 120,
-                                child: Text(
-                                  e.responsibleTeam,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .displayMedium!
-                                      .copyWith(fontWeight: FontWeight.w400, fontSize: 11),
-                                ),
-                              ),
-                            ),
-                            // Storage Location
-                            DataCell(
-                              SizedBox(
-                                width: 100,
-                                child: Text(
-                                  e.location,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .displayMedium!
-                                      .copyWith(fontWeight: FontWeight.w400, fontSize: 11),
-                                ),
-                              ),
-                            ),
-                            // Next Service Due
-                            DataCell(
-                              SizedBox(
-                                width: 100,
-                                child: Text(
-                                  e.nextServiceDue != null 
-                                      ? "${e.nextServiceDue!.day}/${e.nextServiceDue!.month}/${e.nextServiceDue!.year}"
-                                      : "N/A",
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .displayMedium!
-                                      .copyWith(fontWeight: FontWeight.w400, fontSize: 11),
-                                ),
-                              ),
-                            ),
-                            // Availability Status
-                            DataCell(
-                              SizedBox(
-                                width: 120,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: e.availabilityStatus.toLowerCase() == 'available' 
-                                        ? Colors.green.withOpacity(0.1)
-                                        : Colors.orange.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: e.availabilityStatus.toLowerCase() == 'available' 
-                                          ? Colors.green
-                                          : Colors.orange,
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    e.availabilityStatus,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .displayMedium!
-                                        .copyWith(
-                                          fontWeight: FontWeight.w500, 
-                                          fontSize: 10,
-                                          color: e.availabilityStatus.toLowerCase() == 'available' 
-                                              ? Colors.green.shade700
-                                              : Colors.orange.shade700,
-                                        ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            // Action button
-                            DataCell(
-                              GestureDetector(
-                                onTap: () {
-                                  context.router.push(ProductDetailRoute(id: e.refId));
-                                },
-                                child: SvgPicture.asset(
-                                  "assets/images/Select_arrow.svg",
-                                  width: 12,
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      }).toList(),
-                    ),
+                      ),
+                    ],
                   ),
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(child: Text("Error: $e")),
             ),
-          ),
-
-          const Divider(
-            height: 2,
-            color: Color(0xffD9D9D9),
-            indent: 24,
-            endIndent: 24,
-          ),
-          Container(
-            height: 40,
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            alignment: Alignment.centerLeft,
-            child: const Text("show 10 entries", style: TextStyle(fontSize: 12)),
           ),
         ],
       ),
