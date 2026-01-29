@@ -7,7 +7,7 @@ class AddMaintenanceService extends StatefulWidget {
   final String? itemName;
   final String? assetType;
   final VoidCallback onServiceAdded;
-  final MaintenanceModel? existingMaintenance; // Add this for editing
+  final MaintenanceModel? existingMaintenance;
 
   const AddMaintenanceService({
     super.key,
@@ -15,7 +15,7 @@ class AddMaintenanceService extends StatefulWidget {
     this.itemName,
     this.assetType,
     required this.onServiceAdded,
-    this.existingMaintenance, // Add this parameter
+    this.existingMaintenance,
   });
 
   @override
@@ -34,7 +34,7 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
   final _extraChargesController = TextEditingController();
   final _totalCostController = TextEditingController(text: '0.00');
 
-  String _selectedServiceType = '';
+  String? _selectedServiceType;
   bool _isSubmitting = false;
 
   final List<String> _serviceTypes = [
@@ -68,12 +68,12 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
       }
       _serviceNotesController.text = maintenance.serviceNotes ?? '';
       _toolCostController.text = maintenance.cost.toStringAsFixed(2);
-      _extraChargesController.text = '0.00'; // Default since we don't store extra charges separately
+      _extraChargesController.text = '0.00';
     }
   }
   
   String _formatDateForInput(DateTime date) {
-    return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+    return "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
   }
 
   @override
@@ -107,7 +107,7 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF2563EB),
+              primary: Color(0xff00599A),
             ),
           ),
           child: child!,
@@ -115,7 +115,7 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
       },
     );
     if (picked != null) {
-      controller.text = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+      controller.text = "${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}";
     }
   }
 
@@ -124,7 +124,7 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
       return;
     }
 
-    if (_selectedServiceType.isEmpty) {
+    if (_selectedServiceType == null || _selectedServiceType!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select a service type'),
@@ -141,35 +141,45 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
     try {
       final apiService = ApiService();
       
+      // Parse dates
+      DateTime? serviceDate;
+      DateTime? nextServiceDate;
+      
+      if (_serviceDateController.text.isNotEmpty) {
+        final parts = _serviceDateController.text.split('/');
+        if (parts.length == 3) {
+          serviceDate = DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+        }
+      }
+      
+      if (_nextServiceDateController.text.isNotEmpty) {
+        final parts = _nextServiceDateController.text.split('/');
+        if (parts.length == 3) {
+          nextServiceDate = DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+        }
+      }
+      
       // Create maintenance data
       final maintenanceData = <String, dynamic>{
         'assetId': widget.assetId,
         'assetType': widget.assetType ?? 'Unknown',
         'itemName': widget.itemName ?? 'Unknown',
-        'serviceDate': _serviceDateController.text,
+        'serviceDate': serviceDate?.toIso8601String(),
         'serviceProviderCompany': _serviceProviderController.text,
         'serviceEngineerName': _serviceEngineerController.text,
-        'serviceType': _selectedServiceType,
-        'nextServiceDue': _nextServiceDateController.text.isNotEmpty ? _nextServiceDateController.text : null,
+        'serviceType': _selectedServiceType!,
+        'nextServiceDue': nextServiceDate?.toIso8601String(),
         'serviceNotes': _serviceNotesController.text,
         'maintenanceStatus': 'Completed',
         'cost': double.tryParse(_totalCostController.text) ?? 0.0,
         'responsibleTeam': _responsibleTeamController.text,
       };
 
-      // Only include ID and createdDate for updates, not for new records
       if (widget.existingMaintenance != null) {
         maintenanceData['maintenanceId'] = widget.existingMaintenance!.maintenanceId;
         maintenanceData['createdDate'] = widget.existingMaintenance!.createdDate.toIso8601String();
       }
 
-      print('DEBUG: Submitting maintenance data: $maintenanceData');
-      print('DEBUG: Is update mode: ${widget.existingMaintenance != null}');
-      if (widget.existingMaintenance != null) {
-        print('DEBUG: Maintenance ID: ${widget.existingMaintenance!.maintenanceId}');
-      }
-
-      // Call API to add or update maintenance record
       final response = widget.existingMaintenance != null
           ? await apiService.updateMaintenanceRecord(widget.existingMaintenance!.maintenanceId, maintenanceData)
           : await apiService.addMaintenanceRecord(maintenanceData);
@@ -184,12 +194,10 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
           ),
         );
         
-        // Close dialog and refresh data
         Navigator.of(context).pop();
         widget.onServiceAdded();
       }
     } catch (e) {
-      print('DEBUG: Error in _submitForm: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -209,474 +217,402 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
     }
   }
 
+  // Required label style matching the reference
+  Widget _requiredLabel(String text) {
+    return RichText(
+      text: TextSpan(
+        text: text,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+          color: Color.fromRGBO(88, 88, 88, 1),
+        ),
+        children: const [
+          TextSpan(text: ' *', style: TextStyle(color: Colors.red)),
+        ],
+      ),
+    );
+  }
+
+  // Section title style
+  Widget _sectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: Colors.black,
+        ),
+      ),
+    );
+  }
+
+  // Common InputDecoration matching the reference
+  InputDecoration _inputDecoration({
+    required Widget label,
+    required String hint,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      label: label,
+      hintText: hint,
+      hintStyle: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w400,
+        color: Color.fromRGBO(144, 144, 144, 1),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xff00599A), width: 1.2),
+      ),
+      suffixIcon: suffixIcon,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.existingMaintenance != null 
-                      ? 'Edit maintenance service record'
-                      : 'Add new tool for maintenance and service',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF111827),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  widget.existingMaintenance != null
-                      ? 'Update the details below and click submit to save changes'
-                      : 'Please enter the details below and click submit to add a new tool',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF6B7280),
-                  ),
-                ),
-              ],
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          // HEADER - matching the reference exactly
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              widget.existingMaintenance != null ? "Edit maintenance service" : "Add new maintenance service",
+              style: const TextStyle(
+                color: Color.fromRGBO(0, 0, 0, 1),
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            IconButton(
-              onPressed: () => Navigator.of(context).pop(),
-              icon: const Icon(Icons.close, color: Color(0xFF6B7280)),
+          ),
+          const SizedBox(height: 4),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              widget.existingMaintenance != null 
+                ? "Please update the details below and click submit to save changes"
+                : "Please enter the details below and click submit to add a new maintenance service",
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: Color.fromRGBO(88, 88, 88, 1),
+              ),
             ),
-          ],
-        ),
-        
-        const SizedBox(height: 24),
-        
-        // Form
-        Expanded(
-          child: Form(
-            key: _formKey,
+          ),
+          const SizedBox(height: 14),
+
+          // FIELDS SCROLL
+          Expanded(
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Service information section
+                  _sectionTitle("Service information"),
+
                   // Row 1: Service Date & Service Provider Company
                   Row(
                     children: [
                       Expanded(
-                        child: _buildDateField(
-                          'Service date *',
-                          'Select the service date',
-                          _serviceDateController,
-                          required: true,
+                        child: TextFormField(
+                          controller: _serviceDateController,
+                          readOnly: true,
+                          decoration: _inputDecoration(
+                            label: _requiredLabel("Service date"),
+                            hint: "Select the service date",
+                            suffixIcon: const Icon(
+                              Icons.calendar_today,
+                              size: 16,
+                              color: Color.fromRGBO(144, 144, 144, 1),
+                            ),
+                          ),
+                          style: const TextStyle(fontSize: 12),
+                          onTap: () => _selectDate(_serviceDateController),
+                          validator: (v) => (v == null || v.isEmpty)
+                              ? "The field cannot be empty"
+                              : null,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 24),
                       Expanded(
-                        child: _buildTextField(
-                          'Service provider company *',
-                          'Enter the service provider company',
-                          _serviceProviderController,
-                          required: true,
+                        child: TextFormField(
+                          controller: _serviceProviderController,
+                          decoration: _inputDecoration(
+                            label: _requiredLabel("Service provider company"),
+                            hint: "Enter the service provider company",
+                          ),
+                          style: const TextStyle(fontSize: 12),
+                          validator: (v) => (v == null || v.isEmpty)
+                              ? "The field cannot be empty"
+                              : null,
                         ),
                       ),
                     ],
                   ),
-                  
-                  const SizedBox(height: 20),
-                  
+                  const SizedBox(height: 14),
+
                   // Row 2: Service Engineer Name & Service Type
                   Row(
                     children: [
                       Expanded(
-                        child: _buildTextField(
-                          'Service engineer name *',
-                          'Enter the service engineer name',
-                          _serviceEngineerController,
-                          required: true,
+                        child: TextFormField(
+                          controller: _serviceEngineerController,
+                          decoration: _inputDecoration(
+                            label: _requiredLabel("Service engineer name"),
+                            hint: "Enter the service engineer name",
+                          ),
+                          style: const TextStyle(fontSize: 12),
+                          validator: (v) => (v == null || v.isEmpty)
+                              ? "The field cannot be empty"
+                              : null,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 24),
                       Expanded(
-                        child: _buildDropdownField(
-                          'Service type',
-                          'Select the service type',
-                          _selectedServiceType,
-                          _serviceTypes,
-                          (value) {
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedServiceType,
+                          isExpanded: true,
+                          items: _serviceTypes
+                              .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                              .toList(),
+                          onChanged: (value) {
                             setState(() {
-                              _selectedServiceType = value ?? '';
+                              _selectedServiceType = value;
                             });
                           },
+                          hint: const Text(
+                            "Select the service type",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Color.fromRGBO(144, 144, 144, 1),
+                            ),
+                          ),
+                          decoration: _inputDecoration(
+                            label: _requiredLabel("Service type"),
+                            hint: "Select the service type",
+                            suffixIcon: const Icon(
+                              Icons.keyboard_arrow_down,
+                              size: 16,
+                              color: Color.fromRGBO(144, 144, 144, 1),
+                            ),
+                          ),
+                          style: const TextStyle(fontSize: 12, color: Colors.black),
+                          validator: (v) => (v == null || v.isEmpty)
+                              ? "The field cannot be empty"
+                              : null,
                         ),
                       ),
                     ],
                   ),
-                  
-                  const SizedBox(height: 20),
-                  
+                  const SizedBox(height: 14),
+
                   // Row 3: Responsible Team & Next Service Due Date
                   Row(
                     children: [
                       Expanded(
-                        child: _buildTextField(
-                          'Responsible team *',
-                          'Enter the responsible team name',
-                          _responsibleTeamController,
-                          required: true,
+                        child: TextFormField(
+                          controller: _responsibleTeamController,
+                          decoration: _inputDecoration(
+                            label: _requiredLabel("Responsible team"),
+                            hint: "Enter the responsible team",
+                          ),
+                          style: const TextStyle(fontSize: 12),
+                          validator: (v) => (v == null || v.isEmpty)
+                              ? "The field cannot be empty"
+                              : null,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 24),
                       Expanded(
-                        child: _buildDateField(
-                          'Next service due date *',
-                          'Select the next service due date',
-                          _nextServiceDateController,
-                          required: true,
+                        child: TextFormField(
+                          controller: _nextServiceDateController,
+                          readOnly: true,
+                          decoration: _inputDecoration(
+                            label: _requiredLabel("Next service due date"),
+                            hint: "Select the next service due date",
+                            suffixIcon: const Icon(
+                              Icons.calendar_today,
+                              size: 16,
+                              color: Color.fromRGBO(144, 144, 144, 1),
+                            ),
+                          ),
+                          style: const TextStyle(fontSize: 12),
+                          onTap: () => _selectDate(_nextServiceDateController),
+                          validator: (v) => (v == null || v.isEmpty)
+                              ? "The field cannot be empty"
+                              : null,
                         ),
                       ),
                     ],
                   ),
-                  
-                  const SizedBox(height: 20),
-                  
+                  const SizedBox(height: 14),
+
                   // Service Notes (Full Width)
-                  _buildTextAreaField(
-                    'Service notes',
-                    'Enter the service notes',
-                    _serviceNotesController,
+                  TextFormField(
+                    controller: _serviceNotesController,
+                    maxLines: 3,
+                    decoration: _inputDecoration(
+                      label: const Text(
+                        "Service notes",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                          color: Color.fromRGBO(88, 88, 88, 1),
+                        ),
+                      ),
+                      hint: "Enter the service notes",
+                    ),
+                    style: const TextStyle(fontSize: 12),
                   ),
-                  
                   const SizedBox(height: 20),
-                  
-                  // Row 4: Tool Cost & Extra Charges
+
+                  // Cost information section
+                  _sectionTitle("Cost information"),
+
+                  // Row 4: Service Cost & Extra Charges
                   Row(
                     children: [
                       Expanded(
-                        child: _buildTextField(
-                          'Tool cost *',
-                          'Enter the tool cost',
-                          _toolCostController,
+                        child: TextFormField(
+                          controller: _toolCostController,
                           keyboardType: TextInputType.number,
-                          required: true,
+                          decoration: _inputDecoration(
+                            label: _requiredLabel("Service cost"),
+                            hint: "Enter the service cost",
+                          ),
+                          style: const TextStyle(fontSize: 12),
+                          validator: (v) => (v == null || v.isEmpty)
+                              ? "The field cannot be empty"
+                              : null,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 24),
                       Expanded(
-                        child: _buildTextField(
-                          'Extra charges',
-                          'Enter the extra charges',
-                          _extraChargesController,
+                        child: TextFormField(
+                          controller: _extraChargesController,
                           keyboardType: TextInputType.number,
+                          decoration: _inputDecoration(
+                            label: const Text(
+                              "Extra charges",
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w400,
+                                color: Color.fromRGBO(88, 88, 88, 1),
+                              ),
+                            ),
+                            hint: "Enter the extra charges",
+                          ),
+                          style: const TextStyle(fontSize: 12),
                         ),
                       ),
                     ],
                   ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Total Tool Cost
+                  const SizedBox(height: 14),
+
+                  // Total Cost (Half Width)
                   SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.3,
-                    child: _buildTextField(
-                      'Total tool cost',
-                      '0.00',
-                      _totalCostController,
+                    width: MediaQuery.of(context).size.width * 0.25,
+                    child: TextFormField(
+                      controller: _totalCostController,
                       enabled: false,
+                      decoration: _inputDecoration(
+                        label: const Text(
+                          "Total service cost",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            color: Color.fromRGBO(88, 88, 88, 1),
+                          ),
+                        ),
+                        hint: "0.00",
+                      ),
+                      style: const TextStyle(fontSize: 12),
                     ),
                   ),
-                  
                   const SizedBox(height: 40),
                 ],
               ),
             ),
           ),
-        ),
-        
-        // Bottom Buttons
-        Container(
-          padding: const EdgeInsets.only(top: 16),
-          child: Row(
+
+          // BOTTOM BUTTONS - using existing add page button styling
+          Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              TextButton(
-                onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                    side: const BorderSide(color: Color(0xFFD1D5DB)),
+              // Cancel Button - matching add tool style
+              SizedBox(
+                width: 120,
+                height: 36,
+                child: OutlinedButton(
+                  onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xff00599A), width: 1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
-                ),
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(
-                    color: Color(0xFF374151),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(
+                      color: Color(0xff00599A),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              ElevatedButton(
-                onPressed: _isSubmitting ? null : _submitForm,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6B7280),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
+              const SizedBox(width: 14),
+              // Submit Button - matching add tool style
+              SizedBox(
+                width: 120,
+                height: 36,
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submitForm,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isSubmitting 
+                        ? Colors.grey 
+                        : const Color(0xff00599A),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    elevation: 0,
                   ),
-                  elevation: 0,
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Text(
+                          widget.existingMaintenance != null ? 'Update' : 'Submit',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
-                child: _isSubmitting
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : Text(
-                        widget.existingMaintenance != null ? 'Update' : 'Submit',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
               ),
             ],
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTextField(
-    String label,
-    String placeholder,
-    TextEditingController controller, {
-    bool required = false,
-    bool enabled = true,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF374151),
-          ),
-        ),
-        const SizedBox(height: 6),
-        TextFormField(
-          controller: controller,
-          enabled: enabled,
-          keyboardType: keyboardType,
-          decoration: InputDecoration(
-            hintText: placeholder,
-            hintStyle: const TextStyle(
-              color: Color(0xFF9CA3AF),
-              fontSize: 14,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: Color(0xFF2563EB)),
-            ),
-            disabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-            ),
-            filled: !enabled,
-            fillColor: enabled ? null : const Color(0xFFF9FAFB),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          ),
-          validator: required
-              ? (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'This field is required';
-                  }
-                  return null;
-                }
-              : null,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDateField(
-    String label,
-    String placeholder,
-    TextEditingController controller, {
-    bool required = false,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF374151),
-          ),
-        ),
-        const SizedBox(height: 6),
-        TextFormField(
-          controller: controller,
-          readOnly: true,
-          decoration: InputDecoration(
-            hintText: placeholder,
-            hintStyle: const TextStyle(
-              color: Color(0xFF9CA3AF),
-              fontSize: 14,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: Color(0xFF2563EB)),
-            ),
-            suffixIcon: const Icon(
-              Icons.calendar_today,
-              color: Color(0xFF6B7280),
-              size: 18,
-            ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          ),
-          onTap: () => _selectDate(controller),
-          validator: required
-              ? (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'This field is required';
-                  }
-                  return null;
-                }
-              : null,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDropdownField(
-    String label,
-    String placeholder,
-    String value,
-    List<String> items,
-    ValueChanged<String?> onChanged,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF374151),
-          ),
-        ),
-        const SizedBox(height: 6),
-        DropdownButtonFormField<String>(
-          value: value.isEmpty ? null : value,
-          decoration: InputDecoration(
-            hintText: placeholder,
-            hintStyle: const TextStyle(
-              color: Color(0xFF9CA3AF),
-              fontSize: 14,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: Color(0xFF2563EB)),
-            ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          ),
-          items: items.map((String item) {
-            return DropdownMenuItem<String>(
-              value: item,
-              child: Text(
-                item,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF111827),
-                ),
-              ),
-            );
-          }).toList(),
-          onChanged: onChanged,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTextAreaField(
-    String label,
-    String placeholder,
-    TextEditingController controller,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF374151),
-          ),
-        ),
-        const SizedBox(height: 6),
-        TextFormField(
-          controller: controller,
-          maxLines: 4,
-          decoration: InputDecoration(
-            hintText: placeholder,
-            hintStyle: const TextStyle(
-              color: Color(0xFF9CA3AF),
-              fontSize: 14,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: Color(0xFF2563EB)),
-            ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

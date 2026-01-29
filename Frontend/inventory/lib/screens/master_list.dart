@@ -938,6 +938,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:inventory/providers/master_list_provider.dart';
 import 'package:inventory/providers/selection_provider.dart';
+import 'package:inventory/providers/search_provider.dart';
 import 'package:inventory/widgets/top_layer.dart';
 import 'package:inventory/widgets/generic_paginated_table.dart';
 import 'package:inventory/routers/app_router.dart';
@@ -949,7 +950,9 @@ class MasterListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final masterAsync = ref.watch(masterListProvider);
+    // Use filtered data instead of raw data
+    final filteredItems = ref.watch(filteredMasterListProvider);
+    final masterListAsync = ref.watch(masterListProvider);
     
     return Container(
       padding: const EdgeInsets.only(top: 12),
@@ -962,17 +965,50 @@ class MasterListScreen extends ConsumerWidget {
           TopLayer(),
 
           Expanded(
-            child: masterAsync.when(
+            child: masterListAsync.when(
               data: (items) {
+                // Show message if no results found
+                if (filteredItems.isEmpty && items.isNotEmpty) {
+                  final searchQuery = ref.watch(masterListSearchQueryProvider);
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.search_off,
+                          size: 64,
+                          color: Color(0xFF9CA3AF),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No results found for "$searchQuery"',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF6B7280),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Try adjusting your search terms',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF9CA3AF),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: GenericPaginatedTable<MasterListModel>(
-                    data: items,
-                    rowsPerPage: 7, // Following your pattern
+                    data: filteredItems, // Use filtered data
+                    rowsPerPage: 7,
                     minWidth: 1800,
                     showCheckboxColumn: true,
                     onSelectionChanged: (selectedItems) {
-                      // Handle selection changes if needed
                       print("Selected ${selectedItems.length} items");
                     },
                     headers: [
@@ -980,55 +1016,199 @@ class MasterListScreen extends ConsumerWidget {
                         width: 150,
                         alignment: Alignment.centerLeft,
                         padding: const EdgeInsets.all(8.0),
-                        child: Text("Item ID", style: Theme.of(context).textTheme.titleSmall),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                "Item ID", 
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF374151),
+                                ),
+                              ),
+                            ),
+                            SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                            const SizedBox(width: 1),
+                            SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                          ],
+                        ),
                       ),
                       Container(
                         width: 120,
                         alignment: Alignment.centerLeft,
                         padding: const EdgeInsets.all(8.0),
-                        child: Text("Type", style: Theme.of(context).textTheme.titleSmall),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                "Type", 
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF374151),
+                                ),
+                              ),
+                            ),
+                            SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                            const SizedBox(width: 1),
+                            SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                          ],
+                        ),
                       ),
                       Container(
                         width: 200,
                         alignment: Alignment.centerLeft,
                         padding: const EdgeInsets.all(8.0),
-                        child: Text("Item Name", style: Theme.of(context).textTheme.titleSmall),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                "Item Name", 
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF374151),
+                                ),
+                              ),
+                            ),
+                            SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                            const SizedBox(width: 1),
+                            SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                          ],
+                        ),
                       ),
                       Container(
                         width: 150,
                         alignment: Alignment.centerLeft,
                         padding: const EdgeInsets.all(8.0),
-                        child: Text("Vendor", style: Theme.of(context).textTheme.titleSmall),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                "Vendor", 
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF374151),
+                                ),
+                              ),
+                            ),
+                            SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                            const SizedBox(width: 1),
+                            SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                          ],
+                        ),
                       ),
                       Container(
                         width: 150,
                         alignment: Alignment.centerLeft,
                         padding: const EdgeInsets.all(8.0),
-                        child: Text("Created Date", style: Theme.of(context).textTheme.titleSmall),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                "Created Date", 
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF374151),
+                                ),
+                              ),
+                            ),
+                            SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                            const SizedBox(width: 1),
+                            SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                          ],
+                        ),
                       ),
                       Container(
                         width: 180,
                         alignment: Alignment.centerLeft,
                         padding: const EdgeInsets.all(8.0),
-                        child: Text("Responsible Team", style: Theme.of(context).textTheme.titleSmall),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                "Responsible Team", 
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF374151),
+                                ),
+                              ),
+                            ),
+                            SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                            const SizedBox(width: 1),
+                            SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                          ],
+                        ),
                       ),
                       Container(
                         width: 180,
                         alignment: Alignment.centerLeft,
                         padding: const EdgeInsets.all(8.0),
-                        child: Text("Storage Location", style: Theme.of(context).textTheme.titleSmall),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                "Storage Location", 
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF374151),
+                                ),
+                              ),
+                            ),
+                            SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                            const SizedBox(width: 1),
+                            SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                          ],
+                        ),
                       ),
                       Container(
                         width: 150,
                         alignment: Alignment.centerLeft,
                         padding: const EdgeInsets.all(8.0),
-                        child: Text("Next Service Due", style: Theme.of(context).textTheme.titleSmall),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                "Next Service Due", 
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF374151),
+                                ),
+                              ),
+                            ),
+                            SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                            const SizedBox(width: 1),
+                            SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                          ],
+                        ),
                       ),
                       Container(
                         width: 180,
                         alignment: Alignment.centerLeft,
                         padding: const EdgeInsets.all(8.0),
-                        child: Text("Availability Status", style: Theme.of(context).textTheme.titleSmall),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                "Availability Status", 
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF374151),
+                                ),
+                              ),
+                            ),
+                            SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                            const SizedBox(width: 1),
+                            SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                          ],
+                        ),
                       ),
                       Container(
                         width: 50,

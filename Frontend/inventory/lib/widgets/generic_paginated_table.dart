@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:inventory/widgets/pagination_controls.dart';
 
 /// A simple, clean paginated table widget
 class GenericPaginatedTable<T> extends StatefulWidget {
@@ -27,54 +28,30 @@ class GenericPaginatedTable<T> extends StatefulWidget {
 }
 
 class _GenericPaginatedTableState<T> extends State<GenericPaginatedTable<T>> {
-  static const _defaultRowsPerPageOptions = [5, 10, 15, 20];
-  
-  late int _rowsPerPage;
-  int _firstRowIndex = 0;
+  late PaginationState _paginationState;
   Set<T> _selectedItems = {};
   bool _selectAll = false;
 
   @override
   void initState() {
     super.initState();
-    _rowsPerPage = widget.rowsPerPage;
+    _paginationState = PaginationState(
+      currentPage: 1,
+      rowsPerPage: widget.rowsPerPage,
+      totalItems: widget.data.length,
+    );
   }
 
-  // Pagination calculations
-  int get _rowCount => widget.data.length;
-  int get _maxFirstRowIndex => math.max(0, _rowCount - _rowsPerPage);
-  bool get _canGoNext => _firstRowIndex < _maxFirstRowIndex;
-  bool get _canGoPrev => _firstRowIndex > 0;
-
-  int _clampIndex(int index) {
-    return math.max(0, math.min(index, _maxFirstRowIndex));
-  }
-
-  // Navigation methods
-  void _goNext() {
-    if (!_canGoNext) return;
-    setState(() {
-      _firstRowIndex = math.min(_firstRowIndex + _rowsPerPage, _maxFirstRowIndex);
-    });
-  }
-
-  void _goPrev() {
-    if (!_canGoPrev) return;
-    setState(() {
-      _firstRowIndex = math.max(0, _firstRowIndex - _rowsPerPage);
-    });
-  }
-
-  void _goToFirstPage() {
-    setState(() {
-      _firstRowIndex = 0;
-    });
-  }
-
-  void _goToLastPage() {
-    setState(() {
-      _firstRowIndex = _maxFirstRowIndex;
-    });
+  @override
+  void didUpdateWidget(GenericPaginatedTable<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.data.length != widget.data.length) {
+      setState(() {
+        _paginationState = _paginationState.copyWith(
+          totalItems: widget.data.length,
+        );
+      });
+    }
   }
 
   // Selection methods
@@ -106,8 +83,26 @@ class _GenericPaginatedTableState<T> extends State<GenericPaginatedTable<T>> {
   }
 
   List<T> _getCurrentPageItems() {
-    final end = math.min(_firstRowIndex + _rowsPerPage, _rowCount);
-    return widget.data.sublist(_firstRowIndex, end);
+    return _paginationState.getPageItems(widget.data);
+  }
+
+  void _onPageChanged(int page) {
+    setState(() {
+      _paginationState = _paginationState.copyWith(currentPage: page);
+    });
+  }
+
+  void _onRowsPerPageChanged(int rowsPerPage) {
+    setState(() {
+      // Calculate which page we should be on after changing rows per page
+      final currentFirstItem = (_paginationState.currentPage - 1) * _paginationState.rowsPerPage;
+      final newPage = (currentFirstItem / rowsPerPage).floor() + 1;
+      
+      _paginationState = _paginationState.copyWith(
+        currentPage: newPage,
+        rowsPerPage: rowsPerPage,
+      );
+    });
   }
 
   @override
@@ -199,253 +194,15 @@ class _GenericPaginatedTableState<T> extends State<GenericPaginatedTable<T>> {
         ),
         
         // Pagination controls
-        _buildPaginationControls(),
+        PaginationControls(
+          currentPage: _paginationState.currentPage,
+          totalPages: _paginationState.totalPages,
+          rowsPerPage: _paginationState.rowsPerPage,
+          totalItems: _paginationState.totalItems,
+          onPageChanged: _onPageChanged,
+          onRowsPerPageChanged: _onRowsPerPageChanged,
+        ),
       ],
     );
-  }
-
-  Widget _buildPaginationControls() {
-    final totalPages = (_rowCount / _rowsPerPage).ceil();
-    final currentPage = (_firstRowIndex / _rowsPerPage).floor() + 1;
-    
-    final options = {..._defaultRowsPerPageOptions, _rowsPerPage}.toList()..sort();
-
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: Color(0xffD9D9D9))),
-      ),
-      child: Row(
-        children: [
-          // Left side - Show entries dropdown
-          Row(
-            children: [
-              const Text(
-                "Show", 
-                style: TextStyle(
-                  fontSize: 13, 
-                  color: Color(0xff6B7280),
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                height: 32,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: const Color(0xffD1D5DB)),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: DropdownButton<int>(
-                  value: _rowsPerPage,
-                  underline: const SizedBox(),
-                  isDense: true,
-                  icon: const Icon(
-                    Icons.keyboard_arrow_down,
-                    size: 16,
-                    color: Color(0xff6B7280),
-                  ),
-                  style: const TextStyle(
-                    fontSize: 13, 
-                    color: Color(0xff374151),
-                    fontWeight: FontWeight.w500,
-                  ),
-                  onChanged: (value) {
-                    if (value == null) return;
-                    setState(() {
-                      final page = _firstRowIndex ~/ _rowsPerPage;
-                      _rowsPerPage = value;
-                      _firstRowIndex = page * _rowsPerPage;
-                      _firstRowIndex = _clampIndex(_firstRowIndex);
-                    });
-                  },
-                  items: options.map((e) => DropdownMenuItem(
-                    value: e, 
-                    child: Text("$e")
-                  )).toList(),
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                "entries", 
-                style: TextStyle(
-                  fontSize: 13, 
-                  color: Color(0xff6B7280),
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ],
-          ),
-          
-          // Center - Page numbers
-          Expanded(
-            child: Center(
-              child: totalPages > 1 
-                  ? _buildPageNumbers(currentPage, totalPages)
-                  : const SizedBox(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPageNumbers(int currentPage, int totalPages) {
-    List<Widget> pageButtons = [];
-    
-    // Previous button
-    pageButtons.add(
-      _buildPageButton(
-        icon: Icons.chevron_left,
-        onPressed: _canGoPrev ? _goPrev : null,
-        isEnabled: _canGoPrev,
-      ),
-    );
-    
-    // Calculate which page numbers to show
-    List<int> pagesToShow = _calculatePagesToShow(currentPage, totalPages);
-    
-    for (int i = 0; i < pagesToShow.length; i++) {
-      int pageNum = pagesToShow[i];
-      
-      // Add ellipsis if there's a gap
-      if (i > 0 && pagesToShow[i] - pagesToShow[i-1] > 1) {
-        pageButtons.add(_buildEllipsis());
-      }
-      
-      pageButtons.add(
-        _buildPageButton(
-          text: pageNum.toString(),
-          onPressed: () => _goToPage(pageNum),
-          isActive: pageNum == currentPage,
-          isEnabled: true,
-        ),
-      );
-    }
-    
-    // Next button
-    pageButtons.add(
-      _buildPageButton(
-        icon: Icons.chevron_right,
-        onPressed: _canGoNext ? _goNext : null,
-        isEnabled: _canGoNext,
-      ),
-    );
-    
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: pageButtons,
-    );
-  }
-
-  List<int> _calculatePagesToShow(int currentPage, int totalPages) {
-    List<int> pages = [];
-    
-    if (totalPages <= 7) {
-      // Show all pages if 7 or fewer
-      for (int i = 1; i <= totalPages; i++) {
-        pages.add(i);
-      }
-    } else {
-      // Always show first page
-      pages.add(1);
-      
-      if (currentPage <= 4) {
-        // Show 1, 2, 3, 4, 5, ..., last
-        for (int i = 2; i <= 5; i++) {
-          pages.add(i);
-        }
-        pages.add(totalPages);
-      } else if (currentPage >= totalPages - 3) {
-        // Show 1, ..., last-4, last-3, last-2, last-1, last
-        for (int i = totalPages - 4; i <= totalPages; i++) {
-          pages.add(i);
-        }
-      } else {
-        // Show 1, ..., current-1, current, current+1, ..., last
-        for (int i = currentPage - 1; i <= currentPage + 1; i++) {
-          pages.add(i);
-        }
-        pages.add(totalPages);
-      }
-    }
-    
-    return pages.toSet().toList()..sort();
-  }
-
-  Widget _buildPageButton({
-    String? text,
-    IconData? icon,
-    VoidCallback? onPressed,
-    bool isActive = false,
-    bool isEnabled = true,
-  }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 2),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: isEnabled ? onPressed : null,
-          borderRadius: BorderRadius.circular(6),
-          child: Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: isActive ? const Color(0xff3B82F6) : Colors.transparent,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Center(
-              child: text != null
-                  ? Text(
-                      text,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: isActive 
-                            ? Colors.white 
-                            : isEnabled 
-                                ? const Color(0xff374151)
-                                : const Color(0xff9CA3AF),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    )
-                  : Icon(
-                      icon,
-                      size: 18,
-                      color: isEnabled 
-                          ? const Color(0xff6B7280) 
-                          : const Color(0xff9CA3AF),
-                    ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEllipsis() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 2),
-      width: 36,
-      height: 36,
-      child: const Center(
-        child: Text(
-          "...",
-          style: TextStyle(
-            fontSize: 14,
-            color: Color(0xff6B7280),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _goToPage(int page) {
-    setState(() {
-      _firstRowIndex = (page - 1) * _rowsPerPage;
-      _firstRowIndex = _clampIndex(_firstRowIndex);
-    });
   }
 }

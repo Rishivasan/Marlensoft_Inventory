@@ -13,7 +13,10 @@ import 'package:inventory/screens/add_forms/add_tool.dart';
 import 'package:inventory/screens/add_forms/add_asset.dart';
 import 'package:inventory/screens/add_forms/add_consumable.dart';
 import 'package:inventory/providers/header_state.dart';
+import 'package:inventory/providers/search_provider.dart';
+import 'package:inventory/widgets/generic_paginated_table.dart';
 import 'package:auto_route/auto_route.dart';
+import 'dart:async';
 
 @RoutePage()
 class ProductDetailScreen extends ConsumerStatefulWidget {
@@ -29,15 +32,27 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
   MasterListModel? productData;
   List<MaintenanceModel> maintenanceRecords = [];
   List<AllocationModel> allocationRecords = [];
+  List<MaintenanceModel> filteredMaintenanceRecords = [];
+  List<AllocationModel> filteredAllocationRecords = [];
   bool loading = true;
   bool loadingMaintenance = true;
   bool loadingAllocation = true;
   late TabController _tabController;
   
+  // Search controllers
+  final TextEditingController _maintenanceSearchController = TextEditingController();
+  final TextEditingController _allocationSearchController = TextEditingController();
+  Timer? _maintenanceDebounceTimer;
+  Timer? _allocationDebounceTimer;
+  
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    
+    // Initialize search controllers
+    _maintenanceSearchController.addListener(_onMaintenanceSearchChanged);
+    _allocationSearchController.addListener(_onAllocationSearchChanged);
     
     // Set header for Product Detail page
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -53,6 +68,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
   @override
   void dispose() {
     _tabController.dispose();
+    _maintenanceSearchController.dispose();
+    _allocationSearchController.dispose();
+    _maintenanceDebounceTimer?.cancel();
+    _allocationDebounceTimer?.cancel();
     
     // Reset header when leaving the page
     ref.read(headerProvider.notifier).state = const HeaderModel(
@@ -61,6 +80,44 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
     );
     
     super.dispose();
+  }
+
+  void _onMaintenanceSearchChanged() {
+    _maintenanceDebounceTimer?.cancel();
+    _maintenanceDebounceTimer = Timer(const Duration(milliseconds: 300), () {
+      setState(() {
+        filteredMaintenanceRecords = filterMaintenanceRecords(
+          maintenanceRecords, 
+          _maintenanceSearchController.text
+        );
+      });
+    });
+  }
+
+  void _onAllocationSearchChanged() {
+    _allocationDebounceTimer?.cancel();
+    _allocationDebounceTimer = Timer(const Duration(milliseconds: 300), () {
+      setState(() {
+        filteredAllocationRecords = filterAllocationRecords(
+          allocationRecords, 
+          _allocationSearchController.text
+        );
+      });
+    });
+  }
+
+  void _clearMaintenanceSearch() {
+    _maintenanceSearchController.clear();
+    setState(() {
+      filteredMaintenanceRecords = maintenanceRecords;
+    });
+  }
+
+  void _clearAllocationSearch() {
+    _allocationSearchController.clear();
+    setState(() {
+      filteredAllocationRecords = allocationRecords;
+    });
   }
   
   Future<void> _loadProductData() async {
@@ -181,6 +238,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
       
       setState(() {
         maintenanceRecords = finalMaintenanceList;
+        filteredMaintenanceRecords = finalMaintenanceList; // Initialize filtered list
         loadingMaintenance = false;
       });
       
@@ -235,6 +293,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
       
       setState(() {
         allocationRecords = finalAllocationList;
+        filteredAllocationRecords = finalAllocationList; // Initialize filtered list
         loadingAllocation = false;
       });
       
@@ -823,34 +882,57 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
               SizedBox(
                 width: 440,
                 height: 35,
-                child: SearchBar(
-                  elevation: const WidgetStatePropertyAll(0),
-                  backgroundColor: const WidgetStatePropertyAll(Colors.white),
-                  hintText: 'Search',
-                  padding: const WidgetStatePropertyAll(
-                    EdgeInsetsGeometry.only(left: 6, bottom: 2),
-                  ),
-                  hintStyle: WidgetStatePropertyAll(
-                    Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  shape: WidgetStatePropertyAll(
-                    RoundedRectangleBorder(
-                      side: const BorderSide(
+                child: TextField(
+                  controller: _maintenanceSearchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search maintenance records...',
+                    hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: const Color(0xFF9CA3AF),
+                    ),
+                    contentPadding: const EdgeInsets.only(left: 12, bottom: 2),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: const BorderSide(
                         color: Color(0xff909090),
                         width: 1,
                       ),
-                      borderRadius: BorderRadius.circular(6),
                     ),
-                  ),
-                  trailing: [
-                    IconButton(
-                      onPressed: () {},
-                      icon: SvgPicture.asset(
-                        "assets/images/Vector.svg",
-                        width: 12,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: const BorderSide(
+                        color: Color(0xff909090),
+                        width: 1,
                       ),
                     ),
-                  ],
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: const BorderSide(
+                        color: Color(0xff00599A),
+                        width: 1,
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    suffixIcon: _maintenanceSearchController.text.isNotEmpty
+                        ? IconButton(
+                            onPressed: _clearMaintenanceSearch,
+                            icon: const Icon(
+                              Icons.clear,
+                              size: 16,
+                              color: Color(0xFF9CA3AF),
+                            ),
+                          )
+                        : IconButton(
+                            onPressed: () {
+                              FocusScope.of(context).requestFocus(FocusNode());
+                            },
+                            icon: SvgPicture.asset(
+                              "assets/images/Vector.svg",
+                              width: 12,
+                            ),
+                          ),
+                  ),
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
               
@@ -913,34 +995,57 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
               SizedBox(
                 width: 440,
                 height: 35,
-                child: SearchBar(
-                  elevation: const WidgetStatePropertyAll(0),
-                  backgroundColor: const WidgetStatePropertyAll(Colors.white),
-                  hintText: 'Search',
-                  padding: const WidgetStatePropertyAll(
-                    EdgeInsetsGeometry.only(left: 6, bottom: 2),
-                  ),
-                  hintStyle: WidgetStatePropertyAll(
-                    Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  shape: WidgetStatePropertyAll(
-                    RoundedRectangleBorder(
-                      side: const BorderSide(
+                child: TextField(
+                  controller: _allocationSearchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search allocation records...',
+                    hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: const Color(0xFF9CA3AF),
+                    ),
+                    contentPadding: const EdgeInsets.only(left: 12, bottom: 2),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: const BorderSide(
                         color: Color(0xff909090),
                         width: 1,
                       ),
-                      borderRadius: BorderRadius.circular(6),
                     ),
-                  ),
-                  trailing: [
-                    IconButton(
-                      onPressed: () {},
-                      icon: SvgPicture.asset(
-                        "assets/images/Vector.svg",
-                        width: 12,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: const BorderSide(
+                        color: Color(0xff909090),
+                        width: 1,
                       ),
                     ),
-                  ],
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: const BorderSide(
+                        color: Color(0xff00599A),
+                        width: 1,
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    suffixIcon: _allocationSearchController.text.isNotEmpty
+                        ? IconButton(
+                            onPressed: _clearAllocationSearch,
+                            icon: const Icon(
+                              Icons.clear,
+                              size: 16,
+                              color: Color(0xFF9CA3AF),
+                            ),
+                          )
+                        : IconButton(
+                            onPressed: () {
+                              FocusScope.of(context).requestFocus(FocusNode());
+                            },
+                            icon: SvgPicture.asset(
+                              "assets/images/Vector.svg",
+                              width: 12,
+                            ),
+                          ),
+                  ),
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
               
@@ -1091,131 +1196,369 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (maintenanceRecords.isEmpty) {
+    if (filteredMaintenanceRecords.isEmpty && maintenanceRecords.isNotEmpty) {
+      // Show no search results message
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.search_off,
+              size: 48,
+              color: Color(0xFF9CA3AF),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No maintenance records found for "${_maintenanceSearchController.text}"',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF6B7280),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Try adjusting your search terms',
+              style: TextStyle(
+                fontSize: 12,
+                color: Color(0xFF9CA3AF),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (filteredMaintenanceRecords.isEmpty) {
       return const Center(
         child: Text(
           'No maintenance records found for this item.',
-          style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)), // Reduced from 16
+          style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
         ),
       );
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16), // Reduced from 20
-      child: Column(
-        children: [
-          // Table Header
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: GenericPaginatedTable<MaintenanceModel>(
+        data: filteredMaintenanceRecords, // Use filtered data
+        rowsPerPage: 5,
+        minWidth: 1200,
+        showCheckboxColumn: false,
+        headers: [
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 10), // Reduced from 12
-            decoration: const BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-              ),
-            ),
+            width: 150,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
-                _buildTableHeaderWithFilter('Service Date', flex: 2),
-                _buildTableHeaderWithFilter('Service provider name', flex: 2),
-                _buildTableHeaderWithFilter('Service engineer name', flex: 2),
-                _buildTableHeaderWithFilter('Service Type', flex: 2),
-                _buildTableHeaderWithFilter('Responsible Team', flex: 2),
-                _buildTableHeaderWithFilter('Next Service Due', flex: 2),
-                _buildTableHeaderWithFilter('Cost', flex: 1),
-                _buildTableHeaderWithFilter('Status', flex: 1),
-                const SizedBox(width: 32), // Reduced from 40
+                const Expanded(
+                  child: Text(
+                    'Service Date',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF374151),
+                    ),
+                  ),
+                ),
+                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                const SizedBox(width: 1),
+                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
               ],
             ),
           ),
-          
-          // Table Rows
-          Expanded(
-            child: ListView.builder(
-              itemCount: maintenanceRecords.length,
-              itemBuilder: (context, index) {
-                final record = maintenanceRecords[index];
-                return Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10), // Reduced from 12
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        color: index == maintenanceRecords.length - 1 
-                            ? Colors.transparent 
-                            : const Color(0xFFE5E7EB),
-                        width: 1,
-                      ),
+          Container(
+            width: 180,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Service provider name',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF374151),
                     ),
                   ),
-                  child: Row(
-                    children: [
-                      _buildTableCell(
-                        _formatDate(record.serviceDate),
-                        flex: 2,
-                      ),
-                      _buildTableCell(record.serviceProviderCompany, flex: 2),
-                      _buildTableCell(record.serviceEngineerName, flex: 2),
-                      _buildTableCell(record.serviceType, flex: 2),
-                      _buildTableCell(record.responsibleTeam, flex: 2),
-                      _buildTableCell(
-                        _formatDate(record.nextServiceDue),
-                        flex: 2,
-                      ),
-                      _buildTableCell(
-                        '₹${record.cost.toStringAsFixed(0)}',
-                        flex: 1,
-                      ),
-                      Expanded(
-                        flex: 1,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3), // Reduced from 8,4
-                          decoration: BoxDecoration(
-                            color: _getMaintenanceStatusColor(record.maintenanceStatus),
-                            borderRadius: BorderRadius.circular(10), // Reduced from 12
-                          ),
-                          child: Text(
-                            record.maintenanceStatus,
-                            style: TextStyle(
-                              color: _getMaintenanceStatusTextColor(record.maintenanceStatus),
-                              fontSize: 11, // Reduced from 12
-                              fontWeight: FontWeight.w500,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 32, // Reduced from 40
-                        child: IconButton(
-                          onPressed: () {
-                            // Open edit dialog with existing maintenance data
-                            DialogPannelHelper().showAddPannel(
-                              context: context,
-                              addingItem: AddMaintenanceService(
-                                assetId: productData?.assetId ?? widget.id,
-                                itemName: productData?.name ?? 'Unknown',
-                                assetType: productData?.itemType ?? 'Unknown',
-                                existingMaintenance: record, // Pass the existing record for editing
-                                onServiceAdded: () {
-                                  _loadMaintenanceData(productData?.assetId ?? widget.id);
-                                },
-                              ),
-                            );
-                          },
-                          icon: const Icon(
-                            Icons.arrow_forward,
-                            size: 14, // Reduced from 16
-                            color: Color(0xFF2563EB),
-                          ),
-                        ),
-                      ),
-                    ],
+                ),
+                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                const SizedBox(width: 1),
+                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+              ],
+            ),
+          ),
+          Container(
+            width: 180,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Service engineer name',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF374151),
+                    ),
+                  ),
+                ),
+                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                const SizedBox(width: 1),
+                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+              ],
+            ),
+          ),
+          Container(
+            width: 120,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Service Type',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF374151),
+                    ),
+                  ),
+                ),
+                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                const SizedBox(width: 1),
+                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+              ],
+            ),
+          ),
+          Container(
+            width: 150,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Responsible Team',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF374151),
+                    ),
+                  ),
+                ),
+                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                const SizedBox(width: 1),
+                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+              ],
+            ),
+          ),
+          Container(
+            width: 150,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Next Service Due',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF374151),
+                    ),
+                  ),
+                ),
+                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                const SizedBox(width: 1),
+                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+              ],
+            ),
+          ),
+          Container(
+            width: 100,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Cost',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF374151),
+                    ),
+                  ),
+                ),
+                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                const SizedBox(width: 1),
+                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+              ],
+            ),
+          ),
+          Container(
+            width: 120,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Status',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF374151),
+                    ),
+                  ),
+                ),
+                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                const SizedBox(width: 1),
+                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+              ],
+            ),
+          ),
+          Container(
+            width: 50,
+            alignment: Alignment.center,
+            child: const Text(""),
+          ),
+        ],
+        rowBuilder: (record, isSelected, onChanged) => [
+          Container(
+            width: 150,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              _formatDate(record.serviceDate),
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF374151),
+              ),
+            ),
+          ),
+          Container(
+            width: 180,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              record.serviceProviderCompany,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF374151),
+              ),
+            ),
+          ),
+          Container(
+            width: 180,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              record.serviceEngineerName,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF374151),
+              ),
+            ),
+          ),
+          Container(
+            width: 120,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              record.serviceType,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF374151),
+              ),
+            ),
+          ),
+          Container(
+            width: 150,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              record.responsibleTeam,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF374151),
+              ),
+            ),
+          ),
+          Container(
+            width: 150,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              _formatDate(record.nextServiceDue),
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF374151),
+              ),
+            ),
+          ),
+          Container(
+            width: 100,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              '₹${record.cost.toStringAsFixed(0)}',
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF374151),
+              ),
+            ),
+          ),
+          Container(
+            width: 120,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: _getMaintenanceStatusColor(record.maintenanceStatus),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                record.maintenanceStatus,
+                style: TextStyle(
+                  color: _getMaintenanceStatusTextColor(record.maintenanceStatus),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+          Container(
+            width: 50,
+            alignment: Alignment.center,
+            child: IconButton(
+              onPressed: () {
+                DialogPannelHelper().showAddPannel(
+                  context: context,
+                  addingItem: AddMaintenanceService(
+                    assetId: productData?.assetId ?? widget.id,
+                    itemName: productData?.name ?? 'Unknown',
+                    assetType: productData?.itemType ?? 'Unknown',
+                    existingMaintenance: record,
+                    onServiceAdded: () {
+                      _loadMaintenanceData(productData?.assetId ?? widget.id);
+                    },
                   ),
                 );
               },
+              icon: const Icon(
+                Icons.arrow_forward,
+                size: 14,
+                color: Color(0xFF2563EB),
+              ),
             ),
           ),
-          
-          // Pagination
-          _buildPagination(maintenanceRecords.length),
         ],
       ),
     );
@@ -1321,129 +1664,335 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (allocationRecords.isEmpty) {
+    if (filteredAllocationRecords.isEmpty && allocationRecords.isNotEmpty) {
+      // Show no search results message
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.search_off,
+              size: 48,
+              color: Color(0xFF9CA3AF),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No allocation records found for "${_allocationSearchController.text}"',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF6B7280),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Try adjusting your search terms',
+              style: TextStyle(
+                fontSize: 12,
+                color: Color(0xFF9CA3AF),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (filteredAllocationRecords.isEmpty) {
       return const Center(
         child: Text(
           'No allocation records found for this item.',
-          style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)), // Reduced from 16
+          style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
         ),
       );
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16), // Reduced from 20
-      child: Column(
-        children: [
-          // Table Header
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: GenericPaginatedTable<AllocationModel>(
+        data: filteredAllocationRecords, // Use filtered data
+        rowsPerPage: 5,
+        minWidth: 1200,
+        showCheckboxColumn: false,
+        headers: [
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 10), // Reduced from 12
-            decoration: const BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-              ),
-            ),
+            width: 150,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
-                _buildTableHeaderWithFilter('Issue Date', flex: 2),
-                _buildTableHeaderWithFilter('Employee name', flex: 2),
-                _buildTableHeaderWithFilter('Team name', flex: 2),
-                _buildTableHeaderWithFilter('Purpose', flex: 2),
-                _buildTableHeaderWithFilter('Expected return date', flex: 2),
-                _buildTableHeaderWithFilter('Actual return date', flex: 2),
-                _buildTableHeaderWithFilter('Status', flex: 1),
-                const SizedBox(width: 32), // Reduced from 40
+                const Expanded(
+                  child: Text(
+                    'Issue Date',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF374151),
+                    ),
+                  ),
+                ),
+                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                const SizedBox(width: 1),
+                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
               ],
             ),
           ),
-          
-          // Table Rows
-          Expanded(
-            child: ListView.builder(
-              itemCount: allocationRecords.length,
-              itemBuilder: (context, index) {
-                final record = allocationRecords[index];
-                return Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10), // Reduced from 12
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        color: index == allocationRecords.length - 1 
-                            ? Colors.transparent 
-                            : const Color(0xFFE5E7EB),
-                        width: 1,
-                      ),
+          Container(
+            width: 180,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Employee name',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF374151),
                     ),
                   ),
-                  child: Row(
-                    children: [
-                      _buildTableCell(
-                        _formatDate(record.issuedDate),
-                        flex: 2,
-                      ),
-                      _buildTableCell(record.employeeName, flex: 2),
-                      _buildTableCell(record.teamName, flex: 2),
-                      _buildTableCell(record.purpose, flex: 2),
-                      _buildTableCell(
-                        _formatDate(record.expectedReturnDate),
-                        flex: 2,
-                      ),
-                      _buildTableCell(
-                        _formatDate(record.actualReturnDate),
-                        flex: 2,
-                      ),
-                      Expanded(
-                        flex: 1,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3), // Reduced from 8,4
-                          decoration: BoxDecoration(
-                            color: _getAllocationStatusColor(record.availabilityStatus),
-                            borderRadius: BorderRadius.circular(10), // Reduced from 12
-                          ),
-                          child: Text(
-                            record.availabilityStatus,
-                            style: TextStyle(
-                              color: _getAllocationStatusTextColor(record.availabilityStatus),
-                              fontSize: 11, // Reduced from 12
-                              fontWeight: FontWeight.w500,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 32, // Reduced from 40
-                        child: IconButton(
-                          onPressed: () {
-                            // Open edit dialog with existing allocation data
-                            DialogPannelHelper().showAddPannel(
-                              context: context,
-                              addingItem: AddAllocation(
-                                assetId: productData?.assetId ?? widget.id,
-                                itemName: productData?.name ?? 'Unknown',
-                                assetType: productData?.itemType ?? 'Unknown',
-                                existingAllocation: record, // Pass the existing record for editing
-                                onAllocationAdded: () {
-                                  _loadAllocationData(productData?.assetId ?? widget.id);
-                                },
-                              ),
-                            );
-                          },
-                          icon: const Icon(
-                            Icons.arrow_forward,
-                            size: 14, // Reduced from 16
-                            color: Color(0xFF2563EB),
-                          ),
-                        ),
-                      ),
-                    ],
+                ),
+                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                const SizedBox(width: 1),
+                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+              ],
+            ),
+          ),
+          Container(
+            width: 150,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Team name',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF374151),
+                    ),
+                  ),
+                ),
+                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                const SizedBox(width: 1),
+                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+              ],
+            ),
+          ),
+          Container(
+            width: 180,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Purpose',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF374151),
+                    ),
+                  ),
+                ),
+                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                const SizedBox(width: 1),
+                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+              ],
+            ),
+          ),
+          Container(
+            width: 160,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Expected return date',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF374151),
+                    ),
+                  ),
+                ),
+                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                const SizedBox(width: 1),
+                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+              ],
+            ),
+          ),
+          Container(
+            width: 160,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Actual return date',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF374151),
+                    ),
+                  ),
+                ),
+                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                const SizedBox(width: 1),
+                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+              ],
+            ),
+          ),
+          Container(
+            width: 120,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Status',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF374151),
+                    ),
+                  ),
+                ),
+                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+                const SizedBox(width: 1),
+                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
+              ],
+            ),
+          ),
+          Container(
+            width: 50,
+            alignment: Alignment.center,
+            child: const Text(""),
+          ),
+        ],
+        rowBuilder: (record, isSelected, onChanged) => [
+          Container(
+            width: 150,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              _formatDate(record.issuedDate),
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF374151),
+              ),
+            ),
+          ),
+          Container(
+            width: 180,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              record.employeeName,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF374151),
+              ),
+            ),
+          ),
+          Container(
+            width: 150,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              record.teamName,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF374151),
+              ),
+            ),
+          ),
+          Container(
+            width: 180,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              record.purpose,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF374151),
+              ),
+            ),
+          ),
+          Container(
+            width: 160,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              _formatDate(record.expectedReturnDate),
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF374151),
+              ),
+            ),
+          ),
+          Container(
+            width: 160,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              _formatDate(record.actualReturnDate),
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF374151),
+              ),
+            ),
+          ),
+          Container(
+            width: 120,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: _getAllocationStatusColor(record.availabilityStatus),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                record.availabilityStatus,
+                style: TextStyle(
+                  color: _getAllocationStatusTextColor(record.availabilityStatus),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+          Container(
+            width: 50,
+            alignment: Alignment.center,
+            child: IconButton(
+              onPressed: () {
+                DialogPannelHelper().showAddPannel(
+                  context: context,
+                  addingItem: AddAllocation(
+                    assetId: productData?.assetId ?? widget.id,
+                    itemName: productData?.name ?? 'Unknown',
+                    assetType: productData?.itemType ?? 'Unknown',
+                    existingAllocation: record,
+                    onAllocationAdded: () {
+                      _loadAllocationData(productData?.assetId ?? widget.id);
+                    },
                   ),
                 );
               },
+              icon: const Icon(
+                Icons.arrow_forward,
+                size: 14,
+                color: Color(0xFF2563EB),
+              ),
             ),
           ),
-          
-          // Pagination
-          _buildPagination(allocationRecords.length),
         ],
       ),
     );
@@ -1465,16 +2014,18 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
             ),
           ),
           const SizedBox(width: 3), // Reduced from 4
-          Icon(
-            Icons.filter_list,
-            size: 14, // Reduced from 16
-            color: const Color(0xFF9CA3AF),
+          SvgPicture.asset(
+            "assets/images/Icon_filter.svg",
+            width: 14, // Reduced from 16
+            height: 14,
+            colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn),
           ),
           const SizedBox(width: 1), // Reduced from 2
-          Icon(
-            Icons.keyboard_arrow_down,
-            size: 14, // Reduced from 16
-            color: const Color(0xFF9CA3AF),
+          SvgPicture.asset(
+            "assets/images/Icon_arrowdown.svg",
+            width: 14, // Reduced from 16
+            height: 14,
+            colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn),
           ),
         ],
       ),

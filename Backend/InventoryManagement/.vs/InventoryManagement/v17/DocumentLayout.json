@@ -3,6 +3,9 @@
   "WorkspaceRootPath": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\desktop\\marlensoft\\backend\\inventorymanagement\\repositories\\masterregisterrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:repositories\\masterregisterrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -12,9 +15,6 @@
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\.gitignore||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\desktop\\marlensoft\\backend\\inventorymanagement\\controllers\\toolscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -171,7 +171,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 7,
+          "SelectedChildIndex": 6,
           "Children": [
             {
               "$type": "Bookmark",
@@ -180,30 +180,6 @@
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{004be353-6879-467c-9d1e-9ac23cdf6d49}"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "MasterRegisterService.cs",
-              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Services\\MasterRegisterService.cs",
-              "RelativeDocumentMoniker": "Services\\MasterRegisterService.cs",
-              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Services\\MasterRegisterService.cs",
-              "RelativeToolTip": "Services\\MasterRegisterService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-24T16:38:02.872Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 16,
-              "Title": "MasterRegister.cs",
-              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Models\\Entities\\MasterRegister.cs",
-              "RelativeDocumentMoniker": "Models\\Entities\\MasterRegister.cs",
-              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Models\\Entities\\MasterRegister.cs",
-              "RelativeToolTip": "Models\\Entities\\MasterRegister.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-24T16:32:11.29Z"
             },
             {
               "$type": "Document",
@@ -227,8 +203,7 @@
               "RelativeToolTip": "Controllers\\ToolsController.cs",
               "ViewState": "AgIAAAEAAAAgmZmZmVkswAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-11T20:54:32.908Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-11T20:54:32.908Z"
             },
             {
               "$type": "Document",
@@ -244,20 +219,56 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "MasterRegisterRepository.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Repositories\\MasterRegisterRepository.cs",
               "RelativeDocumentMoniker": "Repositories\\MasterRegisterRepository.cs",
               "ToolTip": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Repositories\\MasterRegisterRepository.cs",
               "RelativeToolTip": "Repositories\\MasterRegisterRepository.cs",
-              "ViewState": "AgIAADoBAAAYZmZmZmYUwEgBAAAMAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAOUAAAA8AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-24T16:34:56.125Z",
+              "WhenOpened": "2026-01-24T16:34:56.125Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Microsoft.Common.CurrentVersion.targets",
+              "DocumentMoniker": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
+              "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
+              "ToolTip": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
+              "RelativeToolTip": "..\\..\\..\\..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
+              "ViewState": "AgIAAAwVAAAAAAAAAAAwwBEVAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003801|",
+              "WhenOpened": "2026-01-28T10:42:52.915Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 16,
+              "Title": "MasterRegister.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Models\\Entities\\MasterRegister.cs",
+              "RelativeDocumentMoniker": "Models\\Entities\\MasterRegister.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Models\\Entities\\MasterRegister.cs",
+              "RelativeToolTip": "Models\\Entities\\MasterRegister.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-24T16:32:11.29Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "MasterRegisterService.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Services\\MasterRegisterService.cs",
+              "RelativeDocumentMoniker": "Services\\MasterRegisterService.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Services\\MasterRegisterService.cs",
+              "RelativeToolTip": "Services\\MasterRegisterService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-24T16:38:02.872Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
               "Title": "ItemDetailsController.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Controllers\\ItemDetailsController.cs",
               "RelativeDocumentMoniker": "Controllers\\ItemDetailsController.cs",
@@ -265,34 +276,19 @@
               "RelativeToolTip": "Controllers\\ItemDetailsController.cs",
               "ViewState": "AgIAAAwAAACA/v////8PwBoAAAAuAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-28T05:52:13.939Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-28T05:52:13.939Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": ".gitignore",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\.gitignore",
               "RelativeDocumentMoniker": "..\\..\\.gitignore",
               "ToolTip": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\.gitignore",
               "RelativeToolTip": "..\\..\\.gitignore",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADQAAAAGAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2026-01-28T10:13:02.43Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "Microsoft.Common.CurrentVersion.targets",
-              "DocumentMoniker": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
-              "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
-              "ToolTip": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
-              "RelativeToolTip": "..\\..\\..\\..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
-              "ViewState": "AgIAAMkUAACAmJmZmRkhwBEVAAAEAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003801|",
-              "WhenOpened": "2026-01-28T10:42:52.915Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-28T10:13:02.43Z"
             },
             {
               "$type": "Document",

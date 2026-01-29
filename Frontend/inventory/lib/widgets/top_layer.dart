@@ -250,6 +250,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:inventory/dialogs/dialog_pannel_helper.dart';
 import 'package:inventory/providers/master_list_provider.dart';
 import 'package:inventory/providers/selection_provider.dart';
+import 'package:inventory/providers/search_provider.dart';
 import 'package:inventory/screens/add_forms/add_asset.dart';
 import 'package:inventory/screens/add_forms/add_consumable.dart';
 import 'package:inventory/screens/add_forms/add_mmd.dart';
@@ -257,11 +258,51 @@ import 'package:inventory/screens/add_forms/add_tool.dart';
 import 'package:inventory/services/export_service.dart';
 import 'package:inventory/services/delete_service.dart';
 
-class TopLayer extends ConsumerWidget {
+class TopLayer extends ConsumerStatefulWidget {
   const TopLayer({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TopLayer> createState() => _TopLayerState();
+}
+
+class _TopLayerState extends ConsumerState<TopLayer> {
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounceTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize search controller with current search query
+    _searchController.text = ref.read(masterListSearchQueryProvider);
+    
+    // Listen to search controller changes
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _debounceTimer?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    // Cancel previous timer
+    _debounceTimer?.cancel();
+    
+    // Start new timer for debounced search
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      ref.read(masterListSearchQueryProvider.notifier).state = _searchController.text;
+    });
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    ref.read(masterListSearchQueryProvider.notifier).state = '';
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final selectedItems = ref.watch(selectedItemsProvider);
     final masterListAsync = ref.watch(masterListProvider);
     final hasSelection = selectedItems.isNotEmpty;
@@ -275,34 +316,61 @@ class TopLayer extends ConsumerWidget {
               SizedBox(
                 width: 440,
                 height: 35,
-                child: SearchBar(
-                  elevation: const WidgetStatePropertyAll(0),
-                  backgroundColor: const WidgetStatePropertyAll(Colors.white),
-                  hintText: 'Search',
-                  padding: const WidgetStatePropertyAll(
-                    EdgeInsetsGeometry.only(left: 6, bottom: 2),
-                  ),
-                  hintStyle: WidgetStatePropertyAll(
-                    Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  shape: WidgetStatePropertyAll(
-                    RoundedRectangleBorder(
-                      side: const BorderSide(
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search items...',
+                    hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: const Color(0xFF9CA3AF),
+                    ),
+                    contentPadding: const EdgeInsets.only(left: 12, bottom: 2),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: const BorderSide(
                         color: Color(0xff909090),
                         width: 1,
                       ),
-                      borderRadius: BorderRadius.circular(6),
                     ),
-                  ),
-                  trailing: [
-                    IconButton(
-                      onPressed: () {},
-                      icon: SvgPicture.asset(
-                        "assets/images/Vector.svg",
-                        width: 12,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: const BorderSide(
+                        color: Color(0xff909090),
+                        width: 1,
                       ),
                     ),
-                  ],
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: const BorderSide(
+                        color: Color(0xff00599A),
+                        width: 1,
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            onPressed: _clearSearch,
+                            icon: const Icon(
+                              Icons.clear,
+                              size: 16,
+                              color: Color(0xFF9CA3AF),
+                            ),
+                          )
+                        : IconButton(
+                            onPressed: () {
+                              // Focus the text field when search icon is pressed
+                              FocusScope.of(context).requestFocus(FocusNode());
+                            },
+                            icon: SvgPicture.asset(
+                              "assets/images/Vector.svg",
+                              width: 12,
+                            ),
+                          ),
+                  ),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  onChanged: (value) {
+                    setState(() {}); // Rebuild to show/hide clear button
+                  },
                 ),
               ),
 
@@ -324,7 +392,7 @@ class TopLayer extends ConsumerWidget {
                         ),
                       ),
                       child: Text(
-                        "Deactivate",
+                        "Delete",
                         style: TextStyle(
                           color: hasSelection
                               ? Theme.of(context).primaryColor
@@ -532,8 +600,8 @@ class TopLayer extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirm Deactivation'),
-        content: Text('Are you sure you want to deactivate ${selectedItems.length} item(s)? They will be hidden from the active inventory list.'),
+        title: const Text('Confirm Deletion'),
+        content: Text('Are you sure you want to delete ${selectedItems.length} item(s)? They will be permanently removed from the inventory.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -542,7 +610,7 @@ class TopLayer extends ConsumerWidget {
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.orange),
-            child: const Text('Deactivate'),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -569,7 +637,7 @@ class TopLayer extends ConsumerWidget {
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(width: 16),
-                  Text('Deactivating items...'),
+                  Text('Deleting items...'),
                 ],
               ),
             ),
@@ -610,7 +678,7 @@ class TopLayer extends ConsumerWidget {
           }
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('No valid items found to deactivate'),
+              content: Text('No valid items found to delete'),
               backgroundColor: Colors.orange,
             ),
           );
@@ -644,8 +712,8 @@ class TopLayer extends ConsumerWidget {
           SnackBar(
             content: Text(
               failCount == 0 
-                  ? 'Successfully deactivated $successCount item(s)'
-                  : 'Deactivated $successCount item(s), failed to deactivate $failCount item(s)',
+                  ? 'Successfully deleted $successCount item(s)'
+                  : 'Deleted $successCount item(s), failed to delete $failCount item(s)',
             ),
             backgroundColor: failCount == 0 ? Colors.green : Colors.orange,
             duration: const Duration(seconds: 2),
@@ -696,7 +764,7 @@ class TopLayer extends ConsumerWidget {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error deactivating items: $e'),
+          content: Text('Error deleting items: $e'),
           backgroundColor: Colors.red,
         ),
       );

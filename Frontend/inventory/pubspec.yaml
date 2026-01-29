@@ -87,6 +87,8 @@ flutter:
       - assets/images/Select_arrow.svg
       - assets/images/Vectorfilter.svg
       - assets/images/Icon_arrowright.svg
+      - assets/images/Icon_filter.svg
+      - assets/images/Icon_arrowdown.svg
       - assets/images/
 
   #   - images/a_dot_burr.jpeg
