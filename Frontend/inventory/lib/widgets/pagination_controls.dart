@@ -109,14 +109,16 @@ class PaginationControls extends StatelessWidget {
   Widget _buildPageNumbers() {
     List<Widget> pageButtons = [];
     
-    // Previous button
-    pageButtons.add(
-      _buildPageButton(
-        icon: Icons.chevron_left,
-        onPressed: currentPage > 1 ? () => onPageChanged(currentPage - 1) : null,
-        isEnabled: currentPage > 1,
-      ),
-    );
+    // Previous button - only show if not on first page
+    if (currentPage > 1) {
+      pageButtons.add(
+        _buildPageButton(
+          icon: Icons.chevron_left,
+          onPressed: () => onPageChanged(currentPage - 1),
+          isEnabled: true,
+        ),
+      );
+    }
     
     // Calculate which page numbers to show
     List<int> pagesToShow = _calculatePagesToShow();
@@ -139,14 +141,16 @@ class PaginationControls extends StatelessWidget {
       );
     }
     
-    // Next button
-    pageButtons.add(
-      _buildPageButton(
-        icon: Icons.chevron_right,
-        onPressed: currentPage < totalPages ? () => onPageChanged(currentPage + 1) : null,
-        isEnabled: currentPage < totalPages,
-      ),
-    );
+    // Next button - only show if not on last page
+    if (currentPage < totalPages) {
+      pageButtons.add(
+        _buildPageButton(
+          icon: Icons.chevron_right,
+          onPressed: () => onPageChanged(currentPage + 1),
+          isEnabled: true,
+        ),
+      );
+    }
     
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -215,7 +219,7 @@ class PaginationControls extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: isActive ? const Color(0xff3B82F6) : Colors.transparent,
+              color: isActive ? const Color(0xFFF7F7F7) : Colors.transparent, // Light gray background for active page
               borderRadius: BorderRadius.circular(6),
             ),
             child: Center(
@@ -225,7 +229,7 @@ class PaginationControls extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 14,
                         color: isActive 
-                            ? Colors.white 
+                            ? const Color(0xFF374151) // Dark gray text for active page
                             : isEnabled 
                                 ? const Color(0xff374151)
                                 : const Color(0xff9CA3AF),

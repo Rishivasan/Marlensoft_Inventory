@@ -30,7 +30,6 @@ class GenericPaginatedTable<T> extends StatefulWidget {
 class _GenericPaginatedTableState<T> extends State<GenericPaginatedTable<T>> {
   late PaginationState _paginationState;
   Set<T> _selectedItems = {};
-  bool _selectAll = false;
 
   @override
   void initState() {
@@ -50,6 +49,15 @@ class _GenericPaginatedTableState<T> extends State<GenericPaginatedTable<T>> {
         _paginationState = _paginationState.copyWith(
           totalItems: widget.data.length,
         );
+        
+        // Remove any selected items that are no longer in the dataset
+        _selectedItems = _selectedItems.where((item) => widget.data.contains(item)).toSet();
+      });
+    } else {
+      // Data might have changed due to sorting/filtering
+      setState(() {
+        // Remove any selected items that are no longer in the dataset
+        _selectedItems = _selectedItems.where((item) => widget.data.contains(item)).toSet();
       });
     }
   }
@@ -57,9 +65,9 @@ class _GenericPaginatedTableState<T> extends State<GenericPaginatedTable<T>> {
   // Selection methods
   void _toggleSelectAll(bool? value) {
     setState(() {
-      _selectAll = value ?? false;
-      if (_selectAll) {
-        _selectedItems = Set.from(_getCurrentPageItems());
+      if (value == true) {
+        // Select ALL items in the entire dataset, not just current page
+        _selectedItems = Set.from(widget.data);
       } else {
         _selectedItems.clear();
       }
@@ -74,12 +82,19 @@ class _GenericPaginatedTableState<T> extends State<GenericPaginatedTable<T>> {
       } else {
         _selectedItems.remove(item);
       }
-      
-      // Update select all state
-      final currentPageItems = _getCurrentPageItems();
-      _selectAll = currentPageItems.every((item) => _selectedItems.contains(item));
     });
     widget.onSelectionChanged?.call(_selectedItems);
+  }
+
+  // Helper method to determine checkbox state
+  bool? _getSelectAllCheckboxValue() {
+    if (_selectedItems.isEmpty) {
+      return false; // Nothing selected
+    } else if (widget.data.every((item) => _selectedItems.contains(item))) {
+      return true; // Everything selected
+    } else {
+      return null; // Some items selected (indeterminate state)
+    }
   }
 
   List<T> _getCurrentPageItems() {
@@ -143,8 +158,12 @@ class _GenericPaginatedTableState<T> extends State<GenericPaginatedTable<T>> {
                               child: Transform.scale(
                                 scale: 0.7,
                                 child: Checkbox(
-                                  value: _selectAll,
+                                  value: _getSelectAllCheckboxValue(),
+                                  tristate: true, // Enable indeterminate state
                                   onChanged: _toggleSelectAll,
+                                  activeColor: const Color(0xFF00599A),
+                                  checkColor: Colors.white,
+                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                 ),
                               ),
                             ),
@@ -175,6 +194,9 @@ class _GenericPaginatedTableState<T> extends State<GenericPaginatedTable<T>> {
                                         child: Checkbox(
                                           value: isSelected,
                                           onChanged: (value) => _toggleItemSelection(item, value),
+                                          activeColor: const Color(0xFF00599A),
+                                          checkColor: Colors.white,
+                                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                         ),
                                       ),
                                     ),

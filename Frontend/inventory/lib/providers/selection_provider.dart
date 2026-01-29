@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inventory/model/master_list_model.dart';
+import 'package:inventory/providers/master_list_provider.dart';
+import 'package:inventory/providers/sorting_provider.dart';
+import 'package:inventory/utils/sorting_utils.dart';
 
 // Provider to manage selected items
 final selectedItemsProvider = NotifierProvider<SelectedItemsNotifier, Set<String>>(() {
@@ -9,6 +12,25 @@ final selectedItemsProvider = NotifierProvider<SelectedItemsNotifier, Set<String
 // Provider to manage select all state
 final selectAllProvider = NotifierProvider<SelectAllNotifier, bool>(() {
   return SelectAllNotifier();
+});
+
+// Provider for sorted master list
+final sortedMasterListProvider = Provider<AsyncValue<List<MasterListModel>>>((ref) {
+  final masterListAsync = ref.watch(masterListProvider);
+  final sortState = ref.watch(sortProvider);
+
+  return masterListAsync.when(
+    data: (items) {
+      final sortedItems = SortingUtils.sortMasterList(
+        items,
+        sortState.sortColumn,
+        sortState.direction,
+      );
+      return AsyncValue.data(sortedItems);
+    },
+    loading: () => const AsyncValue.loading(),
+    error: (error, stackTrace) => AsyncValue.error(error, stackTrace),
+  );
 });
 
 class SelectedItemsNotifier extends Notifier<Set<String>> {

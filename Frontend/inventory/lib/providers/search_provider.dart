@@ -4,39 +4,50 @@ import 'package:inventory/model/master_list_model.dart';
 import 'package:inventory/model/maintenance_model.dart';
 import 'package:inventory/model/allocation_model.dart';
 import 'package:inventory/providers/master_list_provider.dart';
+import 'package:inventory/providers/selection_provider.dart';
 
 // Search query providers
 final masterListSearchQueryProvider = StateProvider<String>((ref) => '');
 final maintenanceSearchQueryProvider = StateProvider<String>((ref) => '');
 final allocationSearchQueryProvider = StateProvider<String>((ref) => '');
 
-// Filtered data providers
+// Filtered data providers - now uses sorted data
 final filteredMasterListProvider = Provider<List<MasterListModel>>((ref) {
-  final masterListAsync = ref.watch(masterListProvider);
+  final sortedMasterListAsync = ref.watch(sortedMasterListProvider);
   final searchQuery = ref.watch(masterListSearchQueryProvider);
   
-  return masterListAsync.when(
+  return sortedMasterListAsync.when(
     data: (items) {
       if (searchQuery.isEmpty) {
         return items;
       }
       
-      final query = searchQuery.toLowerCase();
-      return items.where((item) {
-        return item.assetId.toLowerCase().contains(query) ||
-               item.name.toLowerCase().contains(query) ||
-               item.type.toLowerCase().contains(query) ||
-               item.itemType.toLowerCase().contains(query) ||
-               item.supplier.toLowerCase().contains(query) ||
-               item.location.toLowerCase().contains(query) ||
-               item.responsibleTeam.toLowerCase().contains(query) ||
-               item.availabilityStatus.toLowerCase().contains(query);
-      }).toList();
+      return filterMasterListItems(items, searchQuery);
     },
     loading: () => [],
     error: (_, __) => [],
   );
 });
+
+// Extracted filter function for reusability
+List<MasterListModel> filterMasterListItems(
+  List<MasterListModel> items, 
+  String query
+) {
+  if (query.isEmpty) return items;
+  
+  final searchQuery = query.toLowerCase();
+  return items.where((item) {
+    return item.assetId.toLowerCase().contains(searchQuery) ||
+           item.name.toLowerCase().contains(searchQuery) ||
+           item.type.toLowerCase().contains(searchQuery) ||
+           item.itemType.toLowerCase().contains(searchQuery) ||
+           item.supplier.toLowerCase().contains(searchQuery) ||
+           item.location.toLowerCase().contains(searchQuery) ||
+           item.responsibleTeam.toLowerCase().contains(searchQuery) ||
+           item.availabilityStatus.toLowerCase().contains(searchQuery);
+  }).toList();
+}
 
 // Search functionality for maintenance records
 List<MaintenanceModel> filterMaintenanceRecords(

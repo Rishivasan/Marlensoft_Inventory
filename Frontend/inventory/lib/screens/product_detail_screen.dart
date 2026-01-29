@@ -14,7 +14,10 @@ import 'package:inventory/screens/add_forms/add_asset.dart';
 import 'package:inventory/screens/add_forms/add_consumable.dart';
 import 'package:inventory/providers/header_state.dart';
 import 'package:inventory/providers/search_provider.dart';
+import 'package:inventory/providers/sorting_provider.dart';
 import 'package:inventory/widgets/generic_paginated_table.dart';
+import 'package:inventory/widgets/sortable_header.dart';
+import 'package:inventory/utils/sorting_utils.dart';
 import 'package:auto_route/auto_route.dart';
 import 'dart:async';
 
@@ -1238,329 +1241,214 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GenericPaginatedTable<MaintenanceModel>(
-        data: filteredMaintenanceRecords, // Use filtered data
-        rowsPerPage: 5,
-        minWidth: 1200,
-        showCheckboxColumn: false,
-        headers: [
-          Container(
-            width: 150,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                const Expanded(
+    return Consumer(
+      builder: (context, ref, child) {
+        final sortState = ref.watch(maintenanceSortProvider);
+        
+        // Apply sorting to filtered data
+        final sortedData = SortingUtils.sortMaintenanceList(
+          filteredMaintenanceRecords,
+          sortState.sortColumn,
+          sortState.direction,
+        );
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: GenericPaginatedTable<MaintenanceModel>(
+            data: sortedData, // Use sorted data
+            rowsPerPage: 5,
+            minWidth: 1200,
+            showCheckboxColumn: false,
+            headers: [
+              SortableHeader(
+                title: 'Service Date',
+                sortKey: 'serviceDate',
+                width: 150,
+                sortProvider: maintenanceSortProvider,
+              ),
+              SortableHeader(
+                title: 'Service provider name',
+                sortKey: 'serviceProvider',
+                width: 180,
+                sortProvider: maintenanceSortProvider,
+              ),
+              SortableHeader(
+                title: 'Service engineer name',
+                sortKey: 'serviceEngineer',
+                width: 180,
+                sortProvider: maintenanceSortProvider,
+              ),
+              SortableHeader(
+                title: 'Service Type',
+                sortKey: 'serviceType',
+                width: 120,
+                sortProvider: maintenanceSortProvider,
+              ),
+              SortableHeader(
+                title: 'Responsible Team',
+                sortKey: 'responsibleTeam',
+                width: 150,
+                sortProvider: maintenanceSortProvider,
+              ),
+              SortableHeader(
+                title: 'Next Service Due',
+                sortKey: 'nextServiceDue',
+                width: 150,
+                sortProvider: maintenanceSortProvider,
+              ),
+              SortableHeader(
+                title: 'Cost',
+                sortKey: 'cost',
+                width: 100,
+                sortProvider: maintenanceSortProvider,
+              ),
+              SortableHeader(
+                title: 'Status',
+                sortKey: 'status',
+                width: 120,
+                sortProvider: maintenanceSortProvider,
+              ),
+              Container(
+                width: 50,
+                alignment: Alignment.center,
+                child: const Text(""),
+              ),
+            ],
+            rowBuilder: (record, isSelected, onChanged) => [
+              Container(
+                width: 150,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  _formatDate(record.serviceDate),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+              ),
+              Container(
+                width: 180,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  record.serviceProviderCompany,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+              ),
+              Container(
+                width: 180,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  record.serviceEngineerName,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+              ),
+              Container(
+                width: 120,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  record.serviceType,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+              ),
+              Container(
+                width: 150,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  record.responsibleTeam,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+              ),
+              Container(
+                width: 150,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  _formatDate(record.nextServiceDue),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+              ),
+              Container(
+                width: 100,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  '₹${record.cost.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+              ),
+              Container(
+                width: 120,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: _getMaintenanceStatusColor(record.maintenanceStatus),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   child: Text(
-                    'Service Date',
+                    record.maintenanceStatus,
                     style: TextStyle(
+                      color: _getMaintenanceStatusTextColor(record.maintenanceStatus),
                       fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF374151),
+                      fontWeight: FontWeight.w500,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
-                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                const SizedBox(width: 1),
-                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-              ],
-            ),
-          ),
-          Container(
-            width: 180,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Service provider name',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF374151),
-                    ),
+              ),
+              Container(
+                width: 50,
+                alignment: Alignment.center,
+                child: IconButton(
+                  onPressed: () {
+                    DialogPannelHelper().showAddPannel(
+                      context: context,
+                      addingItem: AddMaintenanceService(
+                        assetId: productData?.assetId ?? widget.id,
+                        itemName: productData?.name ?? 'Unknown',
+                        assetType: productData?.itemType ?? 'Unknown',
+                        existingMaintenance: record,
+                        onServiceAdded: () {
+                          _loadMaintenanceData(productData?.assetId ?? widget.id);
+                        },
+                      ),
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.arrow_forward,
+                    size: 14,
+                    color: Color(0xFF2563EB),
                   ),
                 ),
-                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                const SizedBox(width: 1),
-                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-              ],
-            ),
-          ),
-          Container(
-            width: 180,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Service engineer name',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF374151),
-                    ),
-                  ),
-                ),
-                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                const SizedBox(width: 1),
-                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-              ],
-            ),
-          ),
-          Container(
-            width: 120,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Service Type',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF374151),
-                    ),
-                  ),
-                ),
-                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                const SizedBox(width: 1),
-                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-              ],
-            ),
-          ),
-          Container(
-            width: 150,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Responsible Team',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF374151),
-                    ),
-                  ),
-                ),
-                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                const SizedBox(width: 1),
-                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-              ],
-            ),
-          ),
-          Container(
-            width: 150,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Next Service Due',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF374151),
-                    ),
-                  ),
-                ),
-                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                const SizedBox(width: 1),
-                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-              ],
-            ),
-          ),
-          Container(
-            width: 100,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Cost',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF374151),
-                    ),
-                  ),
-                ),
-                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                const SizedBox(width: 1),
-                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-              ],
-            ),
-          ),
-          Container(
-            width: 120,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Status',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF374151),
-                    ),
-                  ),
-                ),
-                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                const SizedBox(width: 1),
-                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-              ],
-            ),
-          ),
-          Container(
-            width: 50,
-            alignment: Alignment.center,
-            child: const Text(""),
-          ),
-        ],
-        rowBuilder: (record, isSelected, onChanged) => [
-          Container(
-            width: 150,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              _formatDate(record.serviceDate),
-              style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF374151),
               ),
-            ),
+            ],
           ),
-          Container(
-            width: 180,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              record.serviceProviderCompany,
-              style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF374151),
-              ),
-            ),
-          ),
-          Container(
-            width: 180,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              record.serviceEngineerName,
-              style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF374151),
-              ),
-            ),
-          ),
-          Container(
-            width: 120,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              record.serviceType,
-              style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF374151),
-              ),
-            ),
-          ),
-          Container(
-            width: 150,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              record.responsibleTeam,
-              style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF374151),
-              ),
-            ),
-          ),
-          Container(
-            width: 150,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              _formatDate(record.nextServiceDue),
-              style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF374151),
-              ),
-            ),
-          ),
-          Container(
-            width: 100,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              '₹${record.cost.toStringAsFixed(0)}',
-              style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF374151),
-              ),
-            ),
-          ),
-          Container(
-            width: 120,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-              decoration: BoxDecoration(
-                color: _getMaintenanceStatusColor(record.maintenanceStatus),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                record.maintenanceStatus,
-                style: TextStyle(
-                  color: _getMaintenanceStatusTextColor(record.maintenanceStatus),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-          Container(
-            width: 50,
-            alignment: Alignment.center,
-            child: IconButton(
-              onPressed: () {
-                DialogPannelHelper().showAddPannel(
-                  context: context,
-                  addingItem: AddMaintenanceService(
-                    assetId: productData?.assetId ?? widget.id,
-                    itemName: productData?.name ?? 'Unknown',
-                    assetType: productData?.itemType ?? 'Unknown',
-                    existingMaintenance: record,
-                    onServiceAdded: () {
-                      _loadMaintenanceData(productData?.assetId ?? widget.id);
-                    },
-                  ),
-                );
-              },
-              icon: const Icon(
-                Icons.arrow_forward,
-                size: 14,
-                color: Color(0xFF2563EB),
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -1706,295 +1594,196 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GenericPaginatedTable<AllocationModel>(
-        data: filteredAllocationRecords, // Use filtered data
-        rowsPerPage: 5,
-        minWidth: 1200,
-        showCheckboxColumn: false,
-        headers: [
-          Container(
-            width: 150,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                const Expanded(
+    return Consumer(
+      builder: (context, ref, child) {
+        final sortState = ref.watch(allocationSortProvider);
+        
+        // Apply sorting to filtered data
+        final sortedData = SortingUtils.sortAllocationList(
+          filteredAllocationRecords,
+          sortState.sortColumn,
+          sortState.direction,
+        );
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: GenericPaginatedTable<AllocationModel>(
+            data: sortedData, // Use sorted data
+            rowsPerPage: 5,
+            minWidth: 1200,
+            showCheckboxColumn: false,
+            headers: [
+              SortableHeader(
+                title: 'Issue Date',
+                sortKey: 'issueDate',
+                width: 150,
+                sortProvider: allocationSortProvider,
+              ),
+              SortableHeader(
+                title: 'Employee name',
+                sortKey: 'employeeName',
+                width: 180,
+                sortProvider: allocationSortProvider,
+              ),
+              SortableHeader(
+                title: 'Team name',
+                sortKey: 'teamName',
+                width: 150,
+                sortProvider: allocationSortProvider,
+              ),
+              SortableHeader(
+                title: 'Purpose',
+                sortKey: 'purpose',
+                width: 180,
+                sortProvider: allocationSortProvider,
+              ),
+              SortableHeader(
+                title: 'Expected return date',
+                sortKey: 'expectedReturnDate',
+                width: 160,
+                sortProvider: allocationSortProvider,
+              ),
+              SortableHeader(
+                title: 'Actual return date',
+                sortKey: 'actualReturnDate',
+                width: 160,
+                sortProvider: allocationSortProvider,
+              ),
+              SortableHeader(
+                title: 'Status',
+                sortKey: 'status',
+                width: 120,
+                sortProvider: allocationSortProvider,
+              ),
+              Container(
+                width: 50,
+                alignment: Alignment.center,
+                child: const Text(""),
+              ),
+            ],
+            rowBuilder: (record, isSelected, onChanged) => [
+              Container(
+                width: 150,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  _formatDate(record.issuedDate),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+              ),
+              Container(
+                width: 180,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  record.employeeName,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+              ),
+              Container(
+                width: 150,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  record.teamName,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+              ),
+              Container(
+                width: 180,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  record.purpose,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+              ),
+              Container(
+                width: 160,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  _formatDate(record.expectedReturnDate),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+              ),
+              Container(
+                width: 160,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  _formatDate(record.actualReturnDate),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+              ),
+              Container(
+                width: 120,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: _getAllocationStatusColor(record.availabilityStatus),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   child: Text(
-                    'Issue Date',
+                    record.availabilityStatus,
                     style: TextStyle(
+                      color: _getAllocationStatusTextColor(record.availabilityStatus),
                       fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF374151),
+                      fontWeight: FontWeight.w500,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
-                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                const SizedBox(width: 1),
-                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-              ],
-            ),
-          ),
-          Container(
-            width: 180,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Employee name',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF374151),
-                    ),
+              ),
+              Container(
+                width: 50,
+                alignment: Alignment.center,
+                child: IconButton(
+                  onPressed: () {
+                    DialogPannelHelper().showAddPannel(
+                      context: context,
+                      addingItem: AddAllocation(
+                        assetId: productData?.assetId ?? widget.id,
+                        itemName: productData?.name ?? 'Unknown',
+                        assetType: productData?.itemType ?? 'Unknown',
+                        existingAllocation: record,
+                        onAllocationAdded: () {
+                          _loadAllocationData(productData?.assetId ?? widget.id);
+                        },
+                      ),
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.arrow_forward,
+                    size: 14,
+                    color: Color(0xFF2563EB),
                   ),
                 ),
-                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                const SizedBox(width: 1),
-                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-              ],
-            ),
-          ),
-          Container(
-            width: 150,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Team name',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF374151),
-                    ),
-                  ),
-                ),
-                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                const SizedBox(width: 1),
-                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-              ],
-            ),
-          ),
-          Container(
-            width: 180,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Purpose',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF374151),
-                    ),
-                  ),
-                ),
-                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                const SizedBox(width: 1),
-                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-              ],
-            ),
-          ),
-          Container(
-            width: 160,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Expected return date',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF374151),
-                    ),
-                  ),
-                ),
-                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                const SizedBox(width: 1),
-                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-              ],
-            ),
-          ),
-          Container(
-            width: 160,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Actual return date',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF374151),
-                    ),
-                  ),
-                ),
-                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                const SizedBox(width: 1),
-                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-              ],
-            ),
-          ),
-          Container(
-            width: 120,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Status',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF374151),
-                    ),
-                  ),
-                ),
-                SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                const SizedBox(width: 1),
-                SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-              ],
-            ),
-          ),
-          Container(
-            width: 50,
-            alignment: Alignment.center,
-            child: const Text(""),
-          ),
-        ],
-        rowBuilder: (record, isSelected, onChanged) => [
-          Container(
-            width: 150,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              _formatDate(record.issuedDate),
-              style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF374151),
               ),
-            ),
+            ],
           ),
-          Container(
-            width: 180,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              record.employeeName,
-              style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF374151),
-              ),
-            ),
-          ),
-          Container(
-            width: 150,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              record.teamName,
-              style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF374151),
-              ),
-            ),
-          ),
-          Container(
-            width: 180,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              record.purpose,
-              style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF374151),
-              ),
-            ),
-          ),
-          Container(
-            width: 160,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              _formatDate(record.expectedReturnDate),
-              style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF374151),
-              ),
-            ),
-          ),
-          Container(
-            width: 160,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              _formatDate(record.actualReturnDate),
-              style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF374151),
-              ),
-            ),
-          ),
-          Container(
-            width: 120,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(8.0),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-              decoration: BoxDecoration(
-                color: _getAllocationStatusColor(record.availabilityStatus),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                record.availabilityStatus,
-                style: TextStyle(
-                  color: _getAllocationStatusTextColor(record.availabilityStatus),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-          Container(
-            width: 50,
-            alignment: Alignment.center,
-            child: IconButton(
-              onPressed: () {
-                DialogPannelHelper().showAddPannel(
-                  context: context,
-                  addingItem: AddAllocation(
-                    assetId: productData?.assetId ?? widget.id,
-                    itemName: productData?.name ?? 'Unknown',
-                    assetType: productData?.itemType ?? 'Unknown',
-                    existingAllocation: record,
-                    onAllocationAdded: () {
-                      _loadAllocationData(productData?.assetId ?? widget.id);
-                    },
-                  ),
-                );
-              },
-              icon: const Icon(
-                Icons.arrow_forward,
-                size: 14,
-                color: Color(0xFF2563EB),
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

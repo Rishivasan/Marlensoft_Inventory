@@ -378,51 +378,23 @@ class _TopLayerState extends ConsumerState<TopLayer> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    MaterialButton(
+                    // Delete Button
+                    _buildOutlineButton(
+                      text: "Delete",
                       onPressed: hasSelection ? () => _handleDelete(context, ref) : null,
-                      height: 45,
-                      minWidth: 90,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        side: BorderSide(
-                          color: hasSelection
-                              ? Theme.of(context).primaryColor
-                              : const Color.fromRGBO(144, 144, 144, 1),
-                          width: 1,
-                        ),
-                      ),
-                      child: Text(
-                        "Delete",
-                        style: TextStyle(
-                          color: hasSelection
-                              ? Theme.of(context).primaryColor
-                              : const Color.fromRGBO(144, 144, 144, 1),
-                        ),
-                      ),
+                      isEnabled: hasSelection,
                     ),
                     const SizedBox(width: 20),
 
-                    MaterialButton(
-                      onPressed: () => _handleExport(context, ref),
-                      height: 45,
-                      minWidth: 90,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        side: BorderSide(
-                          color: Theme.of(context).primaryColor,
-                          width: 1,
-                        ),
-                      ),
-                      child: Text(
-                        "Export",
-                        style: TextStyle(
-                          color: Theme.of(context).primaryColor,
-                        ),
-                      ),
+                    // Export Button  
+                    _buildOutlineButton(
+                      text: "Export",
+                      onPressed: hasSelection ? () => _handleExport(context, ref) : null,
+                      isEnabled: hasSelection,
                     ),
-
                     const SizedBox(width: 20),
 
+                    // Add new item button
                     SizedBox(
                       width: 160,
                       height: 42,
@@ -580,6 +552,62 @@ class _TopLayerState extends ConsumerState<TopLayer> {
           ),
           const SizedBox(height: 10),
         ],
+      ),
+    );
+  }
+
+  // Helper method to build outline buttons with hover effects
+  Widget _buildOutlineButton({
+    required String text,
+    required VoidCallback? onPressed,
+    required bool isEnabled,
+  }) {
+    return SizedBox(
+      width: 90, // Fixed width to match button size
+      height: 42, // Same height as "Add new item" button
+      child: MouseRegion(
+        cursor: isEnabled ? SystemMouseCursors.click : SystemMouseCursors.forbidden,
+        child: StatefulBuilder(
+          builder: (context, setState) {
+            bool isHovered = false;
+            
+            return MouseRegion(
+              onEnter: (_) => setState(() => isHovered = true),
+              onExit: (_) => setState(() => isHovered = false),
+              child: OutlinedButton(
+                onPressed: onPressed,
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: isEnabled 
+                      ? (isHovered ? const Color(0xff00599A) : const Color(0xFF6B7280))
+                      : const Color(0xFF9CA3AF),
+                  side: BorderSide(
+                    color: isEnabled 
+                        ? (isHovered ? const Color(0xff00599A) : const Color(0xFFD1D5DB))
+                        : const Color(0xFFE5E7EB),
+                    width: 1,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0), // Reduced horizontal padding, zero vertical padding
+                  minimumSize: const Size(90, 42), // Ensure minimum size
+                  fixedSize: const Size(90, 42), // Force exact size
+                ),
+                child: Text(
+                  text,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: isEnabled 
+                        ? (isHovered ? const Color(0xff00599A) : const Color(0xFF6B7280))
+                        : const Color(0xFF9CA3AF),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -775,29 +803,57 @@ class _TopLayerState extends ConsumerState<TopLayer> {
 
   void _handleExport(BuildContext context, WidgetRef ref) async {
     print('🔥 _handleExport called');
+    final selectedItems = ref.read(selectedItemsProvider);
     final masterListAsync = ref.read(masterListProvider);
     
+    // Check if any items are selected
+    if (selectedItems.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select items to export'),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+    
     try {
-      print('🔥 Starting export');
+      print('🔥 Starting export for ${selectedItems.length} selected items');
 
       // Get the current state of masterListAsync
       final asyncValue = masterListAsync;
       print('🔥 AsyncValue state: hasValue=${asyncValue.hasValue}, isLoading=${asyncValue.isLoading}, hasError=${asyncValue.hasError}');
       
       if (asyncValue.hasValue) {
-        final items = asyncValue.value!;
-        print('🔥 Found ${items.length} items to export');
+        final allItems = asyncValue.value!;
+        print('🔥 Found ${allItems.length} total items');
+        
+        // Filter to only selected items
+        final itemsToExport = allItems.where((item) => selectedItems.contains(item.refId)).toList();
+        print('🔥 Filtered to ${itemsToExport.length} selected items for export');
+        
+        if (itemsToExport.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Selected items not found in current data'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 2),
+            ),
+          );
+          return;
+        }
         
         // Use the ExportService
-        final result = await ExportService.exportToExcel(items);
+        final result = await ExportService.exportToExcel(itemsToExport);
         
         if (result != null) {
           print('🔥 Export successful: $result');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(kIsWeb 
-                ? 'CSV file downloaded successfully! (${items.length} items)'
-                : 'CSV file saved successfully! (${items.length} items)'),
+                ? 'Excel file downloaded successfully! (${itemsToExport.length} items)'
+                : 'Excel file saved successfully! (${itemsToExport.length} items)'),
               backgroundColor: Colors.green,
               duration: const Duration(seconds: 2),
             ),

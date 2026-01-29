@@ -939,8 +939,11 @@ import 'package:flutter_svg/svg.dart';
 import 'package:inventory/providers/master_list_provider.dart';
 import 'package:inventory/providers/selection_provider.dart';
 import 'package:inventory/providers/search_provider.dart';
+import 'package:inventory/providers/sorting_provider.dart';
+import 'package:inventory/utils/sorting_utils.dart';
 import 'package:inventory/widgets/top_layer.dart';
 import 'package:inventory/widgets/generic_paginated_table.dart';
+import 'package:inventory/widgets/sortable_header.dart';
 import 'package:inventory/routers/app_router.dart';
 import 'package:inventory/model/master_list_model.dart';
 
@@ -950,9 +953,12 @@ class MasterListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Use filtered data instead of raw data
-    final filteredItems = ref.watch(filteredMasterListProvider);
+    // Watch the master list async for loading states
     final masterListAsync = ref.watch(masterListProvider);
+    // Watch the search query
+    final searchQuery = ref.watch(masterListSearchQueryProvider);
+    // Watch the sort state
+    final sortState = ref.watch(sortProvider);
     
     return Container(
       padding: const EdgeInsets.only(top: 12),
@@ -966,10 +972,22 @@ class MasterListScreen extends ConsumerWidget {
 
           Expanded(
             child: masterListAsync.when(
-              data: (items) {
-                // Show message if no results found
-                if (filteredItems.isEmpty && items.isNotEmpty) {
-                  final searchQuery = ref.watch(masterListSearchQueryProvider);
+              data: (rawItems) {
+                // Apply search filtering first
+                List<MasterListModel> filteredItems = rawItems;
+                if (searchQuery.isNotEmpty) {
+                  filteredItems = filterMasterListItems(rawItems, searchQuery);
+                }
+                
+                // Apply sorting to filtered data
+                final sortedAndFilteredItems = SortingUtils.sortMasterList(
+                  filteredItems,
+                  sortState.sortColumn,
+                  sortState.direction,
+                );
+                
+                // Show message if no results found after filtering
+                if (sortedAndFilteredItems.isEmpty && rawItems.isNotEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -1004,211 +1022,70 @@ class MasterListScreen extends ConsumerWidget {
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: GenericPaginatedTable<MasterListModel>(
-                    data: filteredItems, // Use filtered data
+                    data: sortedAndFilteredItems, // Use directly sorted and filtered data
                     rowsPerPage: 7,
                     minWidth: 1800,
                     showCheckboxColumn: true,
                     onSelectionChanged: (selectedItems) {
                       print("Selected ${selectedItems.length} items");
+                      // Update the global selection provider
+                      final selectedIds = selectedItems.map((item) => item.refId).toSet();
+                      ref.read(selectedItemsProvider.notifier).state = selectedIds;
                     },
                     headers: [
-                      Container(
+                      SortableHeader(
+                        title: "Item ID",
+                        sortKey: "itemId",
                         width: 150,
-                        alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                "Item ID", 
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF374151),
-                                ),
-                              ),
-                            ),
-                            SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                            const SizedBox(width: 1),
-                            SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                          ],
-                        ),
+                        sortProvider: sortProvider,
                       ),
-                      Container(
+                      SortableHeader(
+                        title: "Type",
+                        sortKey: "type",
                         width: 120,
-                        alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                "Type", 
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF374151),
-                                ),
-                              ),
-                            ),
-                            SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                            const SizedBox(width: 1),
-                            SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                          ],
-                        ),
+                        sortProvider: sortProvider,
                       ),
-                      Container(
+                      SortableHeader(
+                        title: "Item Name",
+                        sortKey: "itemName",
                         width: 200,
-                        alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                "Item Name", 
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF374151),
-                                ),
-                              ),
-                            ),
-                            SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                            const SizedBox(width: 1),
-                            SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                          ],
-                        ),
+                        sortProvider: sortProvider,
                       ),
-                      Container(
+                      SortableHeader(
+                        title: "Vendor",
+                        sortKey: "vendor",
                         width: 150,
-                        alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                "Vendor", 
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF374151),
-                                ),
-                              ),
-                            ),
-                            SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                            const SizedBox(width: 1),
-                            SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                          ],
-                        ),
+                        sortProvider: sortProvider,
                       ),
-                      Container(
+                      SortableHeader(
+                        title: "Created Date",
+                        sortKey: "createdDate",
                         width: 150,
-                        alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                "Created Date", 
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF374151),
-                                ),
-                              ),
-                            ),
-                            SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                            const SizedBox(width: 1),
-                            SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                          ],
-                        ),
+                        sortProvider: sortProvider,
                       ),
-                      Container(
+                      SortableHeader(
+                        title: "Responsible Team",
+                        sortKey: "responsibleTeam",
                         width: 180,
-                        alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                "Responsible Team", 
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF374151),
-                                ),
-                              ),
-                            ),
-                            SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                            const SizedBox(width: 1),
-                            SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                          ],
-                        ),
+                        sortProvider: sortProvider,
                       ),
-                      Container(
+                      SortableHeader(
+                        title: "Storage Location",
+                        sortKey: "storageLocation",
                         width: 180,
-                        alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                "Storage Location", 
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF374151),
-                                ),
-                              ),
-                            ),
-                            SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                            const SizedBox(width: 1),
-                            SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                          ],
-                        ),
+                        sortProvider: sortProvider,
                       ),
-                      Container(
+                      SortableHeader(
+                        title: "Next Service Due",
+                        sortKey: "nextServiceDue",
                         width: 150,
-                        alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                "Next Service Due", 
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF374151),
-                                ),
-                              ),
-                            ),
-                            SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                            const SizedBox(width: 1),
-                            SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                          ],
-                        ),
+                        sortProvider: sortProvider,
                       ),
-                      Container(
+                      SortableHeader(
+                        title: "Availability Status",
+                        sortKey: "availabilityStatus",
                         width: 180,
-                        alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                "Availability Status", 
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF374151),
-                                ),
-                              ),
-                            ),
-                            SvgPicture.asset("assets/images/Icon_filter.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                            const SizedBox(width: 1),
-                            SvgPicture.asset("assets/images/Icon_arrowdown.svg", width: 14, height: 14, colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn)),
-                          ],
-                        ),
+                        sortProvider: sortProvider,
                       ),
                       Container(
                         width: 50,

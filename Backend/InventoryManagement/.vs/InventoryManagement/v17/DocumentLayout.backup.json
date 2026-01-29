@@ -3,11 +3,23 @@
   "WorkspaceRootPath": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\desktop\\marlensoft\\backend\\inventorymanagement\\repositories\\interfaces\\itoolrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:repositories\\interfaces\\itoolrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\desktop\\marlensoft\\backend\\inventorymanagement\\repositories\\masterregisterrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:repositories\\masterregisterrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\desktop\\marlensoft\\backend\\inventorymanagement\\services\\assetsconsumablesservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:services\\assetsconsumablesservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\desktop\\marlensoft\\backend\\inventorymanagement\\controllers\\masterregistercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:controllers\\masterregistercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\desktop\\marlensoft\\backend\\inventorymanagement\\controllers\\itemdetailscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -19,10 +31,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\desktop\\marlensoft\\backend\\inventorymanagement\\controllers\\toolscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:controllers\\toolscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\desktop\\marlensoft\\backend\\inventorymanagement\\controllers\\masterregistercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:controllers\\masterregistercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\desktop\\marlensoft\\backend\\inventorymanagement\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -54,10 +62,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\desktop\\marlensoft\\backend\\inventorymanagement\\repositories\\mmdsrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:repositories\\mmdsrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\desktop\\marlensoft\\backend\\inventorymanagement\\services\\assetsconsumablesservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:services\\assetsconsumablesservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\desktop\\marlensoft\\backend\\inventorymanagement\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
@@ -156,10 +160,6 @@
       "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:services\\interfaces\\imasterregisterservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\desktop\\marlensoft\\backend\\inventorymanagement\\repositories\\interfaces\\itoolrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:repositories\\interfaces\\itoolrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|c:\\users\\rishivasanmuthukumar\\desktop\\marlensoft\\backend\\inventorymanagement\\data\\dappercontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A1BE776A-C85D-4B83-9855-41F26AC26316}|InventoryManagement.csproj|solutionrelative:data\\dappercontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
@@ -183,39 +183,66 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
-              "Title": "MmdsEntity.cs",
-              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Models\\Entities\\MmdsEntity.cs",
-              "RelativeDocumentMoniker": "Models\\Entities\\MmdsEntity.cs",
-              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Models\\Entities\\MmdsEntity.cs",
-              "RelativeToolTip": "Models\\Entities\\MmdsEntity.cs",
-              "ViewState": "AgIAABcAAAAAAAAAAAAYwCMAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-14T04:25:46.169Z"
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 4,
-              "Title": "ToolsController.cs",
-              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Controllers\\ToolsController.cs",
-              "RelativeDocumentMoniker": "Controllers\\ToolsController.cs",
-              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Controllers\\ToolsController.cs",
-              "RelativeToolTip": "Controllers\\ToolsController.cs",
-              "ViewState": "AgIAAAEAAAAgmZmZmVkswAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-11T20:54:32.908Z"
+              "Title": "Microsoft.Common.CurrentVersion.targets",
+              "DocumentMoniker": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
+              "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
+              "ToolTip": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
+              "RelativeToolTip": "..\\..\\..\\..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
+              "ViewState": "AgIAAAwVAAAAAAAAAAAwwBEVAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003801|",
+              "WhenOpened": "2026-01-28T10:42:52.915Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "MasterRegisterController.cs",
-              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Controllers\\MasterRegisterController.cs",
-              "RelativeDocumentMoniker": "Controllers\\MasterRegisterController.cs",
-              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Controllers\\MasterRegisterController.cs",
-              "RelativeToolTip": "Controllers\\MasterRegisterController.cs",
-              "ViewState": "AgIAAAcAAACwmJmZmVkiwB0AAAAcAAAAAAAAAA==",
+              "DocumentIndex": 17,
+              "Title": "MasterRegister.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Models\\Entities\\MasterRegister.cs",
+              "RelativeDocumentMoniker": "Models\\Entities\\MasterRegister.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Models\\Entities\\MasterRegister.cs",
+              "RelativeToolTip": "Models\\Entities\\MasterRegister.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-24T16:38:58.764Z"
+              "WhenOpened": "2026-01-24T16:32:11.29Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "MasterRegisterService.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Services\\MasterRegisterService.cs",
+              "RelativeDocumentMoniker": "Services\\MasterRegisterService.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Services\\MasterRegisterService.cs",
+              "RelativeToolTip": "Services\\MasterRegisterService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-24T16:38:02.872Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "AssetsConsumablesService.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Services\\AssetsConsumablesService.cs",
+              "RelativeDocumentMoniker": "Services\\AssetsConsumablesService.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Services\\AssetsConsumablesService.cs",
+              "RelativeToolTip": "Services\\AssetsConsumablesService.cs",
+              "ViewState": "AgIAACYAAAAAXGZmZmYNwD8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-21T12:27:14.897Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "IToolRepository.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Repositories\\Interfaces\\IToolRepository.cs",
+              "RelativeDocumentMoniker": "Repositories\\Interfaces\\IToolRepository.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Repositories\\Interfaces\\IToolRepository.cs",
+              "RelativeToolTip": "Repositories\\Interfaces\\IToolRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-25T17:07:38.125Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -232,44 +259,45 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Microsoft.Common.CurrentVersion.targets",
-              "DocumentMoniker": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
-              "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
-              "ToolTip": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
-              "RelativeToolTip": "..\\..\\..\\..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
-              "ViewState": "AgIAAAYVAAAAAAAAAAAwwBEVAAAEAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003801|",
-              "WhenOpened": "2026-01-28T10:42:52.915Z",
+              "DocumentIndex": 3,
+              "Title": "MasterRegisterController.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Controllers\\MasterRegisterController.cs",
+              "RelativeDocumentMoniker": "Controllers\\MasterRegisterController.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Controllers\\MasterRegisterController.cs",
+              "RelativeToolTip": "Controllers\\MasterRegisterController.cs",
+              "ViewState": "AgIAACkAAAAAAAAAAAAAACkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-24T16:38:58.764Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
-              "Title": "MasterRegister.cs",
-              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Models\\Entities\\MasterRegister.cs",
-              "RelativeDocumentMoniker": "Models\\Entities\\MasterRegister.cs",
-              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Models\\Entities\\MasterRegister.cs",
-              "RelativeToolTip": "Models\\Entities\\MasterRegister.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 7,
+              "Title": "ToolsController.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Controllers\\ToolsController.cs",
+              "RelativeDocumentMoniker": "Controllers\\ToolsController.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Controllers\\ToolsController.cs",
+              "RelativeToolTip": "Controllers\\ToolsController.cs",
+              "ViewState": "AgIAAAEAAAAgmZmZmVkswAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-24T16:32:11.29Z"
+              "WhenOpened": "2026-01-11T20:54:32.908Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "MasterRegisterService.cs",
-              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Services\\MasterRegisterService.cs",
-              "RelativeDocumentMoniker": "Services\\MasterRegisterService.cs",
-              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Services\\MasterRegisterService.cs",
-              "RelativeToolTip": "Services\\MasterRegisterService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAABAAAAAAAAAA==",
+              "DocumentIndex": 20,
+              "Title": "MmdsEntity.cs",
+              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Models\\Entities\\MmdsEntity.cs",
+              "RelativeDocumentMoniker": "Models\\Entities\\MmdsEntity.cs",
+              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Models\\Entities\\MmdsEntity.cs",
+              "RelativeToolTip": "Models\\Entities\\MmdsEntity.cs",
+              "ViewState": "AgIAABcAAAAAAAAAAAAYwCMAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-24T16:38:02.872Z"
+              "WhenOpened": "2026-01-14T04:25:46.169Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 5,
               "Title": "ItemDetailsController.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Controllers\\ItemDetailsController.cs",
               "RelativeDocumentMoniker": "Controllers\\ItemDetailsController.cs",
@@ -281,7 +309,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 6,
               "Title": ".gitignore",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\.gitignore",
               "RelativeDocumentMoniker": "..\\..\\.gitignore",
@@ -293,7 +321,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 8,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",
@@ -305,7 +333,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 9,
               "Title": "AssetsConsumablesDto.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Models\\DTOs\\AssetsConsumablesDto.cs",
               "RelativeDocumentMoniker": "Models\\DTOs\\AssetsConsumablesDto.cs",
@@ -317,19 +345,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
-              "Title": "AssetsConsumablesService.cs",
-              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Services\\AssetsConsumablesService.cs",
-              "RelativeDocumentMoniker": "Services\\AssetsConsumablesService.cs",
-              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Services\\AssetsConsumablesService.cs",
-              "RelativeToolTip": "Services\\AssetsConsumablesService.cs",
-              "ViewState": "AgIAAAMAAADAMjMzM7MSwD8AAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-21T12:27:14.897Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 12,
               "Title": "InventoryManagement.http",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\InventoryManagement.http",
               "RelativeDocumentMoniker": "InventoryManagement.http",
@@ -341,7 +357,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 11,
               "Title": "MasterRegisterRepository.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\AppData\\Local\\SourceServer\\f4dce8daaa0c773ab07a1ec5f8106b88838c7c7f17b06169d779e8c45b2a3d53\\Backend\\InventoryManagement\\Repositories\\MasterRegisterRepository.cs",
               "RelativeDocumentMoniker": "..\\..\\..\\..\\AppData\\Local\\SourceServer\\f4dce8daaa0c773ab07a1ec5f8106b88838c7c7f17b06169d779e8c45b2a3d53\\Backend\\InventoryManagement\\Repositories\\MasterRegisterRepository.cs",
@@ -353,7 +369,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 13,
               "Title": "appsettings.json",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\appsettings.json",
               "RelativeDocumentMoniker": "appsettings.json",
@@ -365,7 +381,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 16,
               "Title": "launchSettings.json",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Properties\\launchSettings.json",
               "RelativeDocumentMoniker": "Properties\\launchSettings.json",
@@ -377,7 +393,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 14,
               "Title": "MaintenanceController.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Controllers\\MaintenanceController.cs",
               "RelativeDocumentMoniker": "Controllers\\MaintenanceController.cs",
@@ -389,7 +405,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 15,
               "Title": "MmdsRepository.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Repositories\\MmdsRepository.cs",
               "RelativeDocumentMoniker": "Repositories\\MmdsRepository.cs",
@@ -401,7 +417,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 21,
+              "DocumentIndex": 22,
               "Title": "AllocationEntity.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Models\\Entities\\AllocationEntity.cs",
               "RelativeDocumentMoniker": "Models\\Entities\\AllocationEntity.cs",
@@ -413,7 +429,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 20,
+              "DocumentIndex": 21,
               "Title": "AssetsConsumablesEntity.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Models\\Entities\\AssetsConsumablesEntity.cs",
               "RelativeDocumentMoniker": "Models\\Entities\\AssetsConsumablesEntity.cs",
@@ -425,7 +441,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 19,
               "Title": "ToolEntity.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Models\\Entities\\ToolEntity.cs",
               "RelativeDocumentMoniker": "Models\\Entities\\ToolEntity.cs",
@@ -437,7 +453,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 18,
               "Title": "MaintenanceEntity.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Models\\Entities\\MaintenanceEntity.cs",
               "RelativeDocumentMoniker": "Models\\Entities\\MaintenanceEntity.cs",
@@ -449,7 +465,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 22,
+              "DocumentIndex": 23,
               "Title": "ToolDto.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Models\\DTOs\\ToolDto.cs",
               "RelativeDocumentMoniker": "Models\\DTOs\\ToolDto.cs",
@@ -461,7 +477,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 23,
+              "DocumentIndex": 24,
               "Title": "MmdsDto.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Models\\DTOs\\MmdsDto.cs",
               "RelativeDocumentMoniker": "Models\\DTOs\\MmdsDto.cs",
@@ -473,7 +489,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 24,
+              "DocumentIndex": 25,
               "Title": "MasterListDto.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Models\\DTOs\\MasterListDto.cs",
               "RelativeDocumentMoniker": "Models\\DTOs\\MasterListDto.cs",
@@ -485,7 +501,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 25,
+              "DocumentIndex": 26,
               "Title": "AssetFullDetailDto.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Models\\DTOs\\AssetFullDetailDto.cs",
               "RelativeDocumentMoniker": "Models\\DTOs\\AssetFullDetailDto.cs",
@@ -497,7 +513,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 26,
+              "DocumentIndex": 27,
               "Title": "MmdsController.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Controllers\\MmdsController.cs",
               "RelativeDocumentMoniker": "Controllers\\MmdsController.cs",
@@ -509,7 +525,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 27,
+              "DocumentIndex": 28,
               "Title": "AssetsConsumablesController.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Controllers\\AssetsConsumablesController.cs",
               "RelativeDocumentMoniker": "Controllers\\AssetsConsumablesController.cs",
@@ -521,7 +537,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 28,
+              "DocumentIndex": 29,
               "Title": "ToolsService.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Services\\ToolsService.cs",
               "RelativeDocumentMoniker": "Services\\ToolsService.cs",
@@ -533,7 +549,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 29,
+              "DocumentIndex": 30,
               "Title": "MmdsService.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Services\\MmdsService.cs",
               "RelativeDocumentMoniker": "Services\\MmdsService.cs",
@@ -545,7 +561,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 30,
+              "DocumentIndex": 31,
               "Title": "IAssetsConsumablesService.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Services\\Interfaces\\IAssetsConsumablesService.cs",
               "RelativeDocumentMoniker": "Services\\Interfaces\\IAssetsConsumablesService.cs",
@@ -557,7 +573,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 31,
+              "DocumentIndex": 32,
               "Title": "ToolRepository.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Repositories\\ToolRepository.cs",
               "RelativeDocumentMoniker": "Repositories\\ToolRepository.cs",
@@ -569,7 +585,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 32,
+              "DocumentIndex": 33,
               "Title": "AssetsConsumablesRepository.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Repositories\\AssetsConsumablesRepository.cs",
               "RelativeDocumentMoniker": "Repositories\\AssetsConsumablesRepository.cs",
@@ -581,7 +597,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 33,
+              "DocumentIndex": 34,
               "Title": "IMmdsRepository.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Repositories\\Interfaces\\IMmdsRepository.cs",
               "RelativeDocumentMoniker": "Repositories\\Interfaces\\IMmdsRepository.cs",
@@ -593,7 +609,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 34,
+              "DocumentIndex": 35,
               "Title": "IMasterRegisterRepository.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Repositories\\Interfaces\\IMasterRegisterRepository.cs",
               "RelativeDocumentMoniker": "Repositories\\Interfaces\\IMasterRegisterRepository.cs",
@@ -605,7 +621,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 35,
+              "DocumentIndex": 36,
               "Title": "IAssetsConsumablesRepository.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Repositories\\Interfaces\\IAssetsConsumablesRepository.cs",
               "RelativeDocumentMoniker": "Repositories\\Interfaces\\IAssetsConsumablesRepository.cs",
@@ -617,7 +633,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 37,
+              "DocumentIndex": 38,
               "Title": "IMmdsService.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Services\\Interfaces\\IMmdsService.cs",
               "RelativeDocumentMoniker": "Services\\Interfaces\\IMmdsService.cs",
@@ -629,7 +645,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 36,
+              "DocumentIndex": 37,
               "Title": "IToolService.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Services\\Interfaces\\IToolService.cs",
               "RelativeDocumentMoniker": "Services\\Interfaces\\IToolService.cs",
@@ -642,18 +658,6 @@
             {
               "$type": "Document",
               "DocumentIndex": 39,
-              "Title": "IToolRepository.cs",
-              "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Repositories\\Interfaces\\IToolRepository.cs",
-              "RelativeDocumentMoniker": "Repositories\\Interfaces\\IToolRepository.cs",
-              "ToolTip": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Repositories\\Interfaces\\IToolRepository.cs",
-              "RelativeToolTip": "Repositories\\Interfaces\\IToolRepository.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-25T17:07:38.125Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 38,
               "Title": "IMasterRegisterService.cs",
               "DocumentMoniker": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\Services\\Interfaces\\IMasterRegisterService.cs",
               "RelativeDocumentMoniker": "Services\\Interfaces\\IMasterRegisterService.cs",
