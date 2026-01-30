@@ -673,15 +673,15 @@ class _TopLayerState extends ConsumerState<TopLayer> {
         },
       );
 
-      print('🔥 Loading dialog shown, starting delete process');
+      print('Loading dialog shown, starting delete process');
 
       // Get the current state of masterListAsync
       final asyncValue = masterListAsync;
-      print('🔥 AsyncValue state: hasValue=${asyncValue.hasValue}, isLoading=${asyncValue.isLoading}, hasError=${asyncValue.hasError}');
+      print('AsyncValue state: hasValue=${asyncValue.hasValue}, isLoading=${asyncValue.isLoading}, hasError=${asyncValue.hasError}');
       
       if (asyncValue.hasValue) {
         final items = asyncValue.value!;
-        print('🔥 Found ${items.length} items in master list');
+        print('Found ${items.length} items in master list');
         
         // Create map of selected items with their types
         Map<String, String> itemsToDelete = {};
@@ -689,17 +689,17 @@ class _TopLayerState extends ConsumerState<TopLayer> {
           try {
             final item = items.firstWhere((item) => item.refId == selectedId);
             itemsToDelete[selectedId] = item.itemType;
-            print('🔥 Found item: ${item.refId} of type: ${item.itemType}');
+            print('Found item: ${item.refId} of type: ${item.itemType}');
           } catch (e) {
-            print('🔥 Error finding item with ID $selectedId: $e');
+            print('Error finding item with ID $selectedId: $e');
             continue;
           }
         }
 
-        print('🔥 Items to delete: $itemsToDelete');
+        print('Items to delete: $itemsToDelete');
 
         if (itemsToDelete.isEmpty) {
-          print('🔥 No valid items to delete');
+          print('No valid items to delete');
           if (isDialogOpen) {
             Navigator.of(context, rootNavigator: true).pop();
             isDialogOpen = false;
@@ -713,22 +713,22 @@ class _TopLayerState extends ConsumerState<TopLayer> {
           return;
         }
 
-        print('🔥 Starting delete operation...');
+        print('Starting delete operation...');
         final results = await DeleteService.deleteMultipleItems(itemsToDelete);
         
-        print('🔥 Delete results: $results');
+        print('Delete results: $results');
         
         // Count successful deletions
         int successCount = results.values.where((success) => success).length;
         int failCount = results.length - successCount;
 
-        print('🔥 Success: $successCount, Failed: $failCount');
+        print('Success: $successCount, Failed: $failCount');
 
         // Close loading dialog using rootNavigator
         if (isDialogOpen) {
           Navigator.of(context, rootNavigator: true).pop();
           isDialogOpen = false;
-          print('🔥 Loading dialog closed');
+          print('Loading dialog closed');
         }
 
         // Clear selection immediately
@@ -748,14 +748,14 @@ class _TopLayerState extends ConsumerState<TopLayer> {
           ),
         );
 
-        print('🔥 Result snackbar shown');
+        print('Result snackbar shown');
 
         // Refresh list
         ref.invalidate(masterListProvider);
-        print('🔥 List refreshed');
+        print('List refreshed');
         
       } else if (asyncValue.isLoading) {
-        print('🔥 Data is loading');
+        print('Data is loading');
         if (isDialogOpen) {
           Navigator.of(context, rootNavigator: true).pop();
           isDialogOpen = false;
@@ -767,7 +767,7 @@ class _TopLayerState extends ConsumerState<TopLayer> {
           ),
         );
       } else if (asyncValue.hasError) {
-        print('🔥 Data has error: ${asyncValue.error}');
+        print('Data has error: ${asyncValue.error}');
         if (isDialogOpen) {
           Navigator.of(context, rootNavigator: true).pop();
           isDialogOpen = false;
@@ -780,14 +780,14 @@ class _TopLayerState extends ConsumerState<TopLayer> {
         );
       }
     } catch (e) {
-      print('🔥 Exception in _handleDelete: $e');
+      print('Exception in _handleDelete: $e');
       // Ensure dialog is closed on any exception
       if (isDialogOpen) {
         try {
           Navigator.of(context, rootNavigator: true).pop();
           isDialogOpen = false;
         } catch (popError) {
-          print('🔥 Error closing dialog: $popError');
+          print('Error closing dialog: $popError');
         }
       }
       ScaffoldMessenger.of(context).showSnackBar(
@@ -798,11 +798,11 @@ class _TopLayerState extends ConsumerState<TopLayer> {
       );
     }
     
-    print('🔥 _handleDelete completed');
+    print('_handleDelete completed');
   }
 
   void _handleExport(BuildContext context, WidgetRef ref) async {
-    print('🔥 _handleExport called');
+    print('_handleExport called');
     final selectedItems = ref.read(selectedItemsProvider);
     final masterListAsync = ref.read(masterListProvider);
     
@@ -819,19 +819,19 @@ class _TopLayerState extends ConsumerState<TopLayer> {
     }
     
     try {
-      print('🔥 Starting export for ${selectedItems.length} selected items');
+      print('Starting export for ${selectedItems.length} selected items');
 
       // Get the current state of masterListAsync
       final asyncValue = masterListAsync;
-      print('🔥 AsyncValue state: hasValue=${asyncValue.hasValue}, isLoading=${asyncValue.isLoading}, hasError=${asyncValue.hasError}');
+      print('AsyncValue state: hasValue=${asyncValue.hasValue}, isLoading=${asyncValue.isLoading}, hasError=${asyncValue.hasError}');
       
       if (asyncValue.hasValue) {
         final allItems = asyncValue.value!;
-        print('🔥 Found ${allItems.length} total items');
+        print('Found ${allItems.length} total items');
         
         // Filter to only selected items
         final itemsToExport = allItems.where((item) => selectedItems.contains(item.refId)).toList();
-        print('🔥 Filtered to ${itemsToExport.length} selected items for export');
+        print('Filtered to ${itemsToExport.length} selected items for export');
         
         if (itemsToExport.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -848,7 +848,7 @@ class _TopLayerState extends ConsumerState<TopLayer> {
         final result = await ExportService.exportToExcel(itemsToExport);
         
         if (result != null) {
-          print('🔥 Export successful: $result');
+          print('Export successful: $result');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(kIsWeb 
@@ -859,7 +859,7 @@ class _TopLayerState extends ConsumerState<TopLayer> {
             ),
           );
         } else {
-          print('🔥 Export failed');
+          print('Export failed');
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Export failed. Please try again.'),
@@ -870,7 +870,7 @@ class _TopLayerState extends ConsumerState<TopLayer> {
         }
         
       } else if (asyncValue.isLoading) {
-        print('🔥 Data is still loading');
+        print('Data is still loading');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Data is still loading, please wait...'),
@@ -878,7 +878,7 @@ class _TopLayerState extends ConsumerState<TopLayer> {
           ),
         );
       } else if (asyncValue.hasError) {
-        print('🔥 Data has error: ${asyncValue.error}');
+        print('Data has error: ${asyncValue.error}');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error loading data: ${asyncValue.error}'),
@@ -887,7 +887,7 @@ class _TopLayerState extends ConsumerState<TopLayer> {
         );
       }
     } catch (e) {
-      print('🔥 Exception in _handleExport: $e');
+      print(' Exception in _handleExport: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error exporting: $e'),
@@ -896,6 +896,6 @@ class _TopLayerState extends ConsumerState<TopLayer> {
       );
     }
     
-    print('🔥 _handleExport completed');
+    print(' _handleExport completed');
   }
 }

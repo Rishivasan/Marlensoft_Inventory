@@ -8,7 +8,7 @@ import 'package:excel/excel.dart';
 class ExportService {
   static Future<String?> exportToExcel(List<MasterListModel> items) async {
     try {
-      print('🔥 Starting Excel export for ${items.length} items');
+      print('Starting Excel export for ${items.length} items');
       
       if (kIsWeb) {
         return await _exportToExcelWeb(items);
@@ -16,14 +16,14 @@ class ExportService {
         return await _exportToExcelDesktop(items);
       }
     } catch (e) {
-      print('🔥 Error in export: $e');
+      print('Error in export: $e');
       return null;
     }
   }
 
   static Future<String?> _exportToExcelWeb(List<MasterListModel> items) async {
     try {
-      print('🔥 Creating Excel content for web');
+      print('Creating Excel content for web');
       
       // Create Excel workbook
       var excel = Excel.createExcel();
@@ -88,17 +88,17 @@ class ExportService {
       String fileName = 'inventory_export_${DateTime.now().millisecondsSinceEpoch}.xlsx';
       
       // For web, we would need to trigger download
-      print('🔥 Web Excel export completed: $fileName');
+      print('Web Excel export completed: $fileName');
       return fileName;
     } catch (e) {
-      print('🔥 Error creating Excel for web: $e');
+      print('Error creating Excel for web: $e');
       return null;
     }
   }
 
   static Future<String?> _exportToExcelDesktop(List<MasterListModel> items) async {
     try {
-      print('🔥 Creating Excel for desktop');
+      print('Creating Excel for desktop');
       
       // Create Excel workbook
       var excel = Excel.createExcel();
@@ -168,25 +168,25 @@ class ExportService {
         if (directory != null) {
           final file = File('${directory.path}/$fileName');
           await file.writeAsBytes(excel.encode()!);
-          print('🔥 Desktop Excel saved to: ${file.path}');
+          print('Desktop Excel saved to: ${file.path}');
           return file.path;
         } else {
           // Fallback to documents directory
           final directory = await getApplicationDocumentsDirectory();
           final file = File('${directory.path}/$fileName');
           await file.writeAsBytes(excel.encode()!);
-          print('🔥 Desktop Excel saved to: ${file.path}');
+          print('Desktop Excel saved to: ${file.path}');
           return file.path;
         }
       } catch (e) {
-        print('🔥 Error saving Excel file: $e');
+        print('Error saving Excel file: $e');
         // For now, just return success
-        print('🔥 Desktop Excel content ready');
-        print('🔥 Desktop export completed: $fileName');
+        print('Desktop Excel content ready');
+        print('Desktop export completed: $fileName');
         return fileName;
       }
     } catch (e) {
-      print('🔥 Error creating desktop Excel: $e');
+      print('Error creating desktop Excel: $e');
       return null;
     }
   }

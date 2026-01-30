@@ -1023,7 +1023,7 @@ class MasterListScreen extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: GenericPaginatedTable<MasterListModel>(
                     data: sortedAndFilteredItems, // Use directly sorted and filtered data
-                    rowsPerPage: 7,
+                    rowsPerPage: 10,
                     minWidth: 1800,
                     showCheckboxColumn: true,
                     onSelectionChanged: (selectedItems) {
