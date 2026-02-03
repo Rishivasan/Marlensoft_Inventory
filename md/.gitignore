@@ -1,4 +1,8 @@
-# Visual Studio
+# IDE and Editor files
+.vscode/
+.idea/
+
+# Visual Studio files
 .vs/
 *.suo
 *.user
@@ -17,6 +21,17 @@ bld/
 [Bb]in/
 [Oo]bj/
 
+# Visual Studio 2015/2017 cache/options directory
+.vs/
+
+# MSTest test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# NUnit
+*.VisualState.xml
+TestResult.xml
+
 # .NET Core
 project.lock.json
 project.fragment.lock.json
@@ -30,20 +45,11 @@ artifacts/
 .pub-cache/
 .pub/
 build/
-*.lock
-
-# IDE
-.vscode/
-.idea/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
+**/android/local.properties
+**/ios/Flutter/flutter_export_environment.sh
 
 # Temporary files
 *.tmp
 *.temp
-temp_*
+*.log
+
