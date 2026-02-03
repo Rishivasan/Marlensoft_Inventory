@@ -54,7 +54,7 @@ class MasterListNotifier extends AsyncNotifier<List<MasterListModel>> {
       return masterList;
     } catch (error, stackTrace) {
       print('DEBUG: MasterListNotifier - Error loading: $error');
-      throw error;
+      rethrow;
     }
   }
 
@@ -64,7 +64,22 @@ class MasterListNotifier extends AsyncNotifier<List<MasterListModel>> {
     try {
       final masterList = await loadMasterList();
       state = AsyncValue.data(masterList);
+      print('DEBUG: MasterListNotifier - Refresh complete with ${masterList.length} items');
     } catch (error, stackTrace) {
+      print('DEBUG: MasterListNotifier - Refresh failed: $error');
+      state = AsyncValue.error(error, stackTrace);
+    }
+  }
+
+  // Force immediate refresh without loading state
+  Future<void> forceRefresh() async {
+    try {
+      print('DEBUG: MasterListNotifier - Force refreshing master list');
+      final masterList = await loadMasterList();
+      state = AsyncValue.data(masterList);
+      print('DEBUG: MasterListNotifier - Force refresh complete with ${masterList.length} items');
+    } catch (error, stackTrace) {
+      print('DEBUG: MasterListNotifier - Force refresh failed: $error');
       state = AsyncValue.error(error, stackTrace);
     }
   }
@@ -79,5 +94,13 @@ final refreshMasterListProvider = Provider((ref) {
   return () async {
     print('DEBUG: Triggering master list refresh');
     await ref.read(masterListProvider.notifier).refresh();
+  };
+});
+
+// Helper provider to trigger force refresh (immediate, no loading state)
+final forceRefreshMasterListProvider = Provider((ref) {
+  return () async {
+    print('DEBUG: Triggering master list force refresh');
+    await ref.read(masterListProvider.notifier).forceRefresh();
   };
 });

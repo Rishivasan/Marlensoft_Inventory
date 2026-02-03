@@ -452,5 +452,73 @@
       }
     ],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InventoryManagement.Controllers.ItemDetailsV2Controller",
+    "Method": "GetCompleteItemDetails",
+    "RelativePath": "api/v2/item-details/{itemId}/{itemType}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "itemId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "itemType",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InventoryManagement.Controllers.ItemDetailsV2Controller",
+    "Method": "UpdateCompleteItemDetails",
+    "RelativePath": "api/v2/item-details/{itemId}/{itemType}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "itemId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "itemType",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "updateData",
+        "Type": "System.Text.Json.JsonElement",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InventoryManagement.Controllers.ItemDetailsV2Controller",
+    "Method": "GetItemFieldStructure",
+    "RelativePath": "api/v2/item-details/{itemId}/{itemType}/fields",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "itemId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "itemType",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
   }
 ]

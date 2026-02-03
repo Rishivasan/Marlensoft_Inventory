@@ -379,6 +379,107 @@
         }
       }
     },
+    "/api/v2/item-details/{itemId}/{itemType}": {
+      "get": {
+        "tags": [
+          "ItemDetailsV2"
+        ],
+        "parameters": [
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "itemType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ItemDetailsV2"
+        ],
+        "parameters": [
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "itemType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { }
+            },
+            "text/json": {
+              "schema": { }
+            },
+            "application/*+json": {
+              "schema": { }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v2/item-details/{itemId}/{itemType}/fields": {
+      "get": {
+        "tags": [
+          "ItemDetailsV2"
+        ],
+        "parameters": [
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "itemType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/maintenance": {
       "get": {
         "tags": [
@@ -1006,6 +1107,10 @@
             "type": "string",
             "nullable": true
           },
+          "brandName": {
+            "type": "string",
+            "nullable": true
+          },
           "accuracyClass": {
             "type": "string",
             "nullable": true
@@ -1249,8 +1354,7 @@
             "nullable": true
           },
           "status": {
-            "type": "integer",
-            "format": "int32"
+            "type": "boolean"
           }
         },
         "additionalProperties": false

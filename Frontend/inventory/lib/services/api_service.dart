@@ -17,33 +17,88 @@ class ApiService {
   static String baseUrl = "http://localhost:5069"; // Default
 
   // Get complete item details by ID and type for editing
-  Future<Map<String, dynamic>?> getCompleteItemDetails(String itemId, String itemType) async {
-    print('DEBUG: API - Getting complete details for item: $itemId');
+  // Enhanced method for getting complete item details with type
+  Future<Map<String, dynamic>?> getCompleteItemDetailsV2(String itemId, String itemType) async {
+    print('🔍 DEBUG: API - Getting complete details for item: $itemId, type: $itemType');
     try {
-      final endpoint = '$baseUrl/api/item-details/$itemId';
+      final endpoint = '$baseUrl/api/v2/item-details/$itemId/$itemType';
       
-      print('DEBUG: API - Calling endpoint: $endpoint');
+      print('🌐 DEBUG: API - Calling V2 endpoint: $endpoint');
       final response = await http.get(
         Uri.parse(endpoint),
         headers: {"Content-Type": "application/json"},
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 15));
       
-      print('DEBUG: API - Response status: ${response.statusCode}');
-      print('DEBUG: API - Response body: ${response.body}');
+      print('📊 DEBUG: API - Response status: ${response.statusCode}');
+      print('📏 DEBUG: API - Response body length: ${response.body.length}');
       
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        print('DEBUG: API - Successfully fetched complete item details');
+        print('📄 DEBUG: API - Raw response body: ${response.body}');
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        print('✅ DEBUG: API - Successfully parsed JSON response');
+        print('🔑 DEBUG: API - Response keys: ${data.keys.toList()}');
+        print('🎯 DEBUG: API - HasDetailedData: ${data['hasDetailedData']}');
         
-        // Return the detailed data part
-        return data['DetailedData'] as Map<String, dynamic>?;
+        if (data['detailedData'] != null && data['detailedData'] is Map) {
+          final detailedData = Map<String, dynamic>.from(data['detailedData'] as Map);
+          print('🔧 DEBUG: API - DetailedData keys: ${detailedData.keys.toList()}');
+          print('💾 DEBUG: API - DetailedData sample values:');
+          detailedData.forEach((key, value) {
+            print('   $key: $value');
+          });
+          return {
+            'ItemType': data['itemType'],
+            'MasterData': data['masterData'] != null ? Map<String, dynamic>.from(data['masterData'] as Map) : null,
+            'DetailedData': detailedData,
+            'HasDetailedData': data['hasDetailedData'] == true,
+          };
+        } else {
+          print('❌ DEBUG: API - No DetailedData found in response');
+          return {
+            'ItemType': data['itemType'],
+            'MasterData': data['masterData'] != null ? Map<String, dynamic>.from(data['masterData'] as Map) : null,
+            'DetailedData': <String, dynamic>{},
+            'HasDetailedData': false,
+          };
+        }
       } else {
-        print('DEBUG: API - Failed to fetch item details: ${response.statusCode}');
+        print('❌ DEBUG: API - Failed to fetch item details: ${response.statusCode}');
+        print('📄 DEBUG: API - Error response body: ${response.body}');
         return null;
       }
     } catch (e) {
-      print("DEBUG: API - Error fetching complete item details: $e");
+      print("💥 DEBUG: API - Error fetching complete item details: $e");
+      print("🔍 DEBUG: API - Error type: ${e.runtimeType}");
       return null;
+    }
+  }
+
+  // Update item details with the new V2 endpoint
+  Future<bool> updateCompleteItemDetailsV2(String itemId, String itemType, Map<String, dynamic> updateData) async {
+    print('DEBUG: API - Updating item details for: $itemId, type: $itemType');
+    try {
+      final endpoint = '$baseUrl/api/v2/item-details/$itemId/$itemType';
+      
+      print('DEBUG: API - Calling V2 update endpoint: $endpoint');
+      final response = await http.put(
+        Uri.parse(endpoint),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(updateData),
+      ).timeout(const Duration(seconds: 15));
+      
+      print('DEBUG: API - Update response status: ${response.statusCode}');
+      print('DEBUG: API - Update response body: ${response.body}');
+      
+      if (response.statusCode == 200) {
+        print('DEBUG: API - Successfully updated item details');
+        return true;
+      } else {
+        print('DEBUG: API - Failed to update item details: ${response.statusCode}');
+        return false;
+      }
+    } catch (e) {
+      print("DEBUG: API - Error updating item details: $e");
+      return false;
     }
   }
   Future<MasterListModel?> getMasterListById(String id) async {

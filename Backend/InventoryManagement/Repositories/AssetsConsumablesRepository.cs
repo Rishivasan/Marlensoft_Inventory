@@ -91,11 +91,11 @@ VALUES
                 var masterQuery = @"
 INSERT INTO MasterRegister
 (
-    RefId, ItemType, CreatedDate, IsActive
+    RefId, ItemType, CreatedDate
 )
 VALUES
 (
-    @RefId, @ItemType, GETDATE(), 1
+    @RefId, @ItemType, GETDATE()
 )";
 
                 var masterParams = new
@@ -128,6 +128,10 @@ SET
     Specifications = @Specifications,
     Quantity = @Quantity,
     StorageLocation = @StorageLocation,
+    PoNumber = @PoNumber,
+    PoDate = @PoDate,
+    InvoiceNumber = @InvoiceNumber,
+    InvoiceDate = @InvoiceDate,
     AssetCost = @AssetCost,
     ExtraCharges = @ExtraCharges,
     TotalCost = @TotalCost,
@@ -138,7 +142,8 @@ SET
     Remarks = @Remarks,
     ItemTypeKey = @ItemTypeKey,
     UpdatedBy = @UpdatedBy,
-    UpdatedDate = GETDATE()
+    UpdatedDate = GETDATE(),
+    Status = @Status
 WHERE AssetId = @AssetId";
             using var connection = _context.CreateConnection();
             return await connection.ExecuteAsync(query, asset);
@@ -152,7 +157,7 @@ SET Status = 0, UpdatedDate = GETDATE()
 WHERE AssetId = @AssetId;
 
 UPDATE MasterRegister 
-SET IsActive = 0 
+SET RefId = 'DELETED_' + RefId + '_' + CONVERT(VARCHAR, GETDATE(), 112)
 WHERE RefId = @AssetId AND (ItemType = 'Asset' OR ItemType = 'Consumable');";
 
             using var connection = _context.CreateConnection();

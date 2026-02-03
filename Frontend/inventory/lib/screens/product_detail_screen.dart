@@ -15,6 +15,8 @@ import 'package:inventory/screens/add_forms/add_consumable.dart';
 import 'package:inventory/providers/header_state.dart';
 import 'package:inventory/providers/search_provider.dart';
 import 'package:inventory/providers/sorting_provider.dart';
+import 'package:inventory/providers/master_list_provider.dart';
+import 'package:inventory/providers/product_state_provider.dart';
 import 'package:inventory/widgets/generic_paginated_table.dart';
 import 'package:inventory/widgets/sortable_header.dart';
 import 'package:inventory/utils/sorting_utils.dart';
@@ -24,14 +26,16 @@ import 'dart:async';
 @RoutePage()
 class ProductDetailScreen extends ConsumerStatefulWidget {
   const ProductDetailScreen({super.key, required this.id});
-  
+
   final String id;
-  
+
   @override
-  ConsumerState<ProductDetailScreen> createState() => _ProductDetailScreenState();
+  ConsumerState<ProductDetailScreen> createState() =>
+      _ProductDetailScreenState();
 }
 
-class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with TickerProviderStateMixin {
+class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
+    with TickerProviderStateMixin {
   MasterListModel? productData;
   List<MaintenanceModel> maintenanceRecords = [];
   List<AllocationModel> allocationRecords = [];
@@ -41,33 +45,36 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
   bool loadingMaintenance = true;
   bool loadingAllocation = true;
   late TabController _tabController;
-  
+
   // Search controllers
-  final TextEditingController _maintenanceSearchController = TextEditingController();
-  final TextEditingController _allocationSearchController = TextEditingController();
+  final TextEditingController _maintenanceSearchController =
+      TextEditingController();
+  final TextEditingController _allocationSearchController =
+      TextEditingController();
   Timer? _maintenanceDebounceTimer;
   Timer? _allocationDebounceTimer;
-  
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    
+
     // Initialize search controllers
     _maintenanceSearchController.addListener(_onMaintenanceSearchChanged);
     _allocationSearchController.addListener(_onAllocationSearchChanged);
-    
+
     // Set header for Product Detail page
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(headerProvider.notifier).state = const HeaderModel(
         title: "Products",
-        subtitle: "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
+        subtitle:
+            "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
       );
     });
-    
+
     _loadProductData();
   }
-  
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -75,13 +82,13 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
     _allocationSearchController.dispose();
     _maintenanceDebounceTimer?.cancel();
     _allocationDebounceTimer?.cancel();
-    
+
     // Reset header when leaving the page
-    ref.read(headerProvider.notifier).state = const HeaderModel(
-      title: "Dashboard",
-      subtitle: "Welcome! Select a menu to view details.",
-    );
-    
+    //  ref.read(headerProvider.notifier).state = const HeaderModel(
+    //     title: "Dashboard",
+    //     subtitle: "Welcome! Select a menu to view details.",
+    //   );
+
     super.dispose();
   }
 
@@ -90,8 +97,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
     _maintenanceDebounceTimer = Timer(const Duration(milliseconds: 300), () {
       setState(() {
         filteredMaintenanceRecords = filterMaintenanceRecords(
-          maintenanceRecords, 
-          _maintenanceSearchController.text
+          maintenanceRecords,
+          _maintenanceSearchController.text,
         );
       });
     });
@@ -102,8 +109,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
     _allocationDebounceTimer = Timer(const Duration(milliseconds: 300), () {
       setState(() {
         filteredAllocationRecords = filterAllocationRecords(
-          allocationRecords, 
-          _allocationSearchController.text
+          allocationRecords,
+          _allocationSearchController.text,
         );
       });
     });
@@ -122,13 +129,13 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
       filteredAllocationRecords = allocationRecords;
     });
   }
-  
+
   Future<void> _loadProductData() async {
     print('DEBUG: Loading product data for ID: ${widget.id}');
     try {
       final apiService = ApiService();
       final data = await apiService.getMasterListById(widget.id);
-      
+
       if (data != null) {
         print('DEBUG: Product data loaded successfully:');
         print('  - Name: ${data.name}');
@@ -138,12 +145,12 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
         print('  - Location: ${data.location}');
         print('  - ResponsibleTeam: ${data.responsibleTeam}');
         print('  - AvailabilityStatus: ${data.availabilityStatus}');
-        
+
         setState(() {
           productData = data;
           loading = false;
         });
-        
+
         // Load maintenance and allocation data after product data is loaded
         print('DEBUG: Loading maintenance data for assetId: ${data.assetId}');
         _loadMaintenanceData(data.assetId);
@@ -168,7 +175,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
       _loadAllocationData(widget.id);
     }
   }
-  
+
   MasterListModel _createPlaceholderData(String id) {
     return MasterListModel(
       sno: 0,
@@ -185,24 +192,26 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
       availabilityStatus: 'Unknown',
     );
   }
-  
+
   Future<void> _loadMaintenanceData(String assetId) async {
     print('DEBUG: _loadMaintenanceData called with assetId: $assetId');
     setState(() {
       loadingMaintenance = true;
     });
-    
+
     try {
       final apiService = ApiService();
       print('DEBUG: Calling getMaintenanceByAssetId with: $assetId');
       final maintenance = await apiService.getMaintenanceByAssetId(assetId);
-      
+
       print('DEBUG: Maintenance API returned ${maintenance.length} records');
-      
+
       // If no data from API, add some sample data for testing UI
       List<MaintenanceModel> finalMaintenanceList = maintenance;
       if (maintenance.isEmpty) {
-        print('DEBUG: No maintenance data from API, adding sample data for UI testing');
+        print(
+          'DEBUG: No maintenance data from API, adding sample data for UI testing',
+        );
         finalMaintenanceList = [
           MaintenanceModel(
             maintenanceId: 1,
@@ -238,17 +247,20 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
           ),
         ];
       }
-      
+
       setState(() {
         maintenanceRecords = finalMaintenanceList;
-        filteredMaintenanceRecords = finalMaintenanceList; // Initialize filtered list
+        filteredMaintenanceRecords =
+            finalMaintenanceList; // Initialize filtered list
         loadingMaintenance = false;
       });
-      
+
       if (finalMaintenanceList.isEmpty) {
         print('DEBUG: No maintenance records found for asset: $assetId');
       } else {
-        print('DEBUG: Found maintenance records: ${finalMaintenanceList.map((m) => '${m.serviceProviderCompany} - ${m.serviceType}').toList()}');
+        print(
+          'DEBUG: Found maintenance records: ${finalMaintenanceList.map((m) => '${m.serviceProviderCompany} - ${m.serviceType}').toList()}',
+        );
       }
     } catch (e) {
       print('DEBUG: Error loading maintenance data: $e');
@@ -257,24 +269,26 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
       });
     }
   }
-  
+
   Future<void> _loadAllocationData(String assetId) async {
     print('DEBUG: _loadAllocationData called with assetId: $assetId');
     setState(() {
       loadingAllocation = true;
     });
-    
+
     try {
       final apiService = ApiService();
       print('DEBUG: Calling getAllocationsByAssetId with: $assetId');
       final allocations = await apiService.getAllocationsByAssetId(assetId);
-      
+
       print('DEBUG: Allocation API returned ${allocations.length} records');
-      
+
       // If no data from API, add some sample data for testing UI
       List<AllocationModel> finalAllocationList = allocations;
       if (allocations.isEmpty) {
-        print('DEBUG: No allocation data from API, adding sample data for UI testing');
+        print(
+          'DEBUG: No allocation data from API, adding sample data for UI testing',
+        );
         finalAllocationList = [
           AllocationModel(
             allocationId: 1,
@@ -293,17 +307,20 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
           ),
         ];
       }
-      
+
       setState(() {
         allocationRecords = finalAllocationList;
-        filteredAllocationRecords = finalAllocationList; // Initialize filtered list
+        filteredAllocationRecords =
+            finalAllocationList; // Initialize filtered list
         loadingAllocation = false;
       });
-      
+
       if (finalAllocationList.isEmpty) {
         print('DEBUG: No allocation records found for asset: $assetId');
       } else {
-        print('DEBUG: Found allocation records: ${finalAllocationList.map((a) => '${a.employeeName} - ${a.purpose}').toList()}');
+        print(
+          'DEBUG: Found allocation records: ${finalAllocationList.map((a) => '${a.employeeName} - ${a.purpose}').toList()}',
+        );
       }
     } catch (e) {
       print('DEBUG: Error loading allocation data: $e');
@@ -312,7 +329,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
       });
     }
   }
-  
+
   void _openEditDialog() {
     if (productData == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -328,117 +345,213 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
     final assetType = productData!.type.toLowerCase();
     final itemName = productData!.name.toLowerCase();
     final assetId = productData!.assetId.toLowerCase();
-    
-    print('DEBUG: Opening edit dialog for item type: $itemType, asset type: $assetType, name: $itemName, assetId: $assetId');
+
+    print(
+      'DEBUG: Opening edit dialog for item type: $itemType, asset type: $assetType, name: $itemName, assetId: $assetId',
+    );
 
     Widget? editForm;
     String dialogType = '';
-    
+
     // Enhanced item type detection with priority order
     if (_isMMDType(itemType, assetType, itemName, assetId)) {
       dialogType = 'MMD';
       editForm = AddMmd(
-        submit: () => _loadProductData(),
+        submit: () async {
+          // Add small delay to ensure database transaction commits
+          await Future.delayed(const Duration(milliseconds: 300));
+          // Refresh product detail data
+          await _loadProductData();
+          // Small delay to ensure database transaction completes
+          await Future.delayed(const Duration(milliseconds: 300));
+          // Force refresh master list to update grid/pagination immediately
+          await ref.read(forceRefreshMasterListProvider)();
+          print('DEBUG: ProductDetail - MMD updated, refreshed both product data and master list');
+        },
         existingData: productData, // Pass existing data
       );
     } else if (_isToolType(itemType, assetType, itemName, assetId)) {
       dialogType = 'Tool';
       editForm = AddTool(
-        submit: () => _loadProductData(),
+        submit: () async {
+          // Add small delay to ensure database transaction commits
+          await Future.delayed(const Duration(milliseconds: 300));
+          // Refresh product detail data
+          await _loadProductData();
+          // Small delay to ensure database transaction completes
+          await Future.delayed(const Duration(milliseconds: 300));
+          // Force refresh master list to update grid/pagination immediately
+          await ref.read(forceRefreshMasterListProvider)();
+          print('DEBUG: ProductDetail - Tool updated, refreshed both product data and master list');
+        },
         existingData: productData, // Pass existing data
       );
     } else if (_isConsumableType(itemType, assetType, itemName, assetId)) {
       dialogType = 'Consumable';
       editForm = AddConsumable(
-        submit: () => _loadProductData(),
+        submit: () async {
+          // Add small delay to ensure database transaction commits
+          await Future.delayed(const Duration(milliseconds: 300));
+          // Refresh product detail data
+          await _loadProductData();
+          // Small delay to ensure database transaction completes
+          await Future.delayed(const Duration(milliseconds: 300));
+          // Force refresh master list to update grid/pagination immediately
+          await ref.read(forceRefreshMasterListProvider)();
+          print('DEBUG: ProductDetail - Consumable updated, refreshed both product data and master list');
+        },
         existingData: productData, // Pass existing data
       );
     } else if (_isAssetType(itemType, assetType, itemName, assetId)) {
       dialogType = 'Asset';
       editForm = AddAsset(
-        submit: () => _loadProductData(),
+        submit: () async {
+          // Add small delay to ensure database transaction commits
+          await Future.delayed(const Duration(milliseconds: 300));
+          // Refresh product detail data
+          await _loadProductData();
+          // Small delay to ensure database transaction completes
+          await Future.delayed(const Duration(milliseconds: 300));
+          // Force refresh master list to update grid/pagination immediately
+          await ref.read(forceRefreshMasterListProvider)();
+          print('DEBUG: ProductDetail - Asset updated, refreshed both product data and master list');
+        },
         existingData: productData, // Pass existing data
       );
     } else {
       // Default to Tool if no specific type is detected
-      print('DEBUG: Could not determine specific item type. Defaulting to Tool. ItemType: $itemType, AssetType: $assetType');
+      print(
+        'DEBUG: Could not determine specific item type. Defaulting to Tool. ItemType: $itemType, AssetType: $assetType',
+      );
       dialogType = 'Tool';
       editForm = AddTool(
-        submit: () => _loadProductData(),
+        submit: () async {
+          // Add small delay to ensure database transaction commits
+          await Future.delayed(const Duration(milliseconds: 300));
+          // Refresh product detail data
+          await _loadProductData();
+          // Small delay to ensure database transaction completes
+          await Future.delayed(const Duration(milliseconds: 300));
+          // Force refresh master list to update grid/pagination immediately
+          await ref.read(forceRefreshMasterListProvider)();
+          print('DEBUG: ProductDetail - Tool (default) updated, refreshed both product data and master list');
+        },
         existingData: productData, // Pass existing data
       );
     }
 
     print('DEBUG: Opening $dialogType dialog for item: ${productData!.name}');
-    
-    DialogPannelHelper().showAddPannel(
-      context: context,
-      addingItem: editForm,
+
+    DialogPannelHelper().showAddPannel(context: context, addingItem: editForm);
+  }
+
+  bool _isMMDType(
+    String itemType,
+    String assetType,
+    String itemName,
+    String assetId,
+  ) {
+    const mmdKeywords = [
+      'mmd',
+      'measuring',
+      'monitoring',
+      'device',
+      'calibration',
+      'meter',
+      'gauge',
+    ];
+    return mmdKeywords.any(
+      (keyword) =>
+          itemType.contains(keyword) ||
+          assetType.contains(keyword) ||
+          itemName.contains(keyword) ||
+          assetId.contains(keyword),
     );
   }
 
-  bool _isMMDType(String itemType, String assetType, String itemName, String assetId) {
-    const mmdKeywords = ['mmd', 'measuring', 'monitoring', 'device', 'calibration', 'meter', 'gauge'];
-    return mmdKeywords.any((keyword) => 
-      itemType.contains(keyword) || 
-      assetType.contains(keyword) || 
-      itemName.contains(keyword) || 
-      assetId.contains(keyword)
+  bool _isToolType(
+    String itemType,
+    String assetType,
+    String itemName,
+    String assetId,
+  ) {
+    const toolKeywords = [
+      'tool',
+      'equipment',
+      'instrument',
+      'wrench',
+      'drill',
+      'hammer',
+    ];
+    return toolKeywords.any(
+      (keyword) =>
+          itemType.contains(keyword) ||
+          assetType.contains(keyword) ||
+          itemName.contains(keyword) ||
+          assetId.contains(keyword),
     );
   }
 
-  bool _isToolType(String itemType, String assetType, String itemName, String assetId) {
-    const toolKeywords = ['tool', 'equipment', 'instrument', 'wrench', 'drill', 'hammer'];
-    return toolKeywords.any((keyword) => 
-      itemType.contains(keyword) || 
-      assetType.contains(keyword) || 
-      itemName.contains(keyword) || 
-      assetId.contains(keyword)
+  bool _isConsumableType(
+    String itemType,
+    String assetType,
+    String itemName,
+    String assetId,
+  ) {
+    const consumableKeywords = [
+      'consumable',
+      'material',
+      'supply',
+      'chemical',
+      'reagent',
+      'disposable',
+    ];
+    return consumableKeywords.any(
+      (keyword) =>
+          itemType.contains(keyword) ||
+          assetType.contains(keyword) ||
+          itemName.contains(keyword) ||
+          assetId.contains(keyword),
     );
   }
 
-  bool _isConsumableType(String itemType, String assetType, String itemName, String assetId) {
-    const consumableKeywords = ['consumable', 'material', 'supply', 'chemical', 'reagent', 'disposable'];
-    return consumableKeywords.any((keyword) => 
-      itemType.contains(keyword) || 
-      assetType.contains(keyword) || 
-      itemName.contains(keyword) || 
-      assetId.contains(keyword)
+  bool _isAssetType(
+    String itemType,
+    String assetType,
+    String itemName,
+    String assetId,
+  ) {
+    const assetKeywords = [
+      'asset',
+      'machine',
+      'equipment',
+      'furniture',
+      'computer',
+      'vehicle',
+    ];
+    return assetKeywords.any(
+      (keyword) =>
+          itemType.contains(keyword) ||
+          assetType.contains(keyword) ||
+          itemName.contains(keyword) ||
+          assetId.contains(keyword),
     );
   }
 
-  bool _isAssetType(String itemType, String assetType, String itemName, String assetId) {
-    const assetKeywords = ['asset', 'machine', 'equipment', 'furniture', 'computer', 'vehicle'];
-    return assetKeywords.any((keyword) => 
-      itemType.contains(keyword) || 
-      assetType.contains(keyword) || 
-      itemName.contains(keyword) || 
-      assetId.contains(keyword)
-    );
-  }
-  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       body: loading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: MediaQuery.of(context).size.height - 100, // Ensure minimum height
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0), // Reduced from 16
-                  child: _buildUnifiedCard(),
-                ),
-              ),
-            ),
+          : _buildUnifiedCard(),
     );
   }
 
   Widget _buildUnifiedCard() {
     return Container(
+      height:
+          MediaQuery.of(context).size.height - 16, // Full height minus padding
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
@@ -446,27 +559,18 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
-          // Product Card Section - Compact
+          // Product Card Section - Fixed (non-scrollable)
           _buildProductCardContent(),
-          
+
           // Divider
-          const Divider(
-            height: 1,
-            thickness: 1,
-            color: Color(0xFFE5E7EB),
-          ),
-          
-          // Tabs Section
+          const Divider(height: 1, thickness: 1, color: Color.fromRGBO(144, 144, 144, 1),indent: 15,endIndent: 15,),
+
+          // Tabs Section - Fixed (non-scrollable)
           _buildTabs(),
-          
-          // Tab Content Section - Constrained height to prevent overflow
-          ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.6, // More responsive height
-              minHeight: 350, // Reduced minimum height
-            ),
+
+          // Tab Content Section - Expandable to fill remaining space
+          Expanded(
             child: TabBarView(
               controller: _tabController,
               physics: const NeverScrollableScrollPhysics(), // Disable sliding
@@ -494,7 +598,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
             decoration: BoxDecoration(
               color: const Color(0xFFF3F4F6),
               borderRadius: BorderRadius.circular(6), // Reduced from 8
-              border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(6),
@@ -514,7 +617,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
             ),
           ),
           const SizedBox(width: 16), // Reduced from 20
-          
           // Product Details
           Expanded(
             child: Column(
@@ -546,21 +648,35 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                         ],
                       ),
                     ),
-                    // Status Badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // Reduced from 12,6
-                      decoration: BoxDecoration(
-                        color: _getStatusBadgeColor(productData?.availabilityStatus),
-                        borderRadius: BorderRadius.circular(12), // Reduced from 16
-                      ),
-                      child: Text(
-                        productData?.availabilityStatus ?? 'In use',
-                        style: TextStyle(
-                          fontSize: 10, // Reduced from 12
-                          fontWeight: FontWeight.w500,
-                          color: _getStatusTextColor(productData?.availabilityStatus),
-                        ),
-                      ),
+                    // Status Badge - Reactive
+                    Consumer(
+                      builder: (context, ref, child) {
+                        // Watch for reactive state changes
+                        final productState = ref.watch(productStateByIdProvider(productData?.assetId ?? widget.id));
+                        
+                        // Use reactive state if available, otherwise fall back to productData
+                        final availabilityStatus = productState?.availabilityStatus ?? 
+                            productData?.availabilityStatus ?? 'In use';
+                        
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ), // Reduced from 12,6
+                          decoration: BoxDecoration(
+                            color: _getStatusBadgeColor(availabilityStatus),
+                            borderRadius: BorderRadius.circular(12), // Reduced from 16
+                          ),
+                          child: Text(
+                            availabilityStatus,
+                            style: TextStyle(
+                              fontSize: 10, // Reduced from 12
+                              fontWeight: FontWeight.w500,
+                              color: _getStatusTextColor(availabilityStatus),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(width: 8), // Reduced from 12
                     // Edit Icon
@@ -570,7 +686,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                         padding: const EdgeInsets.all(6), // Reduced from 8
                         decoration: BoxDecoration(
                           color: const Color(0xFFF3F4F6),
-                          borderRadius: BorderRadius.circular(4), // Reduced from 6
+                          borderRadius: BorderRadius.circular(
+                            4,
+                          ), // Reduced from 6
                         ),
                         child: const Icon(
                           Icons.edit_outlined,
@@ -582,24 +700,38 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                   ],
                 ),
                 const SizedBox(height: 16), // Reduced from 20
-                
                 // Product Info Grid - Two rows
                 Row(
                   children: [
                     Expanded(
-                      child: _buildInfoColumn('Item Type', productData?.itemType ?? 'Main article'),
+                      child: _buildInfoColumn(
+                        'Item Type',
+                        productData?.itemType ?? 'Main article',
+                      ),
                     ),
                     Expanded(
-                      child: _buildInfoColumn('Type/Category', productData?.type ?? 'Manufacturing'),
+                      child: _buildInfoColumn(
+                        'Type/Category',
+                        productData?.type ?? 'Manufacturing',
+                      ),
                     ),
                     Expanded(
-                      child: _buildInfoColumn('Asset ID', productData?.assetId ?? widget.id),
+                      child: _buildInfoColumn(
+                        'Asset ID',
+                        productData?.assetId ?? widget.id,
+                      ),
                     ),
                     Expanded(
-                      child: _buildInfoColumn('Supplier', productData?.supplier ?? 'Unknown'),
+                      child: _buildInfoColumn(
+                        'Supplier',
+                        productData?.supplier ?? 'Unknown',
+                      ),
                     ),
                     Expanded(
-                      child: _buildInfoColumn('Location', productData?.location ?? 'Unknown'),
+                      child: _buildInfoColumn(
+                        'Location',
+                        productData?.location ?? 'Unknown',
+                      ),
                     ),
                   ],
                 ),
@@ -607,19 +739,37 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                 Row(
                   children: [
                     Expanded(
-                      child: _buildInfoColumn('Created Date', 
-                        productData != null 
-                          ? "${productData!.createdDate.day}/${productData!.createdDate.month}/${productData!.createdDate.year}"
-                          : '27/1/2024'),
+                      child: _buildInfoColumn(
+                        'Created Date',
+                        productData != null
+                            ? "${productData!.createdDate.day}/${productData!.createdDate.month}/${productData!.createdDate.year}"
+                            : '27/1/2024',
+                      ),
                     ),
                     Expanded(
-                      child: _buildInfoColumn('Responsible Team', productData?.responsibleTeam ?? 'Unknown'),
+                      child: _buildInfoColumn(
+                        'Responsible Team',
+                        productData?.responsibleTeam ?? 'Unknown',
+                      ),
                     ),
                     Expanded(
-                      child: _buildInfoColumn('Next Service Due', 
-                        productData?.nextServiceDue != null 
-                          ? "${productData!.nextServiceDue!.day}/${productData!.nextServiceDue!.month}/${productData!.nextServiceDue!.year}"
-                          : 'N/A'),
+                      child: Consumer(
+                        builder: (context, ref, child) {
+                          // Watch for reactive state changes
+                          final productState = ref.watch(productStateByIdProvider(productData?.assetId ?? widget.id));
+                          
+                          // Use reactive state if available, otherwise fall back to productData
+                          final nextServiceDue = productState?.nextServiceDue ?? 
+                              (productData?.nextServiceDue != null
+                                  ? "${productData!.nextServiceDue!.day}/${productData!.nextServiceDue!.month}/${productData!.nextServiceDue!.year}"
+                                  : null);
+                          
+                          return _buildInfoColumn(
+                            'Next Service Due',
+                            nextServiceDue ?? 'N/A',
+                          );
+                        },
+                      ),
                     ),
                     const Expanded(child: SizedBox()),
                     const Expanded(child: SizedBox()),
@@ -651,7 +801,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
             decoration: BoxDecoration(
               color: const Color(0xFFF3F4F6),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
@@ -671,7 +820,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
             ),
           ),
           const SizedBox(width: 24),
-          
+
           // Product Details
           Expanded(
             child: Column(
@@ -705,9 +854,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                     ),
                     // Status Badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
-                        color: _getStatusBadgeColor(productData?.availabilityStatus),
+                        color: _getStatusBadgeColor(
+                          productData?.availabilityStatus,
+                        ),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
@@ -715,7 +869,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: _getStatusTextColor(productData?.availabilityStatus),
+                          color: _getStatusTextColor(
+                            productData?.availabilityStatus,
+                          ),
                         ),
                       ),
                     ),
@@ -736,24 +892,39 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                   ],
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Product Info Grid
                 Row(
                   children: [
                     Expanded(
-                      child: _buildInfoColumn('Item Type', productData?.itemType ?? 'Main article'),
+                      child: _buildInfoColumn(
+                        'Item Type',
+                        productData?.itemType ?? 'Main article',
+                      ),
                     ),
                     Expanded(
-                      child: _buildInfoColumn('Type/Category', productData?.type ?? 'Manufacturing'),
+                      child: _buildInfoColumn(
+                        'Type/Category',
+                        productData?.type ?? 'Manufacturing',
+                      ),
                     ),
                     Expanded(
-                      child: _buildInfoColumn('Asset ID', productData?.assetId ?? widget.id),
+                      child: _buildInfoColumn(
+                        'Asset ID',
+                        productData?.assetId ?? widget.id,
+                      ),
                     ),
                     Expanded(
-                      child: _buildInfoColumn('Supplier', productData?.supplier ?? 'Unknown'),
+                      child: _buildInfoColumn(
+                        'Supplier',
+                        productData?.supplier ?? 'Unknown',
+                      ),
                     ),
                     Expanded(
-                      child: _buildInfoColumn('Location', productData?.location ?? 'Unknown'),
+                      child: _buildInfoColumn(
+                        'Location',
+                        productData?.location ?? 'Unknown',
+                      ),
                     ),
                   ],
                 ),
@@ -761,19 +932,26 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                 Row(
                   children: [
                     Expanded(
-                      child: _buildInfoColumn('Created Date', 
-                        productData != null 
-                          ? "${productData!.createdDate.day}/${productData!.createdDate.month}/${productData!.createdDate.year}"
-                          : '27/1/2024'),
+                      child: _buildInfoColumn(
+                        'Created Date',
+                        productData != null
+                            ? "${productData!.createdDate.day}/${productData!.createdDate.month}/${productData!.createdDate.year}"
+                            : '27/1/2024',
+                      ),
                     ),
                     Expanded(
-                      child: _buildInfoColumn('Responsible Team', productData?.responsibleTeam ?? 'Unknown'),
+                      child: _buildInfoColumn(
+                        'Responsible Team',
+                        productData?.responsibleTeam ?? 'Unknown',
+                      ),
                     ),
                     Expanded(
-                      child: _buildInfoColumn('Next Service Due', 
-                        productData?.nextServiceDue != null 
-                          ? "${productData!.nextServiceDue!.day}/${productData!.nextServiceDue!.month}/${productData!.nextServiceDue!.year}"
-                          : 'N/A'),
+                      child: _buildInfoColumn(
+                        'Next Service Due',
+                        productData?.nextServiceDue != null
+                            ? "${productData!.nextServiceDue!.day}/${productData!.nextServiceDue!.month}/${productData!.nextServiceDue!.year}"
+                            : 'N/A',
+                      ),
                     ),
                     const Expanded(child: SizedBox()),
                     const Expanded(child: SizedBox()),
@@ -840,30 +1018,35 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
 
   Widget _buildTabs() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0), // Reduced from 20
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 0,
+      ), // Reduced from 20
       decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-        ),
+       //border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB), width: 0)),
       ),
       child: TabBar(
         controller: _tabController,
-        labelColor: const Color(0xFF2563EB),
+        labelColor: Color.fromRGBO(0,89, 154, 1),
         unselectedLabelColor: const Color(0xFF6B7280),
-        indicatorColor: const Color(0xFF2563EB),
-        indicatorWeight: 2,
+        indicatorColor: const Color.fromRGBO(0,89, 154, 1),
+        indicatorWeight: 1,
         indicatorPadding: EdgeInsets.zero,
-        labelPadding: const EdgeInsets.only(right: 32, top: 8, bottom: 8), // Reduced padding
+        labelPadding: const EdgeInsets.only(
+          right: 32,
+          top: 0,
+          bottom: 0,
+        ), // Reduced padding
         isScrollable: true, // Enable scrollable to allow left alignment
         tabAlignment: TabAlignment.start, // Left align tabs
         dividerColor: Colors.transparent,
         labelStyle: const TextStyle(
-          fontSize: 13, // Reduced from 14
-          fontWeight: FontWeight.w500,
+          fontSize: 12, // Reduced from 14
+          fontWeight: FontWeight.w700,
         ),
         unselectedLabelStyle: const TextStyle(
-          fontSize: 13, // Reduced from 14
-          fontWeight: FontWeight.w400,
+          fontSize: 12, // Reduced from 14
+          fontWeight: FontWeight.w500,
         ),
         tabs: const [
           Tab(text: 'Maintenance & service management'),
@@ -872,7 +1055,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
       ),
     );
   }
-  
+
   Widget _buildMaintenanceTabContent() {
     return Column(
       children: [
@@ -938,10 +1121,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
-              
+
               // Spacer to push button to the right
               const Spacer(),
-              
+
               // Add Button - Aligned to right
               ElevatedButton(
                 onPressed: () {
@@ -951,16 +1134,45 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                       assetId: productData?.assetId ?? widget.id,
                       itemName: productData?.name ?? 'Unknown',
                       assetType: productData?.itemType ?? 'Unknown',
-                      onServiceAdded: () {
+                      onServiceAdded: (String? nextServiceDue) async {
+                        print('DEBUG: ProductDetail - Maintenance service added, updating reactive state with Next Service Due: $nextServiceDue');
+                        
+                        // Check if widget is still mounted before using ref
+                        if (!mounted) return;
+                        
+                        // 1. Refresh maintenance data first
                         _loadMaintenanceData(productData?.assetId ?? widget.id);
+                        
+                        // 2. Get updated product data
+                        await _loadProductData();
+                        
+                        // 3. FORCE REFRESH MASTER LIST DATA FROM DATABASE (this is key!)
+                        print('DEBUG: Force refreshing master list data from database to get latest Next Service Due');
+                        await ref.read(forceRefreshMasterListProvider)();
+                        
+                        // 4. Update reactive state immediately for instant UI updates
+                        final assetId = productData?.assetId ?? widget.id;
+                        
+                        // Check if widget is still mounted before using ref
+                        if (!mounted) return;
+                        
+                        final updateProductState = ref.read(updateProductStateProvider);
+                        
+                        // Use the Next Service Due directly from form submission
+                        updateProductState(assetId, nextServiceDue: nextServiceDue);
+                        
+                        print('DEBUG: ProductDetail - Maintenance added, refreshed database and updated reactive state');
                       },
                     ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
+                  backgroundColor: const Color.fromRGBO(0, 89, 154, 1),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // Reduced from 16,12
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ), // Reduced from 16,12
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(6),
                   ),
@@ -977,11 +1189,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
             ],
           ),
         ),
-        
+
         // Table
-        Expanded(
-          child: _buildMaintenanceTable(),
-        ),
+        Expanded(child: _buildMaintenanceTable()),
       ],
     );
   }
@@ -1051,10 +1261,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
-              
+
               // Spacer to push button to the right
               const Spacer(),
-              
+
               // Add Button - Aligned to right
               ElevatedButton(
                 onPressed: () {
@@ -1064,16 +1274,42 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                       assetId: productData?.assetId ?? widget.id,
                       itemName: productData?.name ?? 'Unknown',
                       assetType: productData?.itemType ?? 'Unknown',
-                      onAllocationAdded: () {
+                      onAllocationAdded: (String submittedStatus) async {
+                        print('DEBUG: ProductDetail - Allocation added, updating reactive state with status: $submittedStatus');
+                        
+                        // Check if widget is still mounted before using ref
+                        if (!mounted) return;
+                        
+                        // 1. Refresh allocation data first
                         _loadAllocationData(productData?.assetId ?? widget.id);
+                        
+                        // 2. FORCE REFRESH MASTER LIST DATA FROM DATABASE (this is key!)
+                        print('DEBUG: Force refreshing master list data from database to get latest allocation status');
+                        await ref.read(forceRefreshMasterListProvider)();
+                        
+                        // 3. Update reactive state immediately for instant UI updates
+                        final assetId = productData?.assetId ?? widget.id;
+                        
+                        // Check if widget is still mounted before using ref
+                        if (!mounted) return;
+                        
+                        final updateAvailabilityStatus = ref.read(updateAvailabilityStatusProvider);
+                        
+                        // Use the status directly from form submission
+                        updateAvailabilityStatus(assetId, submittedStatus);
+                        
+                        print('DEBUG: ProductDetail - Allocation added, refreshed database and updated reactive state');
                       },
                     ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
+                  backgroundColor: const Color.fromRGBO(0, 89, 154, 1),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // Reduced from 16,12
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ), // Reduced from 16,12
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(6),
                   ),
@@ -1090,11 +1326,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
             ],
           ),
         ),
-        
+
         // Table
-        Expanded(
-          child: _buildAllocationTable(),
-        ),
+        Expanded(child: _buildAllocationTable()),
       ],
     );
   }
@@ -1123,13 +1357,16 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                         fontSize: 13,
                       ),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                     ),
                   ),
                 ),
               ),
               const SizedBox(width: 8),
-              
+
               // Search Icon Button
               Container(
                 height: 36,
@@ -1148,7 +1385,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                 ),
               ),
               const SizedBox(width: 12),
-              
+
               // Add Button
               ElevatedButton(
                 onPressed: () {
@@ -1158,17 +1395,45 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                       assetId: productData?.assetId ?? widget.id,
                       itemName: productData?.name ?? 'Unknown',
                       assetType: productData?.itemType ?? 'Unknown',
-                      onServiceAdded: () {
-                        // Refresh maintenance data
+                      onServiceAdded: (String? nextServiceDue) async {
+                        print('DEBUG: ProductDetail - Maintenance updated, updating reactive state with Next Service Due: $nextServiceDue');
+                        
+                        // Check if widget is still mounted before using ref
+                        if (!mounted) return;
+                        
+                        // 1. Refresh maintenance data first
                         _loadMaintenanceData(productData?.assetId ?? widget.id);
+                        
+                        // 2. Get updated product data
+                        await _loadProductData();
+                        
+                        // 3. FORCE REFRESH MASTER LIST DATA FROM DATABASE (this is key!)
+                        print('DEBUG: Force refreshing master list data from database to get latest Next Service Due');
+                        await ref.read(forceRefreshMasterListProvider)();
+                        
+                        // 4. Update reactive state immediately for instant UI updates
+                        final assetId = productData?.assetId ?? widget.id;
+                        
+                        // Check if widget is still mounted before using ref
+                        if (!mounted) return;
+                        
+                        final updateProductState = ref.read(updateProductStateProvider);
+                        
+                        // Use the Next Service Due directly from form submission
+                        updateProductState(assetId, nextServiceDue: nextServiceDue);
+                        
+                        print('DEBUG: ProductDetail - Maintenance updated, refreshed database and updated reactive state');
                       },
                     ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
+                  backgroundColor: const Color.fromRGBO(0, 89, 154, 1),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(6),
                   ),
@@ -1176,20 +1441,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                 ),
                 child: const Text(
                   'Add new service',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
                 ),
               ),
             ],
           ),
         ),
-        
+
         // Table
-        Expanded(
-          child: _buildMaintenanceTable(),
-        ),
+        Expanded(child: _buildMaintenanceTable()),
       ],
     );
   }
@@ -1205,11 +1465,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.search_off,
-              size: 48,
-              color: Color(0xFF9CA3AF),
-            ),
+            const Icon(Icons.search_off, size: 48, color: Color(0xFF9CA3AF)),
             const SizedBox(height: 16),
             Text(
               'No maintenance records found for "${_maintenanceSearchController.text}"',
@@ -1222,10 +1478,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
             const SizedBox(height: 8),
             const Text(
               'Try adjusting your search terms',
-              style: TextStyle(
-                fontSize: 12,
-                color: Color(0xFF9CA3AF),
-              ),
+              style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
             ),
           ],
         ),
@@ -1244,7 +1497,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
     return Consumer(
       builder: (context, ref, child) {
         final sortState = ref.watch(maintenanceSortProvider);
-        
+
         // Apply sorting to filtered data
         final sortedData = SortingUtils.sortMaintenanceList(
           filteredMaintenanceRecords,
@@ -1257,86 +1510,161 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
           child: GenericPaginatedTable<MaintenanceModel>(
             data: sortedData, // Use sorted data
             rowsPerPage: 5,
-            minWidth: 1200,
+            minWidth: 1330, // Increased minimum width for better spacing
             showCheckboxColumn: false,
+            onRowTap: (record) {
+              // Handle row tap - open maintenance dialog
+              DialogPannelHelper().showAddPannel(
+                context: context,
+                addingItem: AddMaintenanceService(
+                  assetId: productData?.assetId ?? widget.id,
+                  itemName: productData?.name ?? 'Unknown',
+                  assetType: productData?.itemType ?? 'Unknown',
+                  existingMaintenance: record,
+                  onServiceAdded: (String? nextServiceDue) async {
+                    print('DEBUG: ProductDetail - Maintenance edited, updating reactive state with Next Service Due: $nextServiceDue');
+                    
+                    // Check if widget is still mounted before using ref
+                    if (!mounted) return;
+                    
+                    // 1. Refresh maintenance data first
+                    _loadMaintenanceData(productData?.assetId ?? widget.id);
+                    
+                    // 2. Get updated product data
+                    await _loadProductData();
+                    
+                    // 3. FORCE REFRESH MASTER LIST DATA FROM DATABASE (this is key!)
+                    print('DEBUG: Force refreshing master list data from database to get latest Next Service Due');
+                    await ref.read(forceRefreshMasterListProvider)();
+                    
+                    // 4. Update reactive state immediately for instant UI updates
+                    final assetId = productData?.assetId ?? widget.id;
+                    
+                    // Check if widget is still mounted before using ref
+                    if (!mounted) return;
+                    
+                    final updateProductState = ref.read(updateProductStateProvider);
+                    
+                    // Use the Next Service Due directly from form submission
+                    updateProductState(assetId, nextServiceDue: nextServiceDue);
+                    
+                    print('DEBUG: ProductDetail - Maintenance edited, refreshed database and updated reactive state');
+                  },
+                ),
+              );
+            },
             headers: [
               SortableHeader(
                 title: 'Service Date',
                 sortKey: 'serviceDate',
-                width: 150,
+                width: 140,
                 sortProvider: maintenanceSortProvider,
               ),
               SortableHeader(
                 title: 'Service provider name',
                 sortKey: 'serviceProvider',
-                width: 180,
+                width: 200,
                 sortProvider: maintenanceSortProvider,
               ),
               SortableHeader(
                 title: 'Service engineer name',
                 sortKey: 'serviceEngineer',
-                width: 180,
+                width: 200,
                 sortProvider: maintenanceSortProvider,
               ),
               SortableHeader(
                 title: 'Service Type',
                 sortKey: 'serviceType',
-                width: 120,
+                width: 150,
                 sortProvider: maintenanceSortProvider,
               ),
               SortableHeader(
                 title: 'Responsible Team',
                 sortKey: 'responsibleTeam',
-                width: 150,
+                width: 180,
                 sortProvider: maintenanceSortProvider,
               ),
               SortableHeader(
                 title: 'Next Service Due',
                 sortKey: 'nextServiceDue',
-                width: 150,
+                width: 180,
                 sortProvider: maintenanceSortProvider,
               ),
               SortableHeader(
                 title: 'Cost',
                 sortKey: 'cost',
-                width: 100,
+                width: 120,
                 sortProvider: maintenanceSortProvider,
               ),
               SortableHeader(
                 title: 'Status',
                 sortKey: 'status',
-                width: 120,
+                width: 140,
                 sortProvider: maintenanceSortProvider,
               ),
               Container(
-                width: 50,
+               width: 50,
                 alignment: Alignment.center,
                 child: const Text(""),
               ),
             ],
             rowBuilder: (record, isSelected, onChanged) => [
               Container(
-                width: 150,
+                width: 140,
                 alignment: Alignment.centerLeft,
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
                   _formatDate(record.serviceDate),
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     color: Color(0xFF374151),
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
               ),
               Container(
-                width: 180,
+                width: 200,
                 alignment: Alignment.centerLeft,
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
                   record.serviceProviderCompany,
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     color: Color(0xFF374151),
+                    fontWeight: FontWeight.w400,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Container(
+                width: 200,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  record.serviceEngineerName,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF374151),
+                    fontWeight: FontWeight.w400,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Container(
+                width: 150,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  record.serviceType,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF374151),
+                    fontWeight: FontWeight.w400,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               Container(
@@ -1344,58 +1672,26 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                 alignment: Alignment.centerLeft,
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
-                  record.serviceEngineerName,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF374151),
-                  ),
-                ),
-              ),
-              Container(
-                width: 120,
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  record.serviceType,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF374151),
-                  ),
-                ),
-              ),
-              Container(
-                width: 150,
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
                   record.responsibleTeam,
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     color: Color(0xFF374151),
+                    fontWeight: FontWeight.w400,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               Container(
-                width: 150,
+                width: 180,
                 alignment: Alignment.centerLeft,
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
                   _formatDate(record.nextServiceDue),
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     color: Color(0xFF374151),
-                  ),
-                ),
-              ),
-              Container(
-                width: 100,
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  '₹${record.cost.toStringAsFixed(0)}',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF374151),
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
               ),
@@ -1403,16 +1699,34 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                 width: 120,
                 alignment: Alignment.centerLeft,
                 padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  '₹${record.cost.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF374151),
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ),
+              Container(
+                width: 140,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(8.0),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: _getMaintenanceStatusColor(record.maintenanceStatus),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     record.maintenanceStatus,
                     style: TextStyle(
-                      color: _getMaintenanceStatusTextColor(record.maintenanceStatus),
+                      color: _getMaintenanceStatusTextColor(
+                        record.maintenanceStatus,
+                      ),
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
                     ),
@@ -1420,11 +1734,38 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                   ),
                 ),
               ),
+              // Center(
+              //   child: IconButton(
+              //     padding: EdgeInsets.zero,
+              //     constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+              //     onPressed: () {
+              //       DialogPannelHelper().showAddPannel(
+              //         context: context,
+              //         addingItem: AddMaintenanceService(
+              //           assetId: productData?.assetId ?? widget.id,
+              //           itemName: productData?.name ?? 'Unknown',
+              //           assetType: productData?.itemType ?? 'Unknown',
+              //           existingMaintenance: record,
+              //           onServiceAdded: () {
+              //             _loadMaintenanceData(productData?.assetId ?? widget.id);
+              //           },
+              //         ),
+              //       );
+              //     },
+              //     icon: const Icon(
+              //       Icons.arrow_forward,
+
+              //       size: 16,
+              //       color: Color(0xFF2563EB),
+              //     )
+              //     ,
+              //   ),
+              // ),
               Container(
                 width: 50,
                 alignment: Alignment.center,
-                child: IconButton(
-                  onPressed: () {
+                child: GestureDetector(
+                  onTap: () {
                     DialogPannelHelper().showAddPannel(
                       context: context,
                       addingItem: AddMaintenanceService(
@@ -1432,16 +1773,41 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                         itemName: productData?.name ?? 'Unknown',
                         assetType: productData?.itemType ?? 'Unknown',
                         existingMaintenance: record,
-                        onServiceAdded: () {
+                        onServiceAdded: (String? nextServiceDue) async {
+                          print('DEBUG: ProductDetail - Maintenance row edited, updating reactive state with Next Service Due: $nextServiceDue');
+                          
+                          // Check if widget is still mounted before using ref
+                          if (!mounted) return;
+                          
+                          // 1. Refresh maintenance data first
                           _loadMaintenanceData(productData?.assetId ?? widget.id);
+                          
+                          // 2. Get updated product data
+                          await _loadProductData();
+                          
+                          // 3. Update reactive state immediately for instant UI updates
+                          final assetId = productData?.assetId ?? widget.id;
+                          
+                          // Check if widget is still mounted before using ref
+                          if (!mounted) return;
+                          
+                          // 3. FORCE REFRESH MASTER LIST DATA FROM DATABASE (this is key!)
+                          print('DEBUG: Force refreshing master list data from database to get latest Next Service Due');
+                          await ref.read(forceRefreshMasterListProvider)();
+                          
+                          final updateProductState = ref.read(updateProductStateProvider);
+                          
+                          // Use the Next Service Due directly from form submission
+                          updateProductState(assetId, nextServiceDue: nextServiceDue);
+                          
+                          print('DEBUG: ProductDetail - Maintenance row edited, refreshed database and updated reactive state');
                         },
                       ),
                     );
                   },
-                  icon: const Icon(
-                    Icons.arrow_forward,
-                    size: 14,
-                    color: Color(0xFF2563EB),
+                  child: SvgPicture.asset(
+                    "assets/images/Select_arrow.svg",
+                    width: 12,
                   ),
                 ),
               ),
@@ -1476,13 +1842,16 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                         fontSize: 13,
                       ),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                     ),
                   ),
                 ),
               ),
               const SizedBox(width: 8),
-              
+
               // Search Icon Button
               Container(
                 height: 36,
@@ -1501,7 +1870,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                 ),
               ),
               const SizedBox(width: 12),
-              
+
               // Add Button
               ElevatedButton(
                 onPressed: () {
@@ -1511,17 +1880,42 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                       assetId: productData?.assetId ?? widget.id,
                       itemName: productData?.name ?? 'Unknown',
                       assetType: productData?.itemType ?? 'Unknown',
-                      onAllocationAdded: () {
-                        // Refresh allocation data
+                      onAllocationAdded: (String submittedStatus) async {
+                        print('DEBUG: ProductDetail - Allocation updated, updating reactive state with status: $submittedStatus');
+                        
+                        // Check if widget is still mounted before using ref
+                        if (!mounted) return;
+                        
+                        // 1. Refresh allocation data first
                         _loadAllocationData(productData?.assetId ?? widget.id);
+                        
+                        // 2. FORCE REFRESH MASTER LIST DATA FROM DATABASE (this is key!)
+                        print('DEBUG: Force refreshing master list data from database to get latest allocation status');
+                        await ref.read(forceRefreshMasterListProvider)();
+                        
+                        // 3. Update reactive state immediately for instant UI updates
+                        final assetId = productData?.assetId ?? widget.id;
+                        
+                        // Check if widget is still mounted before using ref
+                        if (!mounted) return;
+                        
+                        final updateAvailabilityStatus = ref.read(updateAvailabilityStatusProvider);
+                        
+                        // Use the status directly from form submission
+                        updateAvailabilityStatus(assetId, submittedStatus);
+                        
+                        print('DEBUG: ProductDetail - Allocation updated, refreshed database and updated reactive state');
                       },
                     ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
+                  backgroundColor: const Color.fromRGBO(0, 89, 154, 1),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(6),
                   ),
@@ -1529,20 +1923,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                 ),
                 child: const Text(
                   'Add new allocation',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
                 ),
               ),
             ],
           ),
         ),
-        
+
         // Table
-        Expanded(
-          child: _buildAllocationTable(),
-        ),
+        Expanded(child: _buildAllocationTable()),
       ],
     );
   }
@@ -1558,11 +1947,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.search_off,
-              size: 48,
-              color: Color(0xFF9CA3AF),
-            ),
+            const Icon(Icons.search_off, size: 48, color: Color(0xFF9CA3AF)),
             const SizedBox(height: 16),
             Text(
               'No allocation records found for "${_allocationSearchController.text}"',
@@ -1575,10 +1960,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
             const SizedBox(height: 8),
             const Text(
               'Try adjusting your search terms',
-              style: TextStyle(
-                fontSize: 12,
-                color: Color(0xFF9CA3AF),
-              ),
+              style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
             ),
           ],
         ),
@@ -1596,8 +1978,20 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
 
     return Consumer(
       builder: (context, ref, child) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final columnWidths = {
+          'issueDate': screenWidth * 0.12,
+          'employee': screenWidth * 0.16,
+          'team': screenWidth * 0.14,
+          'purpose': screenWidth * 0.16,
+          'expected': screenWidth * 0.14,
+          'actual': screenWidth * 0.14,
+          'status': screenWidth * 0.10,
+          'action': 50.0,
+        };
+
         final sortState = ref.watch(allocationSortProvider);
-        
+
         // Apply sorting to filtered data
         final sortedData = SortingUtils.sortAllocationList(
           filteredAllocationRecords,
@@ -1610,13 +2004,51 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
           child: GenericPaginatedTable<AllocationModel>(
             data: sortedData, // Use sorted data
             rowsPerPage: 5,
-            minWidth: 1200,
+            minWidth: 1370, // Increased minimum width for better spacing
             showCheckboxColumn: false,
+            onRowTap: (record) {
+              // Handle row tap - open allocation dialog
+              DialogPannelHelper().showAddPannel(
+                context: context,
+                addingItem: AddAllocation(
+                  assetId: productData?.assetId ?? widget.id,
+                  itemName: productData?.name ?? 'Unknown',
+                  assetType: productData?.itemType ?? 'Unknown',
+                  existingAllocation: record,
+                  onAllocationAdded: (String submittedStatus) async {
+                    print('DEBUG: ProductDetail - Allocation edited, updating reactive state with status: $submittedStatus');
+                    
+                    // Check if widget is still mounted before using ref
+                    if (!mounted) return;
+                    
+                    // 1. Refresh allocation data first
+                    _loadAllocationData(productData?.assetId ?? widget.id);
+                    
+                    // 2. FORCE REFRESH MASTER LIST DATA FROM DATABASE (this is key!)
+                    print('DEBUG: Force refreshing master list data from database to get latest allocation status');
+                    await ref.read(forceRefreshMasterListProvider)();
+                    
+                    // 3. Update reactive state immediately for instant UI updates
+                    final assetId = productData?.assetId ?? widget.id;
+                    
+                    // Check if widget is still mounted before using ref
+                    if (!mounted) return;
+                    
+                    final updateAvailabilityStatus = ref.read(updateAvailabilityStatusProvider);
+                    
+                    // Use the status directly from form submission
+                    updateAvailabilityStatus(assetId, submittedStatus);
+                    
+                    print('DEBUG: ProductDetail - Allocation edited, refreshed database and updated reactive state');
+                  },
+                ),
+              );
+            },
             headers: [
               SortableHeader(
                 title: 'Issue Date',
                 sortKey: 'issueDate',
-                width: 150,
+                width: 140,
                 sortProvider: allocationSortProvider,
               ),
               SortableHeader(
@@ -1628,31 +2060,31 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
               SortableHeader(
                 title: 'Team name',
                 sortKey: 'teamName',
-                width: 150,
+                width: 200,
                 sortProvider: allocationSortProvider,
               ),
               SortableHeader(
                 title: 'Purpose',
                 sortKey: 'purpose',
-                width: 180,
+                width: 280,
                 sortProvider: allocationSortProvider,
               ),
               SortableHeader(
                 title: 'Expected return date',
                 sortKey: 'expectedReturnDate',
-                width: 160,
+                width: 200,
                 sortProvider: allocationSortProvider,
               ),
               SortableHeader(
                 title: 'Actual return date',
                 sortKey: 'actualReturnDate',
-                width: 160,
+                width: 180,
                 sortProvider: allocationSortProvider,
               ),
               SortableHeader(
                 title: 'Status',
                 sortKey: 'status',
-                width: 120,
+                width: 140,
                 sortProvider: allocationSortProvider,
               ),
               Container(
@@ -1663,14 +2095,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
             ],
             rowBuilder: (record, isSelected, onChanged) => [
               Container(
-                width: 150,
+                width: 140,
                 alignment: Alignment.centerLeft,
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
                   _formatDate(record.issuedDate),
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     color: Color(0xFF374151),
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
               ),
@@ -1681,20 +2114,54 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                 child: Text(
                   record.employeeName,
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     color: Color(0xFF374151),
+                    fontWeight: FontWeight.w400,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               Container(
-                width: 150,
+                width: 200,
                 alignment: Alignment.centerLeft,
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
                   record.teamName,
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     color: Color(0xFF374151),
+                    fontWeight: FontWeight.w400,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Container(
+                width: 280,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  record.purpose,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF374151),
+                    fontWeight: FontWeight.w400,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Container(
+                width: 200,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  _formatDate(record.expectedReturnDate),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF374151),
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
               ),
@@ -1703,51 +2170,33 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                 alignment: Alignment.centerLeft,
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
-                  record.purpose,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF374151),
-                  ),
-                ),
-              ),
-              Container(
-                width: 160,
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  _formatDate(record.expectedReturnDate),
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF374151),
-                  ),
-                ),
-              ),
-              Container(
-                width: 160,
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
                   _formatDate(record.actualReturnDate),
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     color: Color(0xFF374151),
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
               ),
               Container(
-                width: 120,
+                width: 140,
                 alignment: Alignment.centerLeft,
                 padding: const EdgeInsets.all(8.0),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: _getAllocationStatusColor(record.availabilityStatus),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     record.availabilityStatus,
                     style: TextStyle(
-                      color: _getAllocationStatusTextColor(record.availabilityStatus),
+                      color: _getAllocationStatusTextColor(
+                        record.availabilityStatus,
+                      ),
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
                     ),
@@ -1755,11 +2204,44 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                   ),
                 ),
               ),
+              // Container(
+              //   width: 20,
+              //   alignment: Alignment.center,
+              //   padding: const EdgeInsets.all(8.0),
+              //   child: IconButton(
+              //     padding: EdgeInsets.zero,
+              //     constraints: const BoxConstraints(
+              //       minWidth: 20,
+              //       minHeight: 20,
+              //     ),
+              //     onPressed: () {
+              //       DialogPannelHelper().showAddPannel(
+              //         context: context,
+              //         addingItem: AddAllocation(
+              //           assetId: productData?.assetId ?? widget.id,
+              //           itemName: productData?.name ?? 'Unknown',
+              //           assetType: productData?.itemType ?? 'Unknown',
+              //           existingAllocation: record,
+              //           onAllocationAdded: () {
+              //             _loadAllocationData(
+              //               productData?.assetId ?? widget.id,
+              //             );
+              //           },
+              //         ),
+              //       );
+              //     },
+              //     icon: const Icon(
+              //       Icons.arrow_forward,
+              //       size: 16,
+              //       color: Color(0xFF2563EB),
+              //     ),
+              //   ),
+              // ),
               Container(
                 width: 50,
                 alignment: Alignment.center,
-                child: IconButton(
-                  onPressed: () {
+                child: GestureDetector(
+                  onTap: () {
                     DialogPannelHelper().showAddPannel(
                       context: context,
                       addingItem: AddAllocation(
@@ -1767,16 +2249,38 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                         itemName: productData?.name ?? 'Unknown',
                         assetType: productData?.itemType ?? 'Unknown',
                         existingAllocation: record,
-                        onAllocationAdded: () {
+                        onAllocationAdded: (String submittedStatus) async {
+                          print('DEBUG: ProductDetail - Allocation row edited, updating reactive state with status: $submittedStatus');
+                          
+                          // Check if widget is still mounted before using ref
+                          if (!mounted) return;
+                          
+                          // 1. Refresh allocation data first
                           _loadAllocationData(productData?.assetId ?? widget.id);
+                          
+                          // 2. FORCE REFRESH MASTER LIST DATA FROM DATABASE (this is key!)
+                          print('DEBUG: Force refreshing master list data from database to get latest allocation status');
+                          await ref.read(forceRefreshMasterListProvider)();
+                          
+                          // 3. Update reactive state immediately for instant UI updates
+                          final assetId = productData?.assetId ?? widget.id;
+                          
+                          // Check if widget is still mounted before using ref
+                          if (!mounted) return;
+                          
+                          final updateAvailabilityStatus = ref.read(updateAvailabilityStatusProvider);
+                          
+                          // Use the status directly from form submission
+                          updateAvailabilityStatus(assetId, submittedStatus);
+                          
+                          print('DEBUG: ProductDetail - Allocation row edited, refreshed database and updated reactive state');
                         },
                       ),
                     );
                   },
-                  icon: const Icon(
-                    Icons.arrow_forward,
-                    size: 14,
-                    color: Color(0xFF2563EB),
+                  child: SvgPicture.asset(
+                    "assets/images/Select_arrow.svg",
+                    width: 12,
                   ),
                 ),
               ),
@@ -1807,14 +2311,20 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
             "assets/images/Icon_filter.svg",
             width: 14, // Reduced from 16
             height: 14,
-            colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn),
+            colorFilter: const ColorFilter.mode(
+              Color(0xFF9CA3AF),
+              BlendMode.srcIn,
+            ),
           ),
           const SizedBox(width: 1), // Reduced from 2
           SvgPicture.asset(
             "assets/images/Icon_arrowdown.svg",
             width: 14, // Reduced from 16
             height: 14,
-            colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn),
+            colorFilter: const ColorFilter.mode(
+              Color(0xFF9CA3AF),
+              BlendMode.srcIn,
+            ),
           ),
         ],
       ),
@@ -1850,11 +2360,12 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
 
   Widget _buildPagination(int totalItems) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), // Reduced from 16,12
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 10,
+      ), // Reduced from 16,12
       decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(color: Color(0xFFE5E7EB)),
-        ),
+        border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(8),
           bottomRight: Radius.circular(8),
@@ -1874,12 +2385,18 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
             children: [
               for (int i = 1; i <= (totalItems / 10).ceil() && i <= 5; i++)
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 1), // Reduced from 2
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 1,
+                  ), // Reduced from 2
                   child: TextButton(
                     onPressed: () {},
                     style: TextButton.styleFrom(
-                      backgroundColor: i == 1 ? const Color(0xFF2563EB) : Colors.transparent,
-                      foregroundColor: i == 1 ? Colors.white : const Color(0xFF374151),
+                      backgroundColor: i == 1
+                          ? const Color(0xFF2563EB)
+                          : Colors.transparent,
+                      foregroundColor: i == 1
+                          ? Colors.white
+                          : const Color(0xFF374151),
                       minimumSize: const Size(28, 28), // Reduced from 32,32
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4),
@@ -1892,18 +2409,28 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
                   ),
                 ),
               if (totalItems > 50) ...[
-                const Text('...', style: TextStyle(color: Color(0xFF6B7280), fontSize: 12)), // Reduced font size
+                const Text(
+                  '...',
+                  style: TextStyle(color: Color(0xFF6B7280), fontSize: 12),
+                ), // Reduced font size
                 TextButton(
                   onPressed: () {},
                   child: Text(
                     ((totalItems / 10).ceil()).toString(),
-                    style: const TextStyle(color: Color(0xFF374151), fontSize: 12), // Reduced font size
+                    style: const TextStyle(
+                      color: Color(0xFF374151),
+                      fontSize: 12,
+                    ), // Reduced font size
                   ),
                 ),
               ],
               IconButton(
                 onPressed: () {},
-                icon: const Icon(Icons.chevron_right, color: Color(0xFF6B7280), size: 18), // Reduced from default
+                icon: const Icon(
+                  Icons.chevron_right,
+                  color: Color(0xFF6B7280),
+                  size: 18,
+                ), // Reduced from default
               ),
             ],
           ),
@@ -1915,6 +2442,17 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> with 
   String _formatDate(DateTime? date) {
     if (date == null) return 'N/A';
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
+  // Test function to manually trigger master list refresh
+  Future<void> _testMasterListRefresh() async {
+    print('DEBUG: Manual test - Triggering master list refresh');
+    try {
+      await ref.read(forceRefreshMasterListProvider)();
+      print('DEBUG: Manual test - Master list refresh completed successfully');
+    } catch (e) {
+      print('DEBUG: Manual test - Master list refresh failed: $e');
+    }
   }
 
   Color _getMaintenanceStatusColor(String status) {

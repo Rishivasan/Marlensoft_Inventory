@@ -1,0 +1,14 @@
+{
+  "assetId": "TEST_DEBUG_001",
+  "assetType": "Tool", 
+  "itemName": "Debug Test Tool",
+  "serviceDate": "2024-02-02T10:00:00.000Z",
+  "serviceProviderCompany": "Debug Service Co",
+  "serviceEngineerName": "Debug Engineer",
+  "serviceType": "Preventive",
+  "nextServiceDue": "2024-08-02T10:00:00.000Z",
+  "serviceNotes": "Debug test maintenance record",
+  "maintenanceStatus": "Completed",
+  "cost": 100.0,
+  "responsibleTeam": "Debug Team"
+}

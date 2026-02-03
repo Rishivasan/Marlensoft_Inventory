@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\InventoryManagement.csproj": {}
+    "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Marlensoft_Inventory\\Backend\\InventoryManagement\\InventoryManagement.csproj": {}
   },
   "projects": {
-    "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\InventoryManagement.csproj": {
+    "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Marlensoft_Inventory\\Backend\\InventoryManagement\\InventoryManagement.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\InventoryManagement.csproj",
+        "projectUniqueName": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Marlensoft_Inventory\\Backend\\InventoryManagement\\InventoryManagement.csproj",
         "projectName": "InventoryManagement",
-        "projectPath": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\InventoryManagement.csproj",
+        "projectPath": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Marlensoft_Inventory\\Backend\\InventoryManagement\\InventoryManagement.csproj",
         "packagesPath": "C:\\Users\\RishivasanMuthukumar\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Backend\\InventoryManagement\\obj\\",
+        "outputPath": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Marlensoft_Inventory\\Backend\\InventoryManagement\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -83,7 +83,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.307/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.310/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

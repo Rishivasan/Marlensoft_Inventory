@@ -6,7 +6,7 @@ class AddAllocation extends StatefulWidget {
   final String assetId;
   final String? itemName;
   final String? assetType;
-  final VoidCallback onAllocationAdded;
+  final Function(String status) onAllocationAdded;
   final AllocationModel? existingAllocation; // Add this for editing
 
   const AddAllocation({
@@ -91,7 +91,7 @@ class _AddAllocationState extends State<AddAllocation> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xff00599A),
+              primary: Color.fromRGBO(0, 89, 154, 1),
             ),
           ),
           child: child!,
@@ -198,7 +198,7 @@ class _AddAllocationState extends State<AddAllocation> {
         
         // Close dialog and refresh data
         Navigator.of(context).pop();
-        widget.onAllocationAdded();
+        widget.onAllocationAdded(_selectedStatus);
       }
     } catch (e) {
       print('DEBUG: Error in _submitForm: $e');
@@ -347,7 +347,7 @@ class _AddAllocationState extends State<AddAllocation> {
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color(0xff00599A), width: 1.2),
+                                    borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
                                   ),
                                   suffixIcon: const Icon(
                                     Icons.calendar_today,
@@ -393,7 +393,7 @@ class _AddAllocationState extends State<AddAllocation> {
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color(0xff00599A), width: 1.2),
+                                    borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
                                   ),
                                 ),
                                 style: const TextStyle(fontSize: 12),
@@ -440,7 +440,7 @@ class _AddAllocationState extends State<AddAllocation> {
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color(0xff00599A), width: 1.2),
+                                    borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
                                   ),
                                 ),
                                 style: const TextStyle(fontSize: 12),
@@ -480,7 +480,7 @@ class _AddAllocationState extends State<AddAllocation> {
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color(0xff00599A), width: 1.2),
+                                    borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
                                   ),
                                 ),
                                 style: const TextStyle(fontSize: 12),
@@ -528,7 +528,7 @@ class _AddAllocationState extends State<AddAllocation> {
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color(0xff00599A), width: 1.2),
+                                    borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
                                   ),
                                   suffixIcon: const Icon(
                                     Icons.calendar_today,
@@ -582,7 +582,7 @@ class _AddAllocationState extends State<AddAllocation> {
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color(0xff00599A), width: 1.2),
+                                    borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
                                   ),
                                   suffixIcon: const Icon(
                                     Icons.calendar_today,
@@ -648,7 +648,7 @@ class _AddAllocationState extends State<AddAllocation> {
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color(0xff00599A), width: 1.2),
+                                    borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
                                   ),
                                   suffixIcon: const Icon(
                                     Icons.keyboard_arrow_down,
@@ -674,18 +674,18 @@ class _AddAllocationState extends State<AddAllocation> {
             ),
           ),
 
-          // BOTTOM BUTTONS - using existing add page button styling
+          // BUTTONS
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              // Cancel Button - matching add tool style
+              // Cancel Button
               SizedBox(
                 width: 120,
                 height: 36,
                 child: OutlinedButton(
                   onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xff00599A), width: 1),
+                    side: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -693,7 +693,7 @@ class _AddAllocationState extends State<AddAllocation> {
                   child: const Text(
                     "Cancel",
                     style: TextStyle(
-                      color: Color(0xff00599A),
+                      color: Color.fromRGBO(0, 89, 154, 1),
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -701,7 +701,7 @@ class _AddAllocationState extends State<AddAllocation> {
                 ),
               ),
               const SizedBox(width: 14),
-              // Submit Button - matching add tool style
+              // Submit Button
               SizedBox(
                 width: 120,
                 height: 36,
@@ -710,7 +710,7 @@ class _AddAllocationState extends State<AddAllocation> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _isSubmitting 
                         ? Colors.grey 
-                        : const Color(0xff00599A),
+                        : const Color.fromRGBO(0, 89, 154, 1),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),

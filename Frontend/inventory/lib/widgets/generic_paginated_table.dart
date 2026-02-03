@@ -11,6 +11,7 @@ class GenericPaginatedTable<T> extends StatefulWidget {
   final double? minWidth;
   final ValueChanged<Set<T>>? onSelectionChanged;
   final bool showCheckboxColumn;
+  final Function(T item)? onRowTap; // Add row tap callback
 
   const GenericPaginatedTable({
     super.key,
@@ -21,6 +22,7 @@ class GenericPaginatedTable<T> extends StatefulWidget {
     this.minWidth,
     this.onSelectionChanged,
     this.showCheckboxColumn = true,
+    this.onRowTap, // Add to constructor
   });
 
   @override
@@ -42,7 +44,7 @@ class _GenericPaginatedTableState<T> extends State<GenericPaginatedTable<T>> {
   }
 
   @override
-  void didUpdateWidget(GenericPaginatedTable<T> oldWidget) {
+  void didUpdateWidget(GenericPaginatedTable<T> oldWidget) {     //covarient try to use 
     super.didUpdateWidget(oldWidget);
     if (oldWidget.data.length != widget.data.length) {
       setState(() {
@@ -129,88 +131,83 @@ class _GenericPaginatedTableState<T> extends State<GenericPaginatedTable<T>> {
       children: [
         // Table content
         Expanded(
-          child: Scrollbar(
+          child: SingleChildScrollView(
             controller: horizontalScrollController,
-            thumbVisibility: true,
-            trackVisibility: true,
-            thickness: 4.0,
-            radius: const Radius.circular(4.0),
-            child: SingleChildScrollView(
-              controller: horizontalScrollController,
-              scrollDirection: Axis.horizontal,
-              child: SizedBox(
-                width: widget.minWidth ?? 1800,
-                child: Column(
-                  children: [
-                    // Header
-                    Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-                      ),
-                      child: Row(
-                        children: [
-                          if (widget.showCheckboxColumn)
-                            Container(
-                              width: 60,
-                              alignment: Alignment.center,
-                              child: Transform.scale(
-                                scale: 0.7,
-                                child: Checkbox(
-                                  value: _getSelectAllCheckboxValue(),
-                                  tristate: true, // Enable indeterminate state
-                                  onChanged: _toggleSelectAll,
-                                  activeColor: const Color(0xFF00599A),
-                                  checkColor: Colors.white,
-                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                ),
-                              ),
+            scrollDirection: Axis.horizontal,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Header
+                Container(
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+                  ),
+                  child: Row(
+                    children: [
+                      if (widget.showCheckboxColumn)
+                        Container(
+                          width: 60,
+                          alignment: Alignment.center,
+                          child: Transform.scale(
+                            scale: 0.7,
+                            child: Checkbox(
+                              value: _getSelectAllCheckboxValue(),
+                              tristate: true, // Enable indeterminate state
+                              onChanged: _toggleSelectAll,
+                              activeColor: const Color(0xFF00599A),
+                              checkColor: Colors.white,
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
-                          ...widget.headers,
-                        ],
-                      ),
-                    ),
-                    // Data rows
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: currentPageItems.map((item) {
-                            final isSelected = _selectedItems.contains(item);
-                            
-                            return Container(
-                              height: 54,
-                              decoration: BoxDecoration(
-                                border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
-                              ),
-                              child: Row(
-                                children: [
-                                  if (widget.showCheckboxColumn)
-                                    Container(
-                                      width: 60,
-                                      alignment: Alignment.center,
-                                      child: Transform.scale(
-                                        scale: 0.7,
-                                        child: Checkbox(
-                                          value: isSelected,
-                                          onChanged: (value) => _toggleItemSelection(item, value),
-                                          activeColor: const Color(0xFF00599A),
-                                          checkColor: Colors.white,
-                                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                        ),
+                          ),
+                        ),
+                      ...widget.headers,
+                    ],
+                  ),
+                ),
+                // Data rows
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: currentPageItems.map((item) {
+                        final isSelected = _selectedItems.contains(item);
+                        
+                        return InkWell(
+                          onTap: widget.onRowTap != null ? () => widget.onRowTap!(item) : null,
+                          hoverColor: Colors.grey.shade100,
+                          child: Container(
+                            height: 54,
+                            decoration: BoxDecoration(
+                              border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+                            ),
+                            child: Row(
+                              children: [
+                                if (widget.showCheckboxColumn)
+                                  Container(
+                                    width: 60,
+                                    alignment: Alignment.center,
+                                    child: Transform.scale(
+                                      scale: 0.7,
+                                      child: Checkbox(
+                                        value: isSelected,
+                                        onChanged: (value) => _toggleItemSelection(item, value),
+                                        activeColor: const Color(0xFF00599A),
+                                        checkColor: Colors.white,
+                                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                       ),
                                     ),
-                                  ...widget.rowBuilder(item, isSelected, (value) => _toggleItemSelection(item, value)),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
+                                  ),
+                                ...widget.rowBuilder(item, isSelected, (value) => _toggleItemSelection(item, value)),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ),

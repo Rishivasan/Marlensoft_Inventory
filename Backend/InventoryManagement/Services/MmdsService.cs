@@ -21,14 +21,34 @@ namespace InventoryManagement.Services
             return list.Select(x => new MmdsDto
             {
                 MmdId = x.MmdId,
+                BrandName = x.BrandName,  // Added BrandName mapping
                 AccuracyClass = x.AccuracyClass,
                 Vendor = x.Vendor,
+                CalibratedBy = x.CalibratedBy,
+                Specifications = x.Specifications,
                 ModelNumber = x.ModelNumber,
                 SerialNumber = x.SerialNumber,
                 Quantity = x.Quantity,
-                CalibrationStatus = x.CalibrationStatus,
-                NextCalibration = x.NextCalibration,
+                CalibrationCertNo = x.CalibrationCertNo,
                 Location = x.Location,
+                PoNumber = x.PoNumber,
+                PoDate = x.PoDate,
+                InvoiceNumber = x.InvoiceNumber,
+                InvoiceDate = x.InvoiceDate,
+                TotalCost = x.TotalCost,
+                CalibrationFrequency = x.CalibrationFrequency,
+                LastCalibration = x.LastCalibration,
+                NextCalibration = x.NextCalibration,
+                WarrantyYears = x.WarrantyYears,
+                CalibrationStatus = x.CalibrationStatus,
+                ResponsibleTeam = x.ResponsibleTeam,
+                ManualLink = x.ManualLink,
+                StockMsi = x.StockMsi,
+                Remarks = x.Remarks,
+                CreatedBy = x.CreatedBy,
+                UpdatedBy = x.UpdatedBy,
+                CreatedDate = x.CreatedDate,
+                UpdatedDate = x.UpdatedDate,
                 Status = x.Status
             });
         }

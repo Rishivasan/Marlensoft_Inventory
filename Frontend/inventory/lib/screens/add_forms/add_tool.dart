@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:inventory/services/api_service.dart';
 import 'package:inventory/model/master_list_model.dart';
 
@@ -20,6 +19,7 @@ class AddTool extends StatefulWidget {
 class _AddToolState extends State<AddTool> {
   final _formKey = GlobalKey<FormState>();
   bool _isSubmitting = false; // Add submission state tracking
+  bool _isLoadingDetails = false; // Add loading state for fetching details
 
   // Tool information
   final _toolIdCtrl = TextEditingController();
@@ -61,7 +61,7 @@ class _AddToolState extends State<AddTool> {
   final _kermAssetCtrl = TextEditingController();
   final _additionalNotesCtrl = TextEditingController();
 
-  // Dropdown values
+  // Dropdown values - made mutable to allow adding database values
   final List<String> toolTypeList = [
     "Hand Tool",
     "Power Tool",
@@ -150,38 +150,77 @@ class _AddToolState extends State<AddTool> {
         "CreatedBy": "User",
         "UpdatedBy": "User",
         "CreatedDate": DateTime.now().toIso8601String(),
-        "UpdatedDate": null,
-        "Status": selectedToolStatus == "Active" ? 1 : 0,
+        "UpdatedDate": DateTime.now().toIso8601String(),
+        "Status": (selectedToolStatus ?? "Active") == "Active" ? true : false, // ENSURE Status = true for new items
       };
 
-      print('DEBUG: Tool data prepared: $toolData');
+      // CRITICAL: Ensure Status is always true for new Tools
+      if (widget.existingData == null) {
+        toolData["Status"] = true; // Force Status = 1 for new items
+        print('DEBUG: Tool - FORCED Status = true for new item');
+      }
 
-      // Call API to add tool
-      print('DEBUG: Calling API to add tool');
-      await ApiService().addTool(toolData);
-      print('DEBUG: Tool API call successful');
+      print('DEBUG: Tool data prepared: $toolData');
+      print('DEBUG: selectedToolStatus: "${selectedToolStatus ?? "NULL"}"');
+      print('DEBUG: Final Status value: ${toolData["Status"]}');
+
+      bool success = false;
+      String successMessage = '';
+
+      // Check if this is an update or new creation
+      if (widget.existingData != null) {
+        // Update existing tool using V2 API
+        print('DEBUG: Updating existing tool using V2 API');
+        success = await ApiService().updateCompleteItemDetailsV2(
+          _toolIdCtrl.text.trim(),
+          'tool',
+          toolData,
+        );
+        successMessage = 'Tool updated successfully!';
+      } else {
+        // Create new tool using existing API
+        print('DEBUG: Creating new tool using existing API');
+        await ApiService().addTool(toolData);
+        success = true;
+        successMessage = 'Tool added successfully!';
+      }
+
+      print('DEBUG: Tool operation successful: $success');
 
       // Close loading dialog
       if (mounted) Navigator.of(context).pop();
 
-      // Close the add tool dialog
-      if (mounted) Navigator.of(context).pop();
+      if (success) {
+        // Close the add/edit tool dialog
+        if (mounted) Navigator.of(context).pop();
 
-      // Call the submit callback to refresh the list
-      widget.submit();
+        // Call the submit callback to refresh the list
+        widget.submit();
 
-      // Show success message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Tool added successfully!"),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(successMessage),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+        
+        print('DEBUG: Tool operation completed successfully');
+      } else {
+        // Show error message for update failure
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to update tool. Please try again.'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
       }
-      
-      print('DEBUG: Tool creation completed successfully');
     } catch (e) {
       print('DEBUG: Error in _submitTool: $e');
       
@@ -198,7 +237,7 @@ class _AddToolState extends State<AddTool> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Failed to add tool: ${e.toString()}"),
+            content: Text("Failed to ${widget.existingData != null ? 'update' : 'add'} tool: ${e.toString()}"),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),
@@ -224,6 +263,9 @@ class _AddToolState extends State<AddTool> {
     // Pre-populate form if existing data is provided
     if (widget.existingData != null) {
       _populateFormWithExistingData();
+    } else {
+      // Set default values for new tools
+      selectedToolStatus = "Active"; // Default to Active for new items
     }
   }
   
@@ -243,68 +285,166 @@ class _AddToolState extends State<AddTool> {
   }
   
   Future<void> _fetchCompleteToolDetails(String toolId) async {
-    print('DEBUG: Fetching complete Tool details for ID: $toolId');
+    print('🔍 DEBUG: Fetching complete Tool details for ID: $toolId using V2 API');
+    
+    setState(() {
+      _isLoadingDetails = true;
+    });
+    
     try {
       final apiService = ApiService();
-      final completeData = await apiService.getCompleteItemDetails(toolId, 'Tool');
+      final completeData = await apiService.getCompleteItemDetailsV2(toolId, 'tool');
+      
+      print('📦 DEBUG: Raw API response: $completeData');
       
       if (completeData != null) {
-        print('DEBUG: Complete Tool data received: $completeData');
+        print('✅ DEBUG: Complete Tool data received from V2 API');
+        
+        final masterData = completeData['MasterData'] != null 
+            ? Map<String, dynamic>.from(completeData['MasterData'] as Map) 
+            : null;
+        final detailedData = completeData['DetailedData'] != null 
+            ? Map<String, dynamic>.from(completeData['DetailedData'] as Map) 
+            : null;
+        final hasDetailedData = completeData['HasDetailedData'] == true;
+        
+        print('🔍 DEBUG: MasterData: $masterData');
+        print('🔍 DEBUG: DetailedData: $detailedData');
+        print('🔍 DEBUG: HasDetailedData: $hasDetailedData');
         
         // Populate all Tool-specific fields
+        print('🔧 DEBUG: About to call setState to populate fields');
         setState(() {
-          // Basic fields
-          _toolIdCtrl.text = completeData['ToolsId']?.toString() ?? _toolIdCtrl.text;
-          _toolNameCtrl.text = completeData['ToolName']?.toString() ?? _toolNameCtrl.text;
-          _supplierNameCtrl.text = completeData['Vendor']?.toString() ?? _supplierNameCtrl.text;
-          _storageLocationCtrl.text = completeData['StorageLocation']?.toString() ?? _storageLocationCtrl.text;
+          print('🔧 DEBUG: Inside setState - starting field population');
           
-          // Tool-specific fields
-          selectedToolType = completeData['ToolType']?.toString();
-          _associatedProductNameCtrl.text = completeData['AssociatedProduct']?.toString() ?? '';
-          _articleCodeCtrl.text = completeData['ArticleCode']?.toString() ?? '';
-          _toolSpecificationsCtrl.text = completeData['Specifications']?.toString() ?? '';
-          
-          // Purchase information
-          _poNumberCtrl.text = completeData['PoNumber']?.toString() ?? '';
-          _invoiceNumberCtrl.text = completeData['InvoiceNumber']?.toString() ?? '';
-          _toolCostCtrl.text = completeData['ToolCost']?.toString() ?? '';
-          _extraChargesCtrl.text = completeData['ExtraCharges']?.toString() ?? '';
-          
-          // Dates
-          if (completeData['PoDate'] != null) {
-            selectedPoDate = DateTime.tryParse(completeData['PoDate'].toString());
-          }
-          if (completeData['InvoiceDate'] != null) {
-            selectedInvoiceDate = DateTime.tryParse(completeData['InvoiceDate'].toString());
-          }
-          if (completeData['LastAuditDate'] != null) {
-            selectedLastAuditDate = DateTime.tryParse(completeData['LastAuditDate'].toString());
+          // Always populate basic fields from master data
+          if (masterData != null) {
+            print('🔧 DEBUG: Populating master data fields');
+            _toolIdCtrl.text = masterData['itemID']?.toString() ?? _toolIdCtrl.text;
+            _toolNameCtrl.text = masterData['itemName']?.toString() ?? _toolNameCtrl.text;
+            _supplierNameCtrl.text = masterData['vendor']?.toString() ?? _supplierNameCtrl.text;
+            _storageLocationCtrl.text = masterData['storageLocation']?.toString() ?? _storageLocationCtrl.text;
+            _responsiblePersonCtrl.text = masterData['responsibleTeam']?.toString() ?? _responsiblePersonCtrl.text;
+            print('🔧 DEBUG: Master data fields populated');
           }
           
-          // Maintenance & Audit info
-          _toolLifespanCtrl.text = completeData['Lifespan']?.toString() ?? '';
-          _auditIntervalCtrl.text = completeData['AuditInterval']?.toString() ?? '';
-          selectedMaintenanceFrequency = completeData['MaintainanceFrequency']?.toString();
-          toolHandlingCertificateAvailable = completeData['HandlingCertificate'] == true;
-          _lastAuditNotesCtrl.text = completeData['LastAuditNotes']?.toString() ?? '';
-          _maximumToolOutputCtrl.text = completeData['MaxOutput']?.toString() ?? '';
-          selectedToolStatus = completeData['Status'] == 1 ? 'Active' : 'Inactive';
-          _responsiblePersonCtrl.text = completeData['ResponsibleTeam']?.toString() ?? '';
-          _stockMsiAssetCtrl.text = completeData['MsiAsset']?.toString() ?? '';
-          _kermAssetCtrl.text = completeData['KernAsset']?.toString() ?? '';
-          _additionalNotesCtrl.text = completeData['Notes']?.toString() ?? '';
+          // If we have detailed data, populate all detailed fields
+          if (hasDetailedData && detailedData != null) {
+            print('🔧 DEBUG: Populating detailed data fields');
+            
+            // Basic Tool fields - using camelCase field names from backend
+            // Tool type - show actual database value, add to list if not present
+            final toolTypeValue = detailedData['toolType']?.toString();
+            selectedToolType = toolTypeValue;
+            // Add the database value to dropdown list if it doesn't exist
+            if (toolTypeValue != null && toolTypeValue.isNotEmpty && !toolTypeList.contains(toolTypeValue)) {
+              toolTypeList.add(toolTypeValue);
+            }
+            
+            _associatedProductNameCtrl.text = detailedData['associatedProduct']?.toString() ?? '';
+            _articleCodeCtrl.text = detailedData['articleCode']?.toString() ?? '';
+            _toolSpecificationsCtrl.text = detailedData['specifications']?.toString() ?? '';
+            
+            // Purchase information - using camelCase field names
+            _poNumberCtrl.text = detailedData['poNumber']?.toString() ?? '';
+            _invoiceNumberCtrl.text = detailedData['invoiceNumber']?.toString() ?? '';
+            _toolCostCtrl.text = detailedData['toolCost']?.toString() ?? '';
+            _extraChargesCtrl.text = detailedData['extraCharges']?.toString() ?? '';
+            
+            // Dates - using camelCase field names
+            if (detailedData['poDate'] != null) {
+              selectedPoDate = DateTime.tryParse(detailedData['poDate'].toString());
+            }
+            if (detailedData['invoiceDate'] != null) {
+              selectedInvoiceDate = DateTime.tryParse(detailedData['invoiceDate'].toString());
+            }
+            if (detailedData['lastAuditDate'] != null) {
+              selectedLastAuditDate = DateTime.tryParse(detailedData['lastAuditDate'].toString());
+            }
+            
+            // Maintenance & Audit info - using camelCase field names
+            _toolLifespanCtrl.text = detailedData['lifespan']?.toString() ?? '';
+            _auditIntervalCtrl.text = detailedData['auditInterval']?.toString() ?? '';
+            // Maintenance frequency - show actual database value, add to list if not present
+            final maintenanceFreqValue = detailedData['maintainanceFrequency']?.toString();
+            selectedMaintenanceFrequency = maintenanceFreqValue;
+            // Add the database value to dropdown list if it doesn't exist
+            if (maintenanceFreqValue != null && maintenanceFreqValue.isNotEmpty && !maintenanceFrequencyList.contains(maintenanceFreqValue)) {
+              maintenanceFrequencyList.add(maintenanceFreqValue);
+            }
+            toolHandlingCertificateAvailable = detailedData['handlingCertificate'] == true;
+            _lastAuditNotesCtrl.text = detailedData['lastAuditNotes']?.toString() ?? '';
+            _maximumToolOutputCtrl.text = detailedData['maxOutput']?.toString() ?? '';
+            
+            // Status handling
+            final statusValue = detailedData['status'];
+            if (statusValue != null) {
+              selectedToolStatus = statusValue == true ? 'Active' : 'Inactive';
+            }
+            
+            // Override responsible person from detailed data if available
+            if (detailedData['responsibleTeam']?.toString().isNotEmpty == true) {
+              _responsiblePersonCtrl.text = detailedData['responsibleTeam']?.toString() ?? '';
+            }
+            
+            _stockMsiAssetCtrl.text = detailedData['msiAsset']?.toString() ?? '';
+            _kermAssetCtrl.text = detailedData['kernAsset']?.toString() ?? '';
+            _additionalNotesCtrl.text = detailedData['notes']?.toString() ?? '';
+            
+            print('✅ DEBUG: All detailed fields populated successfully');
+          } else {
+            // No detailed data - show message and populate only basic fields
+            print('⚠️ DEBUG: No detailed data found, populating basic fields only');
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Loading basic information. You can add detailed information and save to create a complete record.'),
+                  backgroundColor: Colors.blue,
+                  duration: Duration(seconds: 4),
+                ),
+              );
+            }
+          }
+          
+          print('✅ DEBUG: setState completed - all fields should be populated');
         });
         
         // Recalculate total cost
         _calculateTotalCost();
         
-        print('DEBUG: Successfully populated all Tool fields');
+        if (hasDetailedData) {
+          print('✅ DEBUG: Successfully populated all Tool fields using V2 API with detailed data');
+        } else {
+          print('⚠️ DEBUG: Successfully populated basic Tool fields using V2 API (no detailed data)');
+        }
       } else {
-        print('DEBUG: No complete Tool data found, using basic data only');
+        print('❌ DEBUG: No complete Tool data found from V2 API, using basic data only');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Could not load tool data from API. Please check if the item exists.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
       }
-    } catch (e) {
-      print('DEBUG: Error fetching complete Tool details: $e');
+    } catch (e, stackTrace) {
+      print('💥 DEBUG: Error fetching complete Tool details from V2 API: $e');
+      print('📋 DEBUG: Stack trace: $stackTrace');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading tool details: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingDetails = false;
+        });
+      }
     }
   }
 
@@ -393,7 +533,7 @@ class _AddToolState extends State<AddTool> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xff00599A), width: 1.2),
+        borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
       ),
       suffixIcon: suffixIcon,
     );
@@ -462,6 +602,30 @@ class _AddToolState extends State<AddTool> {
             ),
           ),
           const SizedBox(height: 14),
+
+          // Show loading indicator when fetching details
+          if (_isLoadingDetails)
+            Container(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    "Loading detailed information...",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.blue[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
           // FIELDS SCROLL
           Expanded(
@@ -1055,8 +1219,8 @@ class _AddToolState extends State<AddTool> {
                         child: TextFormField(
                           controller: _kermAssetCtrl,
                           decoration: _inputDecoration(
-                            label: _requiredLabel("KERM asset"),
-                            hint: "Enter the KERM asset",
+                            label: _requiredLabel("Kerm asset"),
+                            hint: "Enter the kerm asset",
                           ),
                           style: const TextStyle(fontSize: 12),
                           validator: (v) => (v == null || v.isEmpty)
@@ -1065,21 +1229,25 @@ class _AddToolState extends State<AddTool> {
                         ),
                       ),
                       const SizedBox(width: 24),
-                      const Expanded(child: SizedBox()),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _additionalNotesCtrl,
+                          maxLines: 3,
+                          decoration: _inputDecoration(
+                            label: const Text(
+                              "Additional notes",
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w400,
+                                color: Color.fromRGBO(88, 88, 88, 1),
+                              ),
+                            ),
+                            hint: "Enter additional notes",
+                          ),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
                     ],
-                  ),
-                  const SizedBox(height: 14),
-
-                  TextFormField(
-                    controller: _additionalNotesCtrl,
-                    decoration: _inputDecoration(
-                      label: _requiredLabel("Additional notes"),
-                      hint: "Enter the additional notes",
-                    ),
-                    style: const TextStyle(fontSize: 12),
-                    validator: (v) => (v == null || v.isEmpty)
-                        ? "The field cannot be empty"
-                        : null,
                   ),
                   const SizedBox(height: 30),
                 ],
@@ -1087,19 +1255,18 @@ class _AddToolState extends State<AddTool> {
             ),
           ),
 
-          const SizedBox(height: 10),
-
           // BUTTONS
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              // Cancel Button
               SizedBox(
-                width: 100,
+                width: 120,
                 height: 36,
                 child: OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xff00599A), width: 1),
+                    side: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -1107,7 +1274,7 @@ class _AddToolState extends State<AddTool> {
                   child: const Text(
                     "Cancel",
                     style: TextStyle(
-                      color: Color(0xff00599A),
+                      color: Color.fromRGBO(0, 89, 154, 1),
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1115,6 +1282,7 @@ class _AddToolState extends State<AddTool> {
                 ),
               ),
               const SizedBox(width: 14),
+              // Submit Button
               SizedBox(
                 width: 120,
                 height: 36,
@@ -1123,7 +1291,7 @@ class _AddToolState extends State<AddTool> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _isSubmitting 
                         ? Colors.grey 
-                        : const Color(0xff00599A),
+                        : const Color.fromRGBO(0, 89, 154, 1),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -1139,9 +1307,9 @@ class _AddToolState extends State<AddTool> {
                             valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
-                      : const Text(
-                          "Submit",
-                          style: TextStyle(
+                      : Text(
+                          widget.existingData != null ? "Update" : "Submit",
+                          style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),

@@ -70,11 +70,11 @@ VALUES
                 var masterQuery = @"
 INSERT INTO MasterRegister
 (
-    RefId, ItemType, CreatedDate, IsActive
+    RefId, ItemType, CreatedDate
 )
 VALUES
 (
-    @RefId, @ItemType, GETDATE(), 1
+    @RefId, @ItemType, GETDATE()
 )";
 
                 var masterParams = new
@@ -104,9 +104,13 @@ SET
     ToolType = @ToolType,
     AssociatedProduct = @AssociatedProduct,
     ArticleCode = @ArticleCode,
-    VendorName = @VendorName,
+    Vendor = @Vendor,
     Specifications = @Specifications,
     StorageLocation = @StorageLocation,
+    PoNumber = @PoNumber,
+    PoDate = @PoDate,
+    InvoiceNumber = @InvoiceNumber,
+    InvoiceDate = @InvoiceDate,
     ToolCost = @ToolCost,
     ExtraCharges = @ExtraCharges,
     TotalCost = @TotalCost,
@@ -122,7 +126,8 @@ SET
     MsiAsset = @MsiAsset,
     KernAsset = @KernAsset,
     UpdatedBy = @UpdatedBy,
-    UpdatedDate = GETDATE()
+    UpdatedDate = GETDATE(),
+    Status = @Status
 WHERE ToolsId = @ToolsId;";
 
             using var connection = _context.CreateConnection();
@@ -137,7 +142,7 @@ SET Status = 0, UpdatedDate = GETDATE()
 WHERE ToolsId = @ToolsId;
 
 UPDATE MasterRegister 
-SET IsActive = 0 
+SET RefId = 'DELETED_' + RefId + '_' + CONVERT(VARCHAR, GETDATE(), 112)
 WHERE RefId = @ToolsId AND ItemType = 'Tool';";
 
             using var connection = _context.CreateConnection();

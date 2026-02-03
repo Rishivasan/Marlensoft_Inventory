@@ -6,7 +6,7 @@ class AddMaintenanceService extends StatefulWidget {
   final String assetId;
   final String? itemName;
   final String? assetType;
-  final VoidCallback onServiceAdded;
+  final Function(String? nextServiceDue) onServiceAdded;
   final MaintenanceModel? existingMaintenance;
 
   const AddMaintenanceService({
@@ -107,7 +107,7 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xff00599A),
+              primary: Color.fromRGBO(0, 89, 154, 1),
             ),
           ),
           child: child!,
@@ -195,7 +195,7 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
         );
         
         Navigator.of(context).pop();
-        widget.onServiceAdded();
+        widget.onServiceAdded(_nextServiceDateController.text.isNotEmpty ? _nextServiceDateController.text : null);
       }
     } catch (e) {
       if (mounted) {
@@ -274,7 +274,7 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xff00599A), width: 1.2),
+        borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
       ),
       suffixIcon: suffixIcon,
     );
@@ -548,18 +548,18 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
             ),
           ),
 
-          // BOTTOM BUTTONS - using existing add page button styling
+          // BUTTONS
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              // Cancel Button - matching add tool style
+              // Cancel Button
               SizedBox(
                 width: 120,
                 height: 36,
                 child: OutlinedButton(
                   onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xff00599A), width: 1),
+                    side: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -567,7 +567,7 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
                   child: const Text(
                     "Cancel",
                     style: TextStyle(
-                      color: Color(0xff00599A),
+                      color: Color.fromRGBO(0, 89, 154, 1),
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -575,7 +575,7 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
                 ),
               ),
               const SizedBox(width: 14),
-              // Submit Button - matching add tool style
+              // Submit Button
               SizedBox(
                 width: 120,
                 height: 36,
@@ -584,7 +584,7 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _isSubmitting 
                         ? Colors.grey 
-                        : const Color(0xff00599A),
+                        : const Color.fromRGBO(0, 89, 154, 1),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),

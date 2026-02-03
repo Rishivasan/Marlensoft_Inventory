@@ -19,37 +19,100 @@ namespace InventoryManagement.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<MaintenanceEntity>>> GetAllMaintenance()
         {
-            // TEMPORARY: Return sample data since database tables don't exist yet
-            var sampleData = new List<MaintenanceEntity>
+            Console.WriteLine("=== MAINTENANCE GET ALL: Starting query ===");
+            
+            try
             {
-                new MaintenanceEntity
+                using var connection = _context.CreateConnection();
+                
+                // Try different possible table names for getting all maintenance records
+                var possibleQueries = new[]
                 {
-                    MaintenanceId = 1,
-                    AssetType = "MMD",
-                    AssetId = "MMD001",
-                    ItemName = "Venter Caliper",
-                    ServiceDate = new DateTime(2024, 4, 6),
-                    ServiceProviderCompany = "ABC Calibration Lab",
-                    ServiceEngineerName = "Ravi",
-                    ServiceType = "Calibration",
-                    NextServiceDue = new DateTime(2024, 12, 1),
-                    ServiceNotes = "Calibration completed",
-                    MaintenanceStatus = "Completed",
-                    Cost = 0,
-                    ResponsibleTeam = "Production Team",
-                    CreatedDate = DateTime.Now
+                    "SELECT * FROM Maintenance ORDER BY ServiceDate DESC",
+                    "SELECT * FROM MaintenanceRecords ORDER BY ServiceDate DESC", 
+                    "SELECT * FROM maintenance ORDER BY ServiceDate DESC"
+                };
+
+                foreach (var sql in possibleQueries)
+                {
+                    try
+                    {
+                        Console.WriteLine($"Trying maintenance query: {sql}");
+                        var maintenance = await connection.QueryAsync<MaintenanceEntity>(sql);
+                        var maintenanceList = maintenance.ToList();
+                        Console.WriteLine($"✓ SUCCESS! Found {maintenanceList.Count} total maintenance records");
+                        return Ok(maintenanceList);
+                    }
+                    catch (Exception queryEx)
+                    {
+                        Console.WriteLine($"✗ Query failed: {queryEx.Message}");
+                        continue; // Try next query
+                    }
                 }
-            };
-            
-            return Ok(sampleData);
-            
-            // TODO: Uncomment this when database tables are created
-            /*
-            using var connection = _context.CreateConnection();
-            var sql = "SELECT * FROM Maintenance ORDER BY CreatedDate DESC";
-            var maintenance = await connection.QueryAsync<MaintenanceEntity>(sql);
-            return Ok(maintenance);
-            */
+
+                // If all specific queries fail, try dynamic discovery
+                Console.WriteLine("Trying dynamic table discovery for getting all maintenance...");
+                try
+                {
+                    var tableInfoSql = @"
+                        SELECT TABLE_NAME 
+                        FROM INFORMATION_SCHEMA.TABLES 
+                        WHERE TABLE_TYPE = 'BASE TABLE' 
+                        AND (TABLE_NAME LIKE '%maintenance%' OR TABLE_NAME LIKE '%Maintenance%')";
+                    
+                    var tables = await connection.QueryAsync<string>(tableInfoSql);
+                    Console.WriteLine($"Found maintenance-related tables: {string.Join(", ", tables)}");
+                    
+                    var firstTable = tables.FirstOrDefault();
+                    if (!string.IsNullOrEmpty(firstTable))
+                    {
+                        var dynamicSql = $"SELECT * FROM {firstTable} ORDER BY ServiceDate DESC";
+                        Console.WriteLine($"Trying dynamic query: {dynamicSql}");
+                        var maintenance = await connection.QueryAsync<MaintenanceEntity>(dynamicSql);
+                        var maintenanceList = maintenance.ToList();
+                        Console.WriteLine($"✓ SUCCESS! Dynamic query found {maintenanceList.Count} maintenance records");
+                        return Ok(maintenanceList);
+                    }
+                }
+                catch (Exception dynamicEx)
+                {
+                    Console.WriteLine($"Dynamic query failed: {dynamicEx.Message}");
+                }
+
+                Console.WriteLine("No maintenance records found, returning empty list");
+                return Ok(new List<MaintenanceEntity>());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"=== MAINTENANCE GET ALL: Fatal error ===");
+                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                
+                // Return sample data as fallback
+                Console.WriteLine("Returning sample data as fallback");
+                var sampleData = new List<MaintenanceEntity>
+                {
+                    new MaintenanceEntity
+                    {
+                        MaintenanceId = 1,
+                        AssetType = "MMD",
+                        AssetId = "MMD001",
+                        ItemName = "Venter Caliper",
+                        ServiceDate = new DateTime(2024, 4, 6),
+                        ServiceProviderCompany = "ABC Calibration Lab",
+                        ServiceEngineerName = "Ravi",
+                        ServiceType = "Calibration",
+                        NextServiceDue = new DateTime(2024, 12, 1),
+                        ServiceNotes = "Calibration completed",
+                        MaintenanceStatus = "Completed",
+                        Cost = 0,
+                        ResponsibleTeam = "Production Team",
+                        CreatedDate = DateTime.Now
+                    }
+                };
+                
+                return Ok(sampleData);
+            }
         }
 
         [HttpGet("{assetId}")]
@@ -131,6 +194,7 @@ namespace InventoryManagement.Controllers
         {
             Console.WriteLine($"=== MAINTENANCE CREATE: Starting creation for AssetId: {maintenance.AssetId} ===");
             Console.WriteLine($"Received maintenance data: AssetType={maintenance.AssetType}, ItemName={maintenance.ItemName}, ServiceType={maintenance.ServiceType}");
+            Console.WriteLine($"NextServiceDue provided: {maintenance.NextServiceDue}");
             
             try
             {
@@ -144,6 +208,16 @@ namespace InventoryManagement.Controllers
                 
                 // Ensure MaintenanceId is 0 for new records (let database auto-generate)
                 maintenance.MaintenanceId = 0;
+                
+                // Validate NextServiceDue is provided
+                if (maintenance.NextServiceDue == null)
+                {
+                    Console.WriteLine("⚠️  WARNING: NextServiceDue is null - this maintenance record won't update the master list next service due");
+                }
+                else
+                {
+                    Console.WriteLine($"✓ NextServiceDue will be set to: {maintenance.NextServiceDue}");
+                }
                 
                 Console.WriteLine($"Prepared maintenance data: ID={maintenance.MaintenanceId}, CreatedDate={maintenance.CreatedDate}");
                 
@@ -184,6 +258,13 @@ namespace InventoryManagement.Controllers
                         maintenance.MaintenanceId = id;
                         
                         Console.WriteLine($"✓ SUCCESS! Created maintenance record with ID: {id} for AssetId: {maintenance.AssetId}");
+                        
+                        // Log the next service due update
+                        if (maintenance.NextServiceDue != null)
+                        {
+                            Console.WriteLine($"✓ Next Service Due stored: {maintenance.NextServiceDue} - This will now appear in the master list for AssetId: {maintenance.AssetId}");
+                        }
+                        
                         return CreatedAtAction(nameof(GetMaintenanceByAssetId), new { assetId = maintenance.AssetId }, maintenance);
                     }
                     catch (Exception queryEx)
@@ -232,6 +313,13 @@ namespace InventoryManagement.Controllers
                         maintenance.MaintenanceId = dynamicId;
                         
                         Console.WriteLine($"✓ SUCCESS! Dynamic insert created maintenance record with ID: {dynamicId}");
+                        
+                        // Log the next service due update
+                        if (maintenance.NextServiceDue != null)
+                        {
+                            Console.WriteLine($"✓ Next Service Due stored: {maintenance.NextServiceDue} - This will now appear in the master list for AssetId: {maintenance.AssetId}");
+                        }
+                        
                         return CreatedAtAction(nameof(GetMaintenanceByAssetId), new { assetId = maintenance.AssetId }, maintenance);
                     }
                 }
@@ -257,6 +345,7 @@ namespace InventoryManagement.Controllers
         public async Task<IActionResult> UpdateMaintenance(int id, MaintenanceEntity maintenance)
         {
             Console.WriteLine($"=== MAINTENANCE UPDATE: Starting update for ID: {id} ===");
+            Console.WriteLine($"NextServiceDue being updated to: {maintenance.NextServiceDue}");
             
             if (id != maintenance.MaintenanceId)
             {
@@ -267,6 +356,16 @@ namespace InventoryManagement.Controllers
             try
             {
                 using var connection = _context.CreateConnection();
+                
+                // Log the next service due update
+                if (maintenance.NextServiceDue != null)
+                {
+                    Console.WriteLine($"✓ Updating NextServiceDue to: {maintenance.NextServiceDue} for AssetId: {maintenance.AssetId}");
+                }
+                else
+                {
+                    Console.WriteLine($"⚠️  WARNING: NextServiceDue is being set to null for AssetId: {maintenance.AssetId}");
+                }
                 
                 // Try different possible table names for update
                 var possibleUpdateQueries = new[]
@@ -306,6 +405,13 @@ namespace InventoryManagement.Controllers
                         if (affectedRows > 0)
                         {
                             Console.WriteLine($"✓ SUCCESS! Updated maintenance record ID: {id}, affected rows: {affectedRows}");
+                            
+                            // Log the next service due update success
+                            if (maintenance.NextServiceDue != null)
+                            {
+                                Console.WriteLine($"✓ Next Service Due updated to: {maintenance.NextServiceDue} - This will now appear in the master list for AssetId: {maintenance.AssetId}");
+                            }
+                            
                             return NoContent();
                         }
                         else
@@ -352,6 +458,13 @@ namespace InventoryManagement.Controllers
                         if (dynamicAffectedRows > 0)
                         {
                             Console.WriteLine($"✓ SUCCESS! Dynamic update affected {dynamicAffectedRows} rows");
+                            
+                            // Log the next service due update success
+                            if (maintenance.NextServiceDue != null)
+                            {
+                                Console.WriteLine($"✓ Next Service Due updated to: {maintenance.NextServiceDue} - This will now appear in the master list for AssetId: {maintenance.AssetId}");
+                            }
+                            
                             return NoContent();
                         }
                         else

@@ -3,6 +3,7 @@
     public class MmdsEntity
     {
         public string MmdId { get; set; }
+        public string BrandName { get; set; }  // Added BrandName field
         public string AccuracyClass { get; set; }
         public string Vendor { get; set; }
         public string CalibratedBy { get; set; }

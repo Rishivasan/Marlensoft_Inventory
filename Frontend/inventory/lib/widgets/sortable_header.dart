@@ -41,14 +41,6 @@ class SortableHeader extends ConsumerWidget {
               ),
             ),
           ),
-          // Filter icon (non-clickable)
-          SvgPicture.asset(
-            "assets/images/Icon_filter.svg", 
-            width: 14, 
-            height: 14, 
-            colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn), // Always gray
-          ),
-          const SizedBox(width: 1),
           // Sort icon (clickable only)
           InkWell(
             onTap: () {

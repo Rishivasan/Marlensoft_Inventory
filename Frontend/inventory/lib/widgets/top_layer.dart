@@ -417,7 +417,10 @@ class _TopLayerState extends ConsumerState<TopLayer> {
                                 addingItem: AddTool(
                                   submit: () async {
                                     print('DEBUG: TopLayer - Tool submitted, refreshing master list');
-                                    await ref.read(refreshMasterListProvider)();
+                                    // Small delay to ensure database transaction completes
+                                    await Future.delayed(const Duration(milliseconds: 300));
+                                    // Force refresh master list immediately
+                                    await ref.read(forceRefreshMasterListProvider)();
                                   },
                                 ),
                               );
@@ -427,7 +430,10 @@ class _TopLayerState extends ConsumerState<TopLayer> {
                                 addingItem: AddAsset(
                                   submit: () async {
                                     print('DEBUG: TopLayer - Asset submitted, refreshing master list');
-                                    await ref.read(refreshMasterListProvider)();
+                                    // Small delay to ensure database transaction completes
+                                    await Future.delayed(const Duration(milliseconds: 300));
+                                    // Force refresh master list immediately
+                                    await ref.read(forceRefreshMasterListProvider)();
                                   },
                                 ),
                               );
@@ -437,7 +443,10 @@ class _TopLayerState extends ConsumerState<TopLayer> {
                                 addingItem: AddMmd(
                                   submit: () async {
                                     print('DEBUG: TopLayer - MMD submitted, refreshing master list');
-                                    await ref.read(refreshMasterListProvider)();
+                                    // Small delay to ensure database transaction completes
+                                    await Future.delayed(const Duration(milliseconds: 300));
+                                    // Force refresh master list immediately
+                                    await ref.read(forceRefreshMasterListProvider)();
                                   },
                                 ),
                               );
@@ -447,7 +456,10 @@ class _TopLayerState extends ConsumerState<TopLayer> {
                                 addingItem: AddConsumable(
                                   submit: () async {
                                     print('DEBUG: TopLayer - Consumable submitted, refreshing master list');
-                                    await ref.read(refreshMasterListProvider)();
+                                    // Small delay to ensure database transaction completes
+                                    await Future.delayed(const Duration(milliseconds: 300));
+                                    // Force refresh master list immediately
+                                    await ref.read(forceRefreshMasterListProvider)();
                                   },
                                 ),
                               );
