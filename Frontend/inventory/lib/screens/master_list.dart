@@ -89,10 +89,16 @@ class MasterListScreen extends ConsumerWidget {
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: GenericPaginatedTable<MasterListModel>(
+<<<<<<< HEAD
                     data:
                         sortedAndFilteredItems, // Use directly sorted and filtered data
                     rowsPerPage: 7,
                     minWidth: 1570,
+=======
+                    data: sortedAndFilteredItems, // Use directly sorted and filtered data
+                    rowsPerPage: 10,
+                    minWidth: 1800,
+>>>>>>> 52cb34ae18173e7a3af0a5c9867f7da9da3023da
                     showCheckboxColumn: true,
                     onRowTap: (item) {
                       // Navigate to product detail screen when row is clicked

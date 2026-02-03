@@ -17,7 +17,7 @@ class PaginationControls extends StatelessWidget {
     required this.totalPages,
     required this.rowsPerPage,
     required this.totalItems,
-    this.rowsPerPageOptions = const [5, 7, 10, 15, 20],
+    this.rowsPerPageOptions = const [5, 10, 15, 20],
     required this.onPageChanged,
     required this.onRowsPerPageChanged,
   });
@@ -62,35 +62,53 @@ class PaginationControls extends StatelessWidget {
         const SizedBox(width: 8),
         Container(
           height: 32,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             color: Colors.white,
-            border: Border.all(color: const Color(0xffD1D5DB)),
+            border: Border.all(color: const Color(0xffD1D5DB), width: 1),
             borderRadius: BorderRadius.circular(6),
           ),
-          child: DropdownButton<int>(
-            value: rowsPerPage,
-            underline: const SizedBox(),
-            isDense: true,
-            icon: const Icon(
-              Icons.keyboard_arrow_down,
-              size: 16,
-              color: Color(0xff6B7280),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<int>(
+              value: rowsPerPage,
+              isDense: true,
+              icon: const Padding(
+                padding: EdgeInsets.only(right: 8),
+                child: Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 16,
+                  color: Color(0xff6B7280),
+                ),
+              ),
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xff374151),
+                fontWeight: FontWeight.w500,
+              ),
+              dropdownColor: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              elevation: 8,
+              onChanged: (value) {
+                if (value != null) {
+                  onRowsPerPageChanged(value);
+                }
+              },
+              items: rowsPerPageOptions.map((option) {
+                return DropdownMenuItem<int>(
+                  value: option,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      "$option",
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xff374151),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
-            style: const TextStyle(
-              fontSize: 13, 
-              color: Color(0xff374151),
-              fontWeight: FontWeight.w500,
-            ),
-            onChanged: (value) {
-              if (value != null) {
-                onRowsPerPageChanged(value);
-              }
-            },
-            items: rowsPerPageOptions.map((e) => DropdownMenuItem(
-              value: e, 
-              child: Text("$e")
-            )).toList(),
           ),
         ),
         const SizedBox(width: 8),
