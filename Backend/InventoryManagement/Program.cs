@@ -101,6 +101,10 @@ builder.Services.AddScoped<IMasterRegisterService, MasterRegisterService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddScoped<IQualityRepository, QualityRepository>();
+builder.Services.AddScoped<IQualityService, QualityService>();
+
+
 var app = builder.Build();
 
 // =====================
