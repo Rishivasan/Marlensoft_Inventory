@@ -73,9 +73,9 @@ class SidebarWidget extends ConsumerWidget {
                 ),
 
                 // MENU
-                SizedBox(
-                  height: 260,
+                Flexible(
                   child: ListView.builder(
+                    shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: svgAssets.length,
                     itemBuilder: (context, index) => SidebarItem(

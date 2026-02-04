@@ -10,7 +10,7 @@ import 'package:inventory/routers/app_router.dart';
 
 
 void main() {
-  HttpOverrides.global = MyHttpOverrides(); //allow localhost HTTPS
+ HttpOverrides.global = MyHttpOverrides(); //allow localhost HTTPS
   runApp(const ProviderScope(child: MainApp()));
 }
 

@@ -6,11 +6,13 @@ class MasterListService {
 
   Future<List<MasterListModel>> getMasterList() async {
     try {
+      print('DEBUG: MasterListService - Starting to fetch master list from /api/enhanced-master-list');
       final dio = DioClient.getDio();
       final response = await dio.get("/api/enhanced-master-list");
 
       if (response.statusCode == 200) {
         final decoded = response.data;
+        print('DEBUG: MasterListService - Received response with ${decoded is List ? decoded.length : 'unknown'} items');
 
         if (decoded is List) {
           final items = decoded.map((e) => MasterListModel.fromJson(e)).toList();
@@ -19,6 +21,10 @@ class MasterListService {
           final uniqueItems = <String, MasterListModel>{};
           for (final item in items) {
             uniqueItems[item.assetId] = item;
+            // Log the Next Service Due for debugging
+            if (item.assetId == 'TL8984') {
+              print('DEBUG: MasterListService - Item TL8984 NextServiceDue: ${item.nextServiceDue}');
+            }
           }
           
           final result = uniqueItems.values.toList();

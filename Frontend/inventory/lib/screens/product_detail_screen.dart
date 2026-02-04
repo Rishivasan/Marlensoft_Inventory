@@ -44,6 +44,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
   bool loading = true;
   bool loadingMaintenance = true;
   bool loadingAllocation = true;
+  bool _isRefreshingMasterList = false; // Flag to prevent multiple simultaneous refreshes
   late TabController _tabController;
 
   // Search controllers
@@ -191,6 +192,34 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
       nextServiceDue: null,
       availabilityStatus: 'Unknown',
     );
+  }
+
+  // Helper method to safely refresh master list data
+  Future<void> _safeRefreshMasterList() async {
+    print('DEBUG: _safeRefreshMasterList - Called');
+    
+    // Prevent multiple simultaneous refreshes
+    if (_isRefreshingMasterList) {
+      print('DEBUG: _safeRefreshMasterList - Already refreshing, skipping');
+      return;
+    }
+    
+    if (!mounted) {
+      print('DEBUG: _safeRefreshMasterList - Widget not mounted, returning');
+      return;
+    }
+    
+    _isRefreshingMasterList = true;
+    
+    try {
+      print('DEBUG: _safeRefreshMasterList - Calling forceRefreshMasterListProvider');
+      await ref.read(forceRefreshMasterListProvider)();
+      print('DEBUG: _safeRefreshMasterList - Successfully refreshed master list');
+    } catch (e) {
+      print('DEBUG: _safeRefreshMasterList - Error refreshing master list: $e');
+    } finally {
+      _isRefreshingMasterList = false;
+    }
   }
 
   Future<void> _loadMaintenanceData(String assetId) async {
@@ -362,10 +391,19 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
           await Future.delayed(const Duration(milliseconds: 300));
           // Refresh product detail data
           await _loadProductData();
+          
+          // Check if widget is still mounted before using ref
+          if (!mounted) return;
+          
           // Small delay to ensure database transaction completes
           await Future.delayed(const Duration(milliseconds: 300));
+          
+          // Check if widget is still mounted before using ref
+          if (!mounted) return;
+          
           // Force refresh master list to update grid/pagination immediately
-          await ref.read(forceRefreshMasterListProvider)();
+          await _safeRefreshMasterList();
+          
           print('DEBUG: ProductDetail - MMD updated, refreshed both product data and master list');
         },
         existingData: productData, // Pass existing data
@@ -381,7 +419,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
           // Small delay to ensure database transaction completes
           await Future.delayed(const Duration(milliseconds: 300));
           // Force refresh master list to update grid/pagination immediately
-          await ref.read(forceRefreshMasterListProvider)();
+          await _safeRefreshMasterList();
           print('DEBUG: ProductDetail - Tool updated, refreshed both product data and master list');
         },
         existingData: productData, // Pass existing data
@@ -397,7 +435,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
           // Small delay to ensure database transaction completes
           await Future.delayed(const Duration(milliseconds: 300));
           // Force refresh master list to update grid/pagination immediately
-          await ref.read(forceRefreshMasterListProvider)();
+          await _safeRefreshMasterList();
           print('DEBUG: ProductDetail - Consumable updated, refreshed both product data and master list');
         },
         existingData: productData, // Pass existing data
@@ -413,7 +451,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
           // Small delay to ensure database transaction completes
           await Future.delayed(const Duration(milliseconds: 300));
           // Force refresh master list to update grid/pagination immediately
-          await ref.read(forceRefreshMasterListProvider)();
+          await _safeRefreshMasterList();
           print('DEBUG: ProductDetail - Asset updated, refreshed both product data and master list');
         },
         existingData: productData, // Pass existing data
@@ -433,7 +471,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
           // Small delay to ensure database transaction completes
           await Future.delayed(const Duration(milliseconds: 300));
           // Force refresh master list to update grid/pagination immediately
-          await ref.read(forceRefreshMasterListProvider)();
+          await _safeRefreshMasterList();
           print('DEBUG: ProductDetail - Tool (default) updated, refreshed both product data and master list');
         },
         existingData: productData, // Pass existing data
@@ -1146,16 +1184,18 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
                         // 2. Get updated product data
                         await _loadProductData();
                         
+                        // Check if widget is still mounted before using ref
+                        if (!mounted) return;
+                        
                         // 3. FORCE REFRESH MASTER LIST DATA FROM DATABASE (this is key!)
                         print('DEBUG: Force refreshing master list data from database to get latest Next Service Due');
-                        await ref.read(forceRefreshMasterListProvider)();
-                        
-                        // 4. Update reactive state immediately for instant UI updates
-                        final assetId = productData?.assetId ?? widget.id;
+                        await _safeRefreshMasterList();
                         
                         // Check if widget is still mounted before using ref
                         if (!mounted) return;
                         
+                        // 4. Update reactive state immediately for instant UI updates
+                        final assetId = productData?.assetId ?? widget.id;
                         final updateProductState = ref.read(updateProductStateProvider);
                         
                         // Use the Next Service Due directly from form submission
@@ -1285,7 +1325,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
                         
                         // 2. FORCE REFRESH MASTER LIST DATA FROM DATABASE (this is key!)
                         print('DEBUG: Force refreshing master list data from database to get latest allocation status');
-                        await ref.read(forceRefreshMasterListProvider)();
+                        await _safeRefreshMasterList();
                         
                         // 3. Update reactive state immediately for instant UI updates
                         final assetId = productData?.assetId ?? widget.id;
@@ -1407,9 +1447,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
                         // 2. Get updated product data
                         await _loadProductData();
                         
+                        // Check if widget is still mounted before using ref
+                        if (!mounted) return;
+                        
                         // 3. FORCE REFRESH MASTER LIST DATA FROM DATABASE (this is key!)
                         print('DEBUG: Force refreshing master list data from database to get latest Next Service Due');
-                        await ref.read(forceRefreshMasterListProvider)();
+                        await _safeRefreshMasterList();
+                        
+                        // Check if widget is still mounted before using ref
+                        if (!mounted) return;
                         
                         // 4. Update reactive state immediately for instant UI updates
                         final assetId = productData?.assetId ?? widget.id;
@@ -1533,16 +1579,18 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
                     // 2. Get updated product data
                     await _loadProductData();
                     
+                    // Check if widget is still mounted before using ref
+                    if (!mounted) return;
+                    
                     // 3. FORCE REFRESH MASTER LIST DATA FROM DATABASE (this is key!)
                     print('DEBUG: Force refreshing master list data from database to get latest Next Service Due');
-                    await ref.read(forceRefreshMasterListProvider)();
-                    
-                    // 4. Update reactive state immediately for instant UI updates
-                    final assetId = productData?.assetId ?? widget.id;
+                    await _safeRefreshMasterList();
                     
                     // Check if widget is still mounted before using ref
                     if (!mounted) return;
                     
+                    // 4. Update reactive state immediately for instant UI updates
+                    final assetId = productData?.assetId ?? widget.id;
                     final updateProductState = ref.read(updateProductStateProvider);
                     
                     // Use the Next Service Due directly from form submission
@@ -1793,7 +1841,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
                           
                           // 3. FORCE REFRESH MASTER LIST DATA FROM DATABASE (this is key!)
                           print('DEBUG: Force refreshing master list data from database to get latest Next Service Due');
-                          await ref.read(forceRefreshMasterListProvider)();
+                          await _safeRefreshMasterList();
                           
                           final updateProductState = ref.read(updateProductStateProvider);
                           
@@ -1891,7 +1939,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
                         
                         // 2. FORCE REFRESH MASTER LIST DATA FROM DATABASE (this is key!)
                         print('DEBUG: Force refreshing master list data from database to get latest allocation status');
-                        await ref.read(forceRefreshMasterListProvider)();
+                        await _safeRefreshMasterList();
                         
                         // 3. Update reactive state immediately for instant UI updates
                         final assetId = productData?.assetId ?? widget.id;
@@ -2026,7 +2074,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
                     
                     // 2. FORCE REFRESH MASTER LIST DATA FROM DATABASE (this is key!)
                     print('DEBUG: Force refreshing master list data from database to get latest allocation status');
-                    await ref.read(forceRefreshMasterListProvider)();
+                    await _safeRefreshMasterList();
                     
                     // 3. Update reactive state immediately for instant UI updates
                     final assetId = productData?.assetId ?? widget.id;
@@ -2260,7 +2308,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
                           
                           // 2. FORCE REFRESH MASTER LIST DATA FROM DATABASE (this is key!)
                           print('DEBUG: Force refreshing master list data from database to get latest allocation status');
-                          await ref.read(forceRefreshMasterListProvider)();
+                          await _safeRefreshMasterList();
                           
                           // 3. Update reactive state immediately for instant UI updates
                           final assetId = productData?.assetId ?? widget.id;
@@ -2448,7 +2496,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
   Future<void> _testMasterListRefresh() async {
     print('DEBUG: Manual test - Triggering master list refresh');
     try {
-      await ref.read(forceRefreshMasterListProvider)();
+      await _safeRefreshMasterList();
       print('DEBUG: Manual test - Master list refresh completed successfully');
     } catch (e) {
       print('DEBUG: Manual test - Master list refresh failed: $e');

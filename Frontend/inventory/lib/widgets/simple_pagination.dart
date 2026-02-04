@@ -14,7 +14,7 @@ class SimplePagination extends StatefulWidget {
     super.key,
     required this.data,
     this.initialRowsPerPage = 10,
-    this.rowsPerPageOptions = const [5, 7, 10, 15, 20],
+    this.rowsPerPageOptions = const [5, 10, 15, 20],
     required this.itemBuilder,
     this.emptyWidget,
   });
@@ -102,21 +102,3 @@ class _SimplePaginationState extends State<SimplePagination> {
   }
 }
 
-/// Example usage:
-/// 
-/// SimplePagination(
-///   data: myDataList,
-///   initialRowsPerPage: 7,
-///   itemBuilder: (pageItems) {
-///     return ListView.builder(
-///       itemCount: pageItems.length,
-///       itemBuilder: (context, index) {
-///         final item = pageItems[index];
-///         return ListTile(
-///           title: Text(item.name),
-///           subtitle: Text(item.description),
-///         );
-///       },
-///     );
-///   },
-/// )

@@ -1,78 +1,16 @@
-// import 'package:auto_route/auto_route.dart';
-// import 'package:flutter/material.dart';
-// import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:inventory/providers/sidebar_state.dart';
-// import 'package:inventory/routers/app_router.dart';
-// import 'package:inventory/widgets/footer.dart';
-// import 'package:inventory/widgets/nav_profile.dart';
-
-
-// class DashboardBodyScreen extends ConsumerWidget {
-//   DashboardBodyScreen({super.key});
-
-//     @override
-//   Widget build(BuildContext context, WidgetRef ref) {
-//     // int temp = ref.read(sideBarStateProvider);
-//     // switch(temp){
-//     //  case 6: context.router.replace(MasterListRoute());
-//     //  default:context.router.replace(DefaultRoute());
-//     // }
-//     return Expanded(
-//       child: Container(
-//         padding: EdgeInsets.symmetric(horizontal: 24),
-//         decoration: BoxDecoration(color: Color(0xFFF4F4F4)),
-//         child: Column(
-//           children: [
-//             Container(
-//               padding: EdgeInsets.symmetric(vertical: 20),
-
-//               child: Row(
-//                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                 children: [
-//                   Column(
-//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                     crossAxisAlignment: CrossAxisAlignment.start,
-//                     children: [
-//                       Text(
-//                         'Tools, Assets, MMDs & Consumables Management',
-//                         style: Theme.of(context).textTheme.displayMedium,
-//                       ),
-//                       Text(
-//                         'Here you can have a centralized system to maintain, track, and manage all equipment and resources',
-//                       ),
-//                     ],
-//                   ),
-
-//                   NavbarProfileWidget(),
-//                 ],
-//               ),
-//             ),
-
-//            Expanded(child: AutoRouter()),
-           
-//           Container(
-//             height: 50,
-//             alignment: Alignment.center,
-//             child: FooterWidget(),
-//           )
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
-
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inventory/providers/header_state.dart';
 import 'package:inventory/providers/sidebar_state.dart';
+import 'package:inventory/providers/screen_provider.dart';
 import 'package:inventory/routers/app_router.dart';
+import 'package:inventory/screens/qc_template_screen.dart';
 import 'package:inventory/widgets/footer.dart';
 import 'package:inventory/widgets/nav_profile.dart';
 
 class DashboardBodyScreen extends ConsumerWidget {
-  DashboardBodyScreen({super.key});
+  const DashboardBodyScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -86,6 +24,7 @@ class DashboardBodyScreen extends ConsumerWidget {
             title: "Dashboard",
             subtitle: "Welcome to Dashboard screen",
           );
+          ref.read(screenProvider.notifier).state = ScreenType.dashboard;
           context.router.replace(const DefaultRoute());
           break;
 
@@ -94,15 +33,17 @@ class DashboardBodyScreen extends ConsumerWidget {
             title: "Products",
             subtitle: "Manage and track your products here",
           );
+          ref.read(screenProvider.notifier).state = ScreenType.products;
           context.router.replace(const DefaultRoute());
           break;
 
         case 2:
           ref.read(headerProvider.notifier).state = const HeaderModel(
-            title: "BOM Master",
-            subtitle: "Manage your BOM master details here",
+            title: "Quality Check Customization",
+            subtitle: "Configure quality control templates and inspection points for BOM Master",
           );
-          context.router.replace(const DefaultRoute());
+          // Set screen to show QC Template
+          ref.read(screenProvider.notifier).state = ScreenType.bomMaster;
           break;
 
         case 3:
@@ -110,6 +51,7 @@ class DashboardBodyScreen extends ConsumerWidget {
             title: "Orders",
             subtitle: "View and manage all orders here",
           );
+          ref.read(screenProvider.notifier).state = ScreenType.orders;
           context.router.replace(const DefaultRoute());
           break;
 
@@ -118,6 +60,7 @@ class DashboardBodyScreen extends ConsumerWidget {
             title: "Suppliers",
             subtitle: "Track and manage supplier details here",
           );
+          ref.read(screenProvider.notifier).state = ScreenType.suppliers;
           context.router.replace(const DefaultRoute());
           break;
 
@@ -126,6 +69,7 @@ class DashboardBodyScreen extends ConsumerWidget {
             title: "Purchases",
             subtitle: "Manage purchase records here",
           );
+          ref.read(screenProvider.notifier).state = ScreenType.purchases;
           context.router.replace(const DefaultRoute());
           break;
 
@@ -135,6 +79,7 @@ class DashboardBodyScreen extends ConsumerWidget {
             subtitle:
                 "Here you can have a centralized system to maintain, track, and manage all equipment and resources",
           );
+          ref.read(screenProvider.notifier).state = ScreenType.inventory;
           context.router.replace( MasterListRoute());
           break;
 
@@ -143,6 +88,7 @@ class DashboardBodyScreen extends ConsumerWidget {
             title: "Dashboard",
             subtitle: "Welcome! Select a menu to view details.",
           );
+          ref.read(screenProvider.notifier).state = ScreenType.dashboard;
           context.router.replace(const DefaultRoute());
       }
     });
@@ -179,7 +125,21 @@ class DashboardBodyScreen extends ConsumerWidget {
             ),
 
             // BODY CONTENT
-            const Expanded(child: AutoRouter()),
+            Expanded(
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final currentScreen = ref.watch(screenProvider);
+                  
+                  // Show QC Template Screen for BOM Master
+                  if (currentScreen == ScreenType.bomMaster) {
+                    return const QCTemplateScreen();
+                  }
+                  
+                  // Default router content for other screens
+                  return const AutoRouter();
+                },
+              ),
+            ),
 
             // FOOTER
             Container(

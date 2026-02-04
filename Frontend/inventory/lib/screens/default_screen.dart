@@ -19,10 +19,15 @@ class _DefaultScreenState extends State<DefaultScreen> {
         borderRadius: BorderRadius.circular(6),
       ),
       child: Center(
-        child: Image.asset(
-          'assets/Images/under_construction.png',
-          fit: BoxFit.contain,
-          width: 420, // you can adjust if needed
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/Images/under_construction.png',
+              fit: BoxFit.contain,
+              width: 420, // you can adjust if needed
+            ),
+          ],
         ),
       ),
     );
