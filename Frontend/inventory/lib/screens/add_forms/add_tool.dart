@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:inventory/services/api_service.dart';
 import 'package:inventory/model/master_list_model.dart';
+import 'package:inventory/providers/next_service_provider.dart';
+import 'package:inventory/services/next_service_calculation_service.dart';
+import 'package:provider/provider.dart';
 
 class AddTool extends StatefulWidget {
   const AddTool({
@@ -183,6 +186,25 @@ class _AddToolState extends State<AddTool> {
         await ApiService().addTool(toolData);
         success = true;
         successMessage = 'Tool added successfully!';
+        
+        // Calculate and store next service date for new tool
+        if (selectedMaintenanceFrequency != null && selectedMaintenanceFrequency!.isNotEmpty) {
+          try {
+            final nextServiceProvider = Provider.of<NextServiceProvider>(context, listen: false);
+            final nextServiceCalculationService = NextServiceCalculationService(nextServiceProvider);
+            
+            await nextServiceCalculationService.calculateNextServiceDateForNewItem(
+              assetId: _toolIdCtrl.text.trim(),
+              assetType: 'Tool',
+              createdDate: DateTime.now(),
+              maintenanceFrequency: selectedMaintenanceFrequency!,
+            );
+            
+            print('DEBUG: Next service date calculated for new tool');
+          } catch (e) {
+            print('DEBUG: Error calculating next service date: $e');
+          }
+        }
       }
 
       print('DEBUG: Tool operation successful: $success');
@@ -556,10 +578,10 @@ class _AddToolState extends State<AddTool> {
 
   String _formatDate(DateTime? date) {
     if (date == null) return "";
-    final d = date.day.toString().padLeft(2, '0');
-    final m = date.month.toString().padLeft(2, '0');
     final y = date.year.toString();
-    return "$d/$m/$y";
+    final m = date.month.toString().padLeft(2, '0');
+    final d = date.day.toString().padLeft(2, '0');
+    return "$y-$m-$d";
   }
 
   void _calculateTotalCost() {

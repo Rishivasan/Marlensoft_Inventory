@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:inventory/services/api_service.dart';
 import 'package:inventory/model/master_list_model.dart';
+import 'package:inventory/providers/next_service_provider.dart';
+import 'package:inventory/services/next_service_calculation_service.dart';
+import 'package:provider/provider.dart';
 
 class AddMmd extends StatefulWidget {
   const AddMmd({
@@ -404,10 +407,10 @@ class _AddMmdState extends State<AddMmd> {
 
   String _formatDate(DateTime? date) {
     if (date == null) return "";
-    final d = date.day.toString().padLeft(2, '0');
-    final m = date.month.toString().padLeft(2, '0');
     final y = date.year.toString();
-    return "$d/$m/$y";
+    final m = date.month.toString().padLeft(2, '0');
+    final d = date.day.toString().padLeft(2, '0');
+    return "$y-$m-$d";
   }
 
   void _calculateTotalCost() {
@@ -516,6 +519,25 @@ class _AddMmdState extends State<AddMmd> {
         await ApiService().addMmd(mmdData);
         success = true;
         successMessage = 'MMD added successfully!';
+        
+        // Calculate and store next service date for new MMD
+        if (selectedCalibrationFrequency != null && selectedCalibrationFrequency!.isNotEmpty) {
+          try {
+            final nextServiceProvider = Provider.of<NextServiceProvider>(context, listen: false);
+            final nextServiceCalculationService = NextServiceCalculationService(nextServiceProvider);
+            
+            await nextServiceCalculationService.calculateNextServiceDateForNewItem(
+              assetId: _assetIdCtrl.text.trim(),
+              assetType: 'MMD',
+              createdDate: DateTime.now(),
+              maintenanceFrequency: selectedCalibrationFrequency!,
+            );
+            
+            print('DEBUG: Next calibration date calculated for new MMD');
+          } catch (e) {
+            print('DEBUG: Error calculating next calibration date: $e');
+          }
+        }
       }
 
       print('DEBUG: MMD operation successful: $success');

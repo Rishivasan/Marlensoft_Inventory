@@ -1,0 +1,1 @@
+sqlcmd -S RISHIVASAN-PC -d ManufacturingApp -U sa -P "Welcome@123" -i "fix_next_service_calculation.sql"

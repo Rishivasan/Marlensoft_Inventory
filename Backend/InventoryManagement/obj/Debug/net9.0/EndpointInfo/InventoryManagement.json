@@ -699,6 +699,18 @@
         }
       }
     },
+    "/api/debug-next-service": {
+      "get": {
+        "tags": [
+          "MasterRegister"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/mmds": {
       "get": {
         "tags": [
@@ -788,6 +800,128 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/NextService/GetLastServiceDate/{assetId}/{assetType}": {
+      "get": {
+        "tags": [
+          "NextService"
+        ],
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assetType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/NextService/UpdateNextServiceDate": {
+      "post": {
+        "tags": [
+          "NextService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNextServiceDateRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNextServiceDateRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNextServiceDateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/NextService/GetMaintenanceFrequency/{assetId}/{assetType}": {
+      "get": {
+        "tags": [
+          "NextService"
+        ],
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assetType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/NextService/CalculateNextServiceDate": {
+      "post": {
+        "tags": [
+          "NextService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalculateNextServiceDateRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalculateNextServiceDateRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalculateNextServiceDateRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -1221,8 +1355,32 @@
             "format": "date-time",
             "nullable": true
           },
+          "nextServiceDue": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "status": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CalculateNextServiceDateRequest": {
+        "type": "object",
+        "properties": {
+          "createdDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastServiceDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "maintenanceFrequency": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1618,8 +1776,31 @@
             "format": "date-time",
             "nullable": true
           },
+          "nextServiceDue": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "status": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateNextServiceDateRequest": {
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": "string",
+            "nullable": true
+          },
+          "assetType": {
+            "type": "string",
+            "nullable": true
+          },
+          "nextServiceDate": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "additionalProperties": false

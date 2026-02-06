@@ -780,8 +780,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
                       child: _buildInfoColumn(
                         'Created Date',
                         productData != null
-                            ? "${productData!.createdDate.day}/${productData!.createdDate.month}/${productData!.createdDate.year}"
-                            : '27/1/2024',
+                            ? "${productData!.createdDate.year}-${productData!.createdDate.month.toString().padLeft(2, '0')}-${productData!.createdDate.day.toString().padLeft(2, '0')}"
+                            : '2024-01-27',
                       ),
                     ),
                     Expanded(
@@ -799,7 +799,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
                           // Use reactive state if available, otherwise fall back to productData
                           final nextServiceDue = productState?.nextServiceDue ?? 
                               (productData?.nextServiceDue != null
-                                  ? "${productData!.nextServiceDue!.day}/${productData!.nextServiceDue!.month}/${productData!.nextServiceDue!.year}"
+                                  ? "${productData!.nextServiceDue!.year}-${productData!.nextServiceDue!.month.toString().padLeft(2, '0')}-${productData!.nextServiceDue!.day.toString().padLeft(2, '0')}"
                                   : null);
                           
                           return _buildInfoColumn(
@@ -973,8 +973,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
                       child: _buildInfoColumn(
                         'Created Date',
                         productData != null
-                            ? "${productData!.createdDate.day}/${productData!.createdDate.month}/${productData!.createdDate.year}"
-                            : '27/1/2024',
+                            ? "${productData!.createdDate.year}-${productData!.createdDate.month.toString().padLeft(2, '0')}-${productData!.createdDate.day.toString().padLeft(2, '0')}"
+                            : '2024-01-27',
                       ),
                     ),
                     Expanded(
@@ -987,7 +987,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
                       child: _buildInfoColumn(
                         'Next Service Due',
                         productData?.nextServiceDue != null
-                            ? "${productData!.nextServiceDue!.day}/${productData!.nextServiceDue!.month}/${productData!.nextServiceDue!.year}"
+                            ? "${productData!.nextServiceDue!.year}-${productData!.nextServiceDue!.month.toString().padLeft(2, '0')}-${productData!.nextServiceDue!.day.toString().padLeft(2, '0')}"
                             : 'N/A',
                       ),
                     ),

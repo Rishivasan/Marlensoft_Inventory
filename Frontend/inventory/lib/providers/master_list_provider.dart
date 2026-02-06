@@ -16,6 +16,19 @@ class MasterListNotifier extends AsyncNotifier<List<MasterListModel>> {
       print('DEBUG: MasterListNotifier - Loading master list');
       final masterList = await MasterListService().getMasterList();
       print('DEBUG: MasterListNotifier - Loaded ${masterList.length} items');
+      
+      // Populate NextServiceProvider with the fetched next service dates
+      // This is done in a separate microtask to avoid issues during build
+      Future.microtask(() {
+        try {
+          // We can't access context here, so we'll need to handle this differently
+          // The NextServiceProvider will be updated when items are displayed
+          print('DEBUG: MasterListNotifier - Next service dates will be populated when items are displayed');
+        } catch (e) {
+          print('DEBUG: MasterListNotifier - Error in microtask: $e');
+        }
+      });
+      
       return masterList;
     } catch (error, stackTrace) {
       print('DEBUG: MasterListNotifier - Error loading: $error');

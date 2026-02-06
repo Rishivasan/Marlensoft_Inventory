@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inventory/core/api/http_override.dart';
 import 'package:inventory/routers/app_router.dart';
+import 'package:inventory/providers/next_service_provider.dart';
+import 'package:provider/provider.dart' as provider;
 
 
 
@@ -11,7 +13,14 @@ import 'package:inventory/routers/app_router.dart';
 
 void main() {
  HttpOverrides.global = MyHttpOverrides(); //allow localhost HTTPS
-  runApp(const ProviderScope(child: MainApp()));
+  runApp(
+    provider.MultiProvider(
+      providers: [
+        provider.ChangeNotifierProvider(create: (_) => NextServiceProvider()),
+      ],
+      child: const ProviderScope(child: MainApp()),
+    ),
+  );
 }
 
 class MainApp extends StatelessWidget {

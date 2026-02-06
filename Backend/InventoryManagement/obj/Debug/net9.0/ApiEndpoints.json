@@ -205,6 +205,16 @@
   },
   {
     "ContainingType": "InventoryManagement.Controllers.MasterRegisterController",
+    "Method": "DebugNextService",
+    "RelativePath": "api/debug-next-service",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InventoryManagement.Controllers.MasterRegisterController",
     "Method": "GetEnhancedMasterList",
     "RelativePath": "api/enhanced-master-list",
     "HttpMethod": "GET",
@@ -390,6 +400,80 @@
       {
         "Name": "id",
         "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InventoryManagement.Controllers.NextServiceController",
+    "Method": "CalculateNextServiceDate",
+    "RelativePath": "api/NextService/CalculateNextServiceDate",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "InventoryManagement.Controllers.CalculateNextServiceDateRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InventoryManagement.Controllers.NextServiceController",
+    "Method": "GetLastServiceDate",
+    "RelativePath": "api/NextService/GetLastServiceDate/{assetId}/{assetType}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "assetId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "assetType",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InventoryManagement.Controllers.NextServiceController",
+    "Method": "GetMaintenanceFrequency",
+    "RelativePath": "api/NextService/GetMaintenanceFrequency/{assetId}/{assetType}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "assetId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "assetType",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "InventoryManagement.Controllers.NextServiceController",
+    "Method": "UpdateNextServiceDate",
+    "RelativePath": "api/NextService/UpdateNextServiceDate",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "InventoryManagement.Controllers.UpdateNextServiceDateRequest",
         "IsRequired": true
       }
     ],

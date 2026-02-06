@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:inventory/services/api_service.dart';
 import 'package:inventory/model/maintenance_model.dart';
+import 'package:inventory/providers/next_service_provider.dart';
+import 'package:inventory/services/next_service_calculation_service.dart';
+import 'package:provider/provider.dart';
 
 class AddMaintenanceService extends StatefulWidget {
   final String assetId;
@@ -36,6 +39,8 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
 
   String? _selectedServiceType;
   bool _isSubmitting = false;
+  String? _maintenanceFrequency;
+  DateTime? _currentNextServiceDue;
 
   final List<String> _serviceTypes = [
     'Preventive',
@@ -52,6 +57,9 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
     super.initState();
     _toolCostController.addListener(_calculateTotal);
     _extraChargesController.addListener(_calculateTotal);
+    
+    // Fetch current next service due and maintenance frequency
+    _loadItemData();
     
     // Pre-populate fields if editing existing maintenance record
     if (widget.existingMaintenance != null) {
@@ -72,8 +80,93 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
     }
   }
   
+  // Load item data to get current next service due and maintenance frequency
+  Future<void> _loadItemData() async {
+    try {
+      final nextServiceProvider = Provider.of<NextServiceProvider>(context, listen: false);
+      final nextServiceCalculationService = NextServiceCalculationService(nextServiceProvider);
+      
+      // Get current next service due from provider
+      final nextServiceDue = nextServiceProvider.getNextServiceDate(widget.assetId);
+      
+      // Get maintenance frequency
+      final frequency = await nextServiceCalculationService.getMaintenanceFrequency(
+        widget.assetId,
+        widget.assetType ?? 'Unknown'
+      );
+      
+      if (mounted) {
+        setState(() {
+          _currentNextServiceDue = nextServiceDue;
+          _maintenanceFrequency = frequency;
+          
+          // Auto-populate Service Date with current Next Service Due
+          if (nextServiceDue != null && widget.existingMaintenance == null) {
+            _serviceDateController.text = _formatDateForInput(nextServiceDue);
+            // Auto-calculate Next Service Due Date
+            _calculateNextServiceDue(nextServiceDue);
+          }
+        });
+        
+        print('DEBUG: Loaded item data - NextServiceDue: $nextServiceDue, Frequency: $frequency');
+      }
+    } catch (e) {
+      print('DEBUG: Error loading item data: $e');
+    }
+  }
+  
+  // Calculate next service due based on service date and maintenance frequency
+  void _calculateNextServiceDue(DateTime serviceDate) {
+    if (_maintenanceFrequency == null || _maintenanceFrequency!.isEmpty) {
+      print('DEBUG: No maintenance frequency available for calculation');
+      return;
+    }
+    
+    final frequency = _maintenanceFrequency!.toLowerCase().trim();
+    DateTime? nextServiceDue;
+    
+    switch (frequency) {
+      case 'daily':
+        nextServiceDue = serviceDate.add(const Duration(days: 1));
+        break;
+      case 'weekly':
+        nextServiceDue = serviceDate.add(const Duration(days: 7));
+        break;
+      case 'monthly':
+        nextServiceDue = DateTime(serviceDate.year, serviceDate.month + 1, serviceDate.day);
+        break;
+      case 'quarterly':
+        nextServiceDue = DateTime(serviceDate.year, serviceDate.month + 3, serviceDate.day);
+        break;
+      case 'half-yearly':
+      case 'halfyearly':
+        nextServiceDue = DateTime(serviceDate.year, serviceDate.month + 6, serviceDate.day);
+        break;
+      case 'yearly':
+      case 'annual':
+        nextServiceDue = DateTime(serviceDate.year + 1, serviceDate.month, serviceDate.day);
+        break;
+      case '2nd year':
+        nextServiceDue = DateTime(serviceDate.year + 2, serviceDate.month, serviceDate.day);
+        break;
+      case '3rd year':
+        nextServiceDue = DateTime(serviceDate.year + 3, serviceDate.month, serviceDate.day);
+        break;
+      default:
+        // Default to yearly
+        nextServiceDue = DateTime(serviceDate.year + 1, serviceDate.month, serviceDate.day);
+    }
+    
+    if (nextServiceDue != null) {
+      setState(() {
+        _nextServiceDateController.text = _formatDateForInput(nextServiceDue!);
+      });
+      print('DEBUG: Calculated NextServiceDue: ServiceDate=$serviceDate, Frequency=$frequency, NextDue=$nextServiceDue');
+    }
+  }
+  
   String _formatDateForInput(DateTime date) {
-    return "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
+    return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
   }
 
   @override
@@ -97,7 +190,7 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
     _totalCostController.text = total.toStringAsFixed(2);
   }
 
-  Future<void> _selectDate(TextEditingController controller) async {
+  Future<void> _selectDate(TextEditingController controller, {bool isServiceDate = false}) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -115,7 +208,12 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
       },
     );
     if (picked != null) {
-      controller.text = "${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}";
+      controller.text = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+      
+      // If this is the service date field, auto-calculate next service due
+      if (isServiceDate) {
+        _calculateNextServiceDue(picked);
+      }
     }
   }
 
@@ -141,21 +239,21 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
     try {
       final apiService = ApiService();
       
-      // Parse dates
+      // Parse dates (YYYY-MM-DD format)
       DateTime? serviceDate;
       DateTime? nextServiceDate;
       
       if (_serviceDateController.text.isNotEmpty) {
-        final parts = _serviceDateController.text.split('/');
+        final parts = _serviceDateController.text.split('-');
         if (parts.length == 3) {
-          serviceDate = DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+          serviceDate = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
         }
       }
       
       if (_nextServiceDateController.text.isNotEmpty) {
-        final parts = _nextServiceDateController.text.split('/');
+        final parts = _nextServiceDateController.text.split('-');
         if (parts.length == 3) {
-          nextServiceDate = DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+          nextServiceDate = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
         }
       }
       
@@ -183,6 +281,29 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
       final response = widget.existingMaintenance != null
           ? await apiService.updateMaintenanceRecord(widget.existingMaintenance!.maintenanceId, maintenanceData)
           : await apiService.addMaintenanceRecord(maintenanceData);
+      
+      // After successful maintenance record creation/update, update next service date via provider
+      if (nextServiceDate != null && widget.assetType != null) {
+        try {
+          final nextServiceProvider = Provider.of<NextServiceProvider>(context, listen: false);
+          
+          // Update the next service date in provider (this will trigger UI updates everywhere)
+          nextServiceProvider.updateNextServiceDate(widget.assetId, nextServiceDate);
+          
+          // Also update via API to persist in database
+          final nextServiceCalculationService = NextServiceCalculationService(nextServiceProvider);
+          await nextServiceCalculationService.calculateNextServiceDateAfterMaintenance(
+            assetId: widget.assetId,
+            assetType: widget.assetType!,
+            serviceDate: serviceDate!,
+            maintenanceFrequency: _maintenanceFrequency ?? 'Yearly',
+          );
+          
+          print('DEBUG: Next service date updated after maintenance: $nextServiceDate');
+        } catch (e) {
+          print('DEBUG: Error updating next service date after maintenance: $e');
+        }
+      }
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -340,7 +461,7 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
                             ),
                           ),
                           style: const TextStyle(fontSize: 12),
-                          onTap: () => _selectDate(_serviceDateController),
+                          onTap: () => _selectDate(_serviceDateController, isServiceDate: true),
                           validator: (v) => (v == null || v.isEmpty)
                               ? "The field cannot be empty"
                               : null,

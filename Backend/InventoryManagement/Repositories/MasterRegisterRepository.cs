@@ -301,8 +301,24 @@ SELECT DISTINCT
         ELSE ''
     END AS StorageLocation,
 
+    -- Maintenance Frequency based on type
+    CASE
+        WHEN m.ItemType = 'Tool' THEN ISNULL(tm.MaintainanceFrequency, '')
+        WHEN m.ItemType IN ('Asset','Consumable') THEN ISNULL(ac.MaintenanceFrequency, '')
+        WHEN m.ItemType = 'MMD' THEN ISNULL(mm.CalibrationFrequency, '')
+        ELSE ''
+    END AS MaintenanceFrequency,
+
+    -- Next Service Due from individual tables (direct from database)
+    CASE
+        WHEN m.ItemType = 'Tool' THEN tm.NextServiceDue
+        WHEN m.ItemType IN ('Asset','Consumable') THEN ac.NextServiceDue
+        WHEN m.ItemType = 'MMD' THEN mm.NextCalibration
+        ELSE NULL
+    END AS DirectNextServiceDue,
+
     -- REAL Next Service Due from Maintenance table (get the latest/most recent NextServiceDue for each item)
-    maint.NextServiceDue,
+    maint.NextServiceDue AS MaintenanceNextServiceDue,
 
     -- REAL Availability Status from Allocation table (determine current status based on allocation records)
     CASE 
@@ -362,14 +378,20 @@ GROUP BY
     tm.Vendor,
     tm.ResponsibleTeam,
     tm.StorageLocation,
+    tm.MaintainanceFrequency,
+    tm.NextServiceDue,
     ac.AssetName,
     ac.Vendor,
     ac.ResponsibleTeam,
     ac.StorageLocation,
+    ac.MaintenanceFrequency,
+    ac.NextServiceDue,
     mm.ModelNumber,
     mm.Vendor,
     mm.ResponsibleTeam,
     mm.StorageLocation,
+    mm.CalibrationFrequency,
+    mm.NextCalibration,
     maint.NextServiceDue,
     alloc.AvailabilityStatus,
     alloc.AssetId,
@@ -398,9 +420,32 @@ ORDER BY MAX(m.CreatedDate) DESC;
                         CreatedDate = row.CreatedDate,
                         ResponsibleTeam = row.ResponsibleTeam ?? "",
                         StorageLocation = row.StorageLocation ?? "",
-                        NextServiceDue = row.NextServiceDue,
                         AvailabilityStatus = row.AvailabilityStatus ?? "Available"
                     };
+
+                    // Calculate Next Service Due - prioritize direct database values
+                    DateTime? nextServiceDue = null;
+                    
+                    // ALWAYS recalculate to ensure proper dates (ignore potentially incorrect DB values)
+                    if (!string.IsNullOrEmpty(row.MaintenanceFrequency))
+                    {
+                        nextServiceDue = CalculateNextServiceDate(row.CreatedDate, row.MaintenanceFrequency);
+                        Console.WriteLine($"DEBUG: Calculated NextServiceDue for {row.ItemID}: Created={row.CreatedDate:yyyy-MM-dd}, Frequency={row.MaintenanceFrequency}, NextService={nextServiceDue:yyyy-MM-dd}");
+                    }
+                    // Fallback to direct database value only if calculation fails
+                    else if (row.MaintenanceNextServiceDue != null)
+                    {
+                        nextServiceDue = row.MaintenanceNextServiceDue;
+                        Console.WriteLine($"DEBUG: Using maintenance record NextServiceDue for {row.ItemID}: {nextServiceDue:yyyy-MM-dd}");
+                    }
+                    // Last resort: use direct DB value
+                    else if (row.DirectNextServiceDue != null)
+                    {
+                        nextServiceDue = row.DirectNextServiceDue;
+                        Console.WriteLine($"DEBUG: Using direct DB NextServiceDue for {row.ItemID}: {nextServiceDue:yyyy-MM-dd}");
+                    }
+                    
+                    dto.NextServiceDue = nextServiceDue;
 
                     list.Add(dto);
                 }
@@ -461,8 +506,23 @@ SELECT DISTINCT
         ELSE ''
     END AS StorageLocation,
 
+    -- Maintenance Frequency based on type
+    CASE
+        WHEN m.ItemType = 'Tool' THEN ISNULL(tm.MaintainanceFrequency, '')
+        WHEN m.ItemType IN ('Asset','Consumable') THEN ISNULL(ac.MaintenanceFrequency, '')
+        WHEN m.ItemType = 'MMD' THEN ISNULL(mm.CalibrationFrequency, '')
+        ELSE ''
+    END AS MaintenanceFrequency,
+
+    -- Next Service Due from individual tables (direct from database)
+    CASE
+        WHEN m.ItemType = 'Tool' THEN tm.NextServiceDue
+        WHEN m.ItemType IN ('Asset','Consumable') THEN ac.NextServiceDue
+        WHEN m.ItemType = 'MMD' THEN mm.NextCalibration
+        ELSE NULL
+    END AS DirectNextServiceDue,
+
     -- Fallback values when maintenance/allocation tables are not available
-    NULL AS NextServiceDue,
     'Available' AS AvailabilityStatus
 
 FROM MasterRegister m
@@ -484,14 +544,20 @@ GROUP BY
     tm.Vendor,
     tm.ResponsibleTeam,
     tm.StorageLocation,
+    tm.MaintainanceFrequency,
+    tm.NextServiceDue,
     ac.AssetName,
     ac.Vendor,
     ac.ResponsibleTeam,
     ac.StorageLocation,
+    ac.MaintenanceFrequency,
+    ac.NextServiceDue,
     mm.ModelNumber,
     mm.Vendor,
     mm.ResponsibleTeam,
-    mm.StorageLocation
+    mm.StorageLocation,
+    mm.CalibrationFrequency,
+    mm.NextCalibration
 
 ORDER BY MAX(m.CreatedDate) DESC;
 ";
@@ -512,14 +578,30 @@ ORDER BY MAX(m.CreatedDate) DESC;
                             CreatedDate = row.CreatedDate,
                             ResponsibleTeam = row.ResponsibleTeam ?? "",
                             StorageLocation = row.StorageLocation ?? "",
-                            NextServiceDue = row.NextServiceDue,
                             AvailabilityStatus = row.AvailabilityStatus ?? "Available"
                         };
+
+                        // Calculate Next Service Due - prioritize direct database values
+                        DateTime? nextServiceDue = null;
+                        
+                        // ALWAYS recalculate to ensure proper dates (ignore potentially incorrect DB values)
+                        if (!string.IsNullOrEmpty(row.MaintenanceFrequency))
+                        {
+                            nextServiceDue = CalculateNextServiceDate(row.CreatedDate, row.MaintenanceFrequency);
+                            Console.WriteLine($"DEBUG: Fallback - Calculated NextServiceDue for {row.ItemID}: Created={row.CreatedDate:yyyy-MM-dd}, Frequency={row.MaintenanceFrequency}, NextService={nextServiceDue:yyyy-MM-dd}");
+                        }
+                        // Fallback to direct database value only if calculation fails
+                        else if (row.DirectNextServiceDue != null)
+                        {
+                            nextServiceDue = row.DirectNextServiceDue;
+                            Console.WriteLine($"DEBUG: Fallback - Using direct DB NextServiceDue for {row.ItemID}: {nextServiceDue:yyyy-MM-dd}");
+                        }
+                        dto.NextServiceDue = nextServiceDue;
 
                         fallbackList.Add(dto);
                     }
 
-                    Console.WriteLine($"✓ Fallback query successful: {fallbackList.Count} items (without maintenance/allocation data)");
+                    Console.WriteLine($"✓ Fallback query successful: {fallbackList.Count} items (calculated next service dates from created date + frequency)");
                     return fallbackList;
                 }
                 catch (Exception fallbackEx)
@@ -529,6 +611,28 @@ ORDER BY MAX(m.CreatedDate) DESC;
                     return new List<EnhancedMasterListDto>();
                 }
             }
+        }
+
+        // Helper method to calculate next service date based on frequency
+        private DateTime? CalculateNextServiceDate(DateTime createdDate, string maintenanceFrequency)
+        {
+            if (string.IsNullOrEmpty(maintenanceFrequency))
+                return null;
+
+            var frequency = maintenanceFrequency.ToLower().Trim();
+            
+            return frequency switch
+            {
+                "daily" => createdDate.AddDays(1),
+                "weekly" => createdDate.AddDays(7),
+                "monthly" => createdDate.AddMonths(1),
+                "quarterly" => createdDate.AddMonths(3),
+                "half-yearly" or "halfyearly" => createdDate.AddMonths(6),
+                "yearly" or "annual" => createdDate.AddYears(1),
+                "2nd year" => createdDate.AddYears(2),
+                "3rd year" => createdDate.AddYears(3),
+                _ => createdDate.AddYears(1) // Default to yearly
+            };
         }
     }
 }

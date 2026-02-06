@@ -7,12 +7,14 @@ import 'package:inventory/providers/selection_provider.dart';
 import 'package:inventory/providers/search_provider.dart';
 import 'package:inventory/providers/sorting_provider.dart';
 import 'package:inventory/providers/product_state_provider.dart';
+import 'package:inventory/providers/next_service_provider.dart';
 import 'package:inventory/utils/sorting_utils.dart';
 import 'package:inventory/widgets/top_layer.dart';
 import 'package:inventory/widgets/generic_paginated_table.dart';
 import 'package:inventory/widgets/sortable_header.dart';
 import 'package:inventory/routers/app_router.dart';
 import 'package:inventory/model/master_list_model.dart';
+import 'package:provider/provider.dart' as provider;
 
 @RoutePage()
 class MasterListScreen extends ConsumerWidget {
@@ -40,6 +42,16 @@ class MasterListScreen extends ConsumerWidget {
           Expanded(
             child: masterListAsync.when(
               data: (rawItems) {
+                // Populate NextServiceProvider with next service dates from the fetched data
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  final nextServiceProvider = provider.Provider.of<NextServiceProvider>(context, listen: false);
+                  for (final item in rawItems) {
+                    if (item.nextServiceDue != null) {
+                      nextServiceProvider.updateNextServiceDate(item.assetId, item.nextServiceDue!);
+                    }
+                  }
+                });
+                
                 // Apply search filtering first
                 List<MasterListModel> filteredItems = rawItems;
                 if (searchQuery.isNotEmpty) {
@@ -284,7 +296,7 @@ class MasterListScreen extends ConsumerWidget {
                             // Use reactive state if available, otherwise fall back to item data
                             final nextServiceDue = productState?.nextServiceDue ?? 
                                 (item.nextServiceDue != null
-                                    ? "${item.nextServiceDue!.day}/${item.nextServiceDue!.month}/${item.nextServiceDue!.year}"
+                                    ? "${item.nextServiceDue!.year}-${item.nextServiceDue!.month.toString().padLeft(2, '0')}-${item.nextServiceDue!.day.toString().padLeft(2, '0')}"
                                     : null);
                             
                             return Text(
@@ -293,6 +305,7 @@ class MasterListScreen extends ConsumerWidget {
                                   .copyWith(
                                     fontWeight: FontWeight.w400,
                                     fontSize: 11,
+                                    color: Colors.black,
                                   ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,

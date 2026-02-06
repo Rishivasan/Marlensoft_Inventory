@@ -34,6 +34,7 @@
         public string UpdatedBy { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
+        public DateTime? NextServiceDue { get; set; }
         public bool Status { get; set; }
     }
     }

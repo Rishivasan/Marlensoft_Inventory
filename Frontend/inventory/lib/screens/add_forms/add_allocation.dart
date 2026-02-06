@@ -67,7 +67,7 @@ class _AddAllocationState extends State<AddAllocation> {
   }
   
   String _formatDateForInput(DateTime date) {
-    return "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
+    return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
   }
 
   @override
@@ -99,7 +99,7 @@ class _AddAllocationState extends State<AddAllocation> {
       },
     );
     if (picked != null) {
-      controller.text = "${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}";
+      controller.text = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
     }
   }
 
@@ -131,23 +131,23 @@ class _AddAllocationState extends State<AddAllocation> {
       DateTime? actualReturnDate;
       
       if (_issueDateController.text.isNotEmpty) {
-        final parts = _issueDateController.text.split('/');
+        final parts = _issueDateController.text.split('-');
         if (parts.length == 3) {
-          issuedDate = DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+          issuedDate = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
         }
       }
       
       if (_expectedReturnDateController.text.isNotEmpty) {
-        final parts = _expectedReturnDateController.text.split('/');
+        final parts = _expectedReturnDateController.text.split('-');
         if (parts.length == 3) {
-          expectedReturnDate = DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+          expectedReturnDate = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
         }
       }
       
       if (_actualReturnDateController.text.isNotEmpty) {
-        final parts = _actualReturnDateController.text.split('/');
+        final parts = _actualReturnDateController.text.split('-');
         if (parts.length == 3) {
-          actualReturnDate = DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+          actualReturnDate = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
         }
       }
       
