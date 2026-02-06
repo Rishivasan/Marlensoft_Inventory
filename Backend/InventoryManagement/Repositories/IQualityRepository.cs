@@ -8,7 +8,7 @@ namespace InventoryManagement.Repositories
         Task<IEnumerable<MaterialDto>> GetMaterialsByProduct(int finalProductId);
         Task<IEnumerable<ValidationTypeDto>> GetValidationTypes();
 
-        Task<int> CreateQCTemplate(string templateName, int validationTypeId, int finalProductId);
+        Task<int> CreateQCTemplate(string templateName, int validationTypeId, int finalProductId, int? materialId = null);
 
         Task<IEnumerable<QCControlPointDto>> GetControlPoints(int templateId);
 

@@ -7,6 +7,7 @@
         public int ValidationTypeId { get; set; }
         public string ProductName { get; set; }
         public int FinalProductId { get; set; }
+        public int? MaterialId { get; set; }
     }
 
 }

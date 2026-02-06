@@ -29,6 +29,11 @@ namespace InventoryManagement.Controllers
         {
             try
             {
+                // Add cache-busting headers to ensure fresh data
+                Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate");
+                Response.Headers.Add("Pragma", "no-cache");
+                Response.Headers.Add("Expires", "0");
+                
                 Console.WriteLine($"DEBUG: Getting complete details for itemId: {itemId}, itemType: {itemType}");
 
                 // Get master data first

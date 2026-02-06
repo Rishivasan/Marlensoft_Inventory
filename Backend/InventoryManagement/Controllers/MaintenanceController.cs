@@ -262,7 +262,11 @@ namespace InventoryManagement.Controllers
                         // Log the next service due update
                         if (maintenance.NextServiceDue != null)
                         {
-                            Console.WriteLine($"✓ Next Service Due stored: {maintenance.NextServiceDue} - This will now appear in the master list for AssetId: {maintenance.AssetId}");
+                            Console.WriteLine($"✓ Next Service Due stored in Maintenance table: {maintenance.NextServiceDue}");
+                            
+                            // IMPORTANT: Update the Next Service Due in the master item table
+                            // This ensures the Master List shows the updated date immediately
+                            await UpdateMasterItemNextServiceDue(connection, maintenance.AssetId, maintenance.AssetType, maintenance.NextServiceDue.Value);
                         }
                         
                         return CreatedAtAction(nameof(GetMaintenanceByAssetId), new { assetId = maintenance.AssetId }, maintenance);
@@ -409,7 +413,11 @@ namespace InventoryManagement.Controllers
                             // Log the next service due update success
                             if (maintenance.NextServiceDue != null)
                             {
-                                Console.WriteLine($"✓ Next Service Due updated to: {maintenance.NextServiceDue} - This will now appear in the master list for AssetId: {maintenance.AssetId}");
+                                Console.WriteLine($"✓ Next Service Due updated in Maintenance table: {maintenance.NextServiceDue}");
+                                
+                                // IMPORTANT: Update the Next Service Due in the master item table
+                                // This ensures the Master List shows the updated date immediately
+                                await UpdateMasterItemNextServiceDue(connection, maintenance.AssetId, maintenance.AssetType, maintenance.NextServiceDue.Value);
                             }
                             
                             return NoContent();
@@ -504,6 +512,65 @@ namespace InventoryManagement.Controllers
             }
 
             return NoContent();
+        }
+
+        // Helper method to update Next Service Due in master item tables
+        private async Task UpdateMasterItemNextServiceDue(System.Data.IDbConnection connection, string assetId, string assetType, DateTime nextServiceDue)
+        {
+            try
+            {
+                Console.WriteLine($"=== UPDATING MASTER ITEM: AssetId={assetId}, Type={assetType}, NextServiceDue={nextServiceDue:yyyy-MM-dd} ===");
+                
+                string updateSql = "";
+                string tableName = "";
+                string columnName = "";
+                
+                // Determine which table and column to update based on asset type
+                switch (assetType?.ToLower())
+                {
+                    case "tool":
+                        tableName = "ToolsMaster";
+                        columnName = "NextServiceDue";
+                        updateSql = $"UPDATE {tableName} SET {columnName} = @NextServiceDue WHERE ToolsId = @AssetId";
+                        break;
+                        
+                    case "asset":
+                    case "consumable":
+                        tableName = "AssetsConsumablesMaster";
+                        columnName = "NextServiceDue";
+                        updateSql = $"UPDATE {tableName} SET {columnName} = @NextServiceDue WHERE AssetId = @AssetId";
+                        break;
+                        
+                    case "mmd":
+                        tableName = "MmdsMaster";
+                        columnName = "NextCalibration";  // MMDs use NextCalibration instead of NextServiceDue
+                        updateSql = $"UPDATE {tableName} SET {columnName} = @NextServiceDue WHERE MmdId = @AssetId";
+                        break;
+                        
+                    default:
+                        Console.WriteLine($"⚠️  Unknown asset type: {assetType}, skipping master item update");
+                        return;
+                }
+                
+                Console.WriteLine($"Executing update: {updateSql}");
+                var affectedRows = await connection.ExecuteAsync(updateSql, new { AssetId = assetId, NextServiceDue = nextServiceDue });
+                
+                if (affectedRows > 0)
+                {
+                    Console.WriteLine($"✓ SUCCESS! Updated {tableName}.{columnName} for {assetId} to {nextServiceDue:yyyy-MM-dd}");
+                    Console.WriteLine($"✓ Master List will now show the updated Next Service Due immediately!");
+                }
+                else
+                {
+                    Console.WriteLine($"⚠️  WARNING: No rows updated in {tableName} for {assetId}. Item might not exist.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ ERROR updating master item Next Service Due: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                // Don't throw - we don't want to fail the maintenance creation if this update fails
+            }
         }
     }
 }

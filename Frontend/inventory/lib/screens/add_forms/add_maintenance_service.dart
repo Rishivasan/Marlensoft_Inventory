@@ -9,6 +9,7 @@ class AddMaintenanceService extends StatefulWidget {
   final String assetId;
   final String? itemName;
   final String? assetType;
+  final String? currentNextServiceDue; // Add this parameter to pass the current Next Service Due
   final Function(String? nextServiceDue) onServiceAdded;
   final MaintenanceModel? existingMaintenance;
 
@@ -17,6 +18,7 @@ class AddMaintenanceService extends StatefulWidget {
     required this.assetId,
     this.itemName,
     this.assetType,
+    this.currentNextServiceDue, // Add this parameter
     required this.onServiceAdded,
     this.existingMaintenance,
   });
@@ -86,8 +88,32 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
       final nextServiceProvider = Provider.of<NextServiceProvider>(context, listen: false);
       final nextServiceCalculationService = NextServiceCalculationService(nextServiceProvider);
       
-      // Get current next service due from provider
-      final nextServiceDue = nextServiceProvider.getNextServiceDate(widget.assetId);
+      // PRIORITY 1: Use the Next Service Due passed from parent (dialog panel)
+      // This ensures we use the SAME value displayed in the dialog
+      DateTime? nextServiceDue;
+      
+      if (widget.currentNextServiceDue != null && widget.currentNextServiceDue!.isNotEmpty) {
+        // Parse the date string from parent (format: YYYY-MM-DD)
+        try {
+          final parts = widget.currentNextServiceDue!.split('-');
+          if (parts.length == 3) {
+            nextServiceDue = DateTime(
+              int.parse(parts[0]), 
+              int.parse(parts[1]), 
+              int.parse(parts[2])
+            );
+            print('DEBUG: Using Next Service Due from parent dialog: $nextServiceDue');
+          }
+        } catch (e) {
+          print('DEBUG: Error parsing Next Service Due from parent: $e');
+        }
+      }
+      
+      // PRIORITY 2: Fallback to provider if not passed from parent
+      if (nextServiceDue == null) {
+        nextServiceDue = nextServiceProvider.getNextServiceDate(widget.assetId);
+        print('DEBUG: Using Next Service Due from provider: $nextServiceDue');
+      }
       
       // Get maintenance frequency
       final frequency = await nextServiceCalculationService.getMaintenanceFrequency(
@@ -100,15 +126,17 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
           _currentNextServiceDue = nextServiceDue;
           _maintenanceFrequency = frequency;
           
-          // Auto-populate Service Date with current Next Service Due
+          // IMPORTANT: Auto-populate Service Date with CURRENT Next Service Due
+          // This is the date when the service is scheduled to happen
           if (nextServiceDue != null && widget.existingMaintenance == null) {
             _serviceDateController.text = _formatDateForInput(nextServiceDue);
-            // Auto-calculate Next Service Due Date
+            // Auto-calculate the NEXT Next Service Due Date (after this service)
             _calculateNextServiceDue(nextServiceDue);
           }
         });
         
-        print('DEBUG: Loaded item data - NextServiceDue: $nextServiceDue, Frequency: $frequency');
+        print('DEBUG: Loaded item data - Current NextServiceDue: $nextServiceDue, Frequency: $frequency');
+        print('DEBUG: Service Date auto-populated with Next Service Due: $nextServiceDue');
       }
     } catch (e) {
       print('DEBUG: Error loading item data: $e');
@@ -116,6 +144,7 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
   }
   
   // Calculate next service due based on service date and maintenance frequency
+  // This calculates when the service AFTER this one should happen
   void _calculateNextServiceDue(DateTime serviceDate) {
     if (_maintenanceFrequency == null || _maintenanceFrequency!.isEmpty) {
       print('DEBUG: No maintenance frequency available for calculation');
@@ -161,7 +190,7 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
       setState(() {
         _nextServiceDateController.text = _formatDateForInput(nextServiceDue!);
       });
-      print('DEBUG: Calculated NextServiceDue: ServiceDate=$serviceDate, Frequency=$frequency, NextDue=$nextServiceDue');
+      print('DEBUG: Calculated Next Service Due: ServiceDate=$serviceDate, Frequency=$frequency, NextDue=$nextServiceDue');
     }
   }
   

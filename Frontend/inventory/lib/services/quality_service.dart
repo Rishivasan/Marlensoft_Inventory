@@ -73,17 +73,21 @@ class QualityService {
 
   static Future<int> createTemplate(Map<String, dynamic> templateData) async {
     try {
+      print('DEBUG: Sending template data: $templateData');
       final response = await http.post(
-        Uri.parse('$baseUrl/Quality/templates'),
+        Uri.parse('$baseUrl/quality/template'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(templateData),
       );
+
+      print('DEBUG: Response status: ${response.statusCode}');
+      print('DEBUG: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = json.decode(response.body);
         return responseData['templateId'] ?? 0;
       } else {
-        throw Exception('Failed to create template');
+        throw Exception('Failed to create template - Status: ${response.statusCode}, Body: ${response.body}');
       }
     } catch (e) {
       print('Error creating template: $e');
@@ -94,7 +98,7 @@ class QualityService {
   static Future<List<dynamic>> getControlPoints(int templateId) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/Quality/templates/$templateId/control-points'),
+        Uri.parse('$baseUrl/quality/control-points/$templateId'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -112,7 +116,7 @@ class QualityService {
   static Future<bool> addControlPoint(Map<String, dynamic> controlPointData) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/Quality/control-points'),
+        Uri.parse('$baseUrl/quality/control-point'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(controlPointData),
       );
@@ -164,6 +168,42 @@ class QualityService {
       }
     } catch (e) {
       print('Error fetching units: $e');
+      return [];
+    }
+  }
+
+  static Future<bool> deleteControlPoint(int controlPointId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/quality/control-point/$controlPointId'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error deleting control point: $e');
+      return false;
+    }
+  }
+
+  static Future<List<dynamic>> getTemplates() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/Quality/templates'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(const Duration(seconds: 10));
+
+      print('DEBUG: Templates response status: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('DEBUG: Templates data: $data');
+        return data;
+      } else {
+        print('DEBUG: Templates failed with status: ${response.statusCode}');
+        throw Exception('Failed to load templates');
+      }
+    } catch (e) {
+      print('Error fetching templates: $e');
       return [];
     }
   }

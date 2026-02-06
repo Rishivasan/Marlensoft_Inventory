@@ -215,6 +215,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
       print('DEBUG: _safeRefreshMasterList - Calling forceRefreshMasterListProvider');
       await ref.read(forceRefreshMasterListProvider)();
       print('DEBUG: _safeRefreshMasterList - Successfully refreshed master list');
+      
+      // IMPORTANT: Also invalidate the paginated provider to refresh the Master List table
+      print('DEBUG: _safeRefreshMasterList - Invalidating paginatedMasterListProvider');
+      ref.invalidate(paginatedMasterListProvider);
+      print('DEBUG: _safeRefreshMasterList - Paginated provider invalidated');
     } catch (e) {
       print('DEBUG: _safeRefreshMasterList - Error refreshing master list: $e');
     } finally {
@@ -1166,12 +1171,20 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
               // Add Button - Aligned to right
               ElevatedButton(
                 onPressed: () {
+                  // Get the current Next Service Due to pass to the form
+                  final productState = ref.read(productStateByIdProvider(productData?.assetId ?? widget.id));
+                  final currentNextServiceDue = productState?.nextServiceDue ?? 
+                      (productData?.nextServiceDue != null
+                          ? "${productData!.nextServiceDue!.year}-${productData!.nextServiceDue!.month.toString().padLeft(2, '0')}-${productData!.nextServiceDue!.day.toString().padLeft(2, '0')}"
+                          : null);
+                  
                   DialogPannelHelper().showAddPannel(
                     context: context,
                     addingItem: AddMaintenanceService(
                       assetId: productData?.assetId ?? widget.id,
                       itemName: productData?.name ?? 'Unknown',
                       assetType: productData?.itemType ?? 'Unknown',
+                      currentNextServiceDue: currentNextServiceDue, // Pass the current Next Service Due
                       onServiceAdded: (String? nextServiceDue) async {
                         print('DEBUG: ProductDetail - Maintenance service added, updating reactive state with Next Service Due: $nextServiceDue');
                         
@@ -1429,12 +1442,20 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
               // Add Button
               ElevatedButton(
                 onPressed: () {
+                  // Get the current Next Service Due to pass to the form
+                  final productState = ref.read(productStateByIdProvider(productData?.assetId ?? widget.id));
+                  final currentNextServiceDue = productState?.nextServiceDue ?? 
+                      (productData?.nextServiceDue != null
+                          ? "${productData!.nextServiceDue!.year}-${productData!.nextServiceDue!.month.toString().padLeft(2, '0')}-${productData!.nextServiceDue!.day.toString().padLeft(2, '0')}"
+                          : null);
+                  
                   DialogPannelHelper().showAddPannel(
                     context: context,
                     addingItem: AddMaintenanceService(
                       assetId: productData?.assetId ?? widget.id,
                       itemName: productData?.name ?? 'Unknown',
                       assetType: productData?.itemType ?? 'Unknown',
+                      currentNextServiceDue: currentNextServiceDue, // Pass the current Next Service Due
                       onServiceAdded: (String? nextServiceDue) async {
                         print('DEBUG: ProductDetail - Maintenance updated, updating reactive state with Next Service Due: $nextServiceDue');
                         
@@ -1559,6 +1580,13 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
             minWidth: 1330, // Increased minimum width for better spacing
             showCheckboxColumn: false,
             onRowTap: (record) {
+              // Get the current Next Service Due to pass to the form
+              final productState = ref.read(productStateByIdProvider(productData?.assetId ?? widget.id));
+              final currentNextServiceDue = productState?.nextServiceDue ?? 
+                  (productData?.nextServiceDue != null
+                      ? "${productData!.nextServiceDue!.year}-${productData!.nextServiceDue!.month.toString().padLeft(2, '0')}-${productData!.nextServiceDue!.day.toString().padLeft(2, '0')}"
+                      : null);
+              
               // Handle row tap - open maintenance dialog
               DialogPannelHelper().showAddPannel(
                 context: context,
@@ -1566,6 +1594,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
                   assetId: productData?.assetId ?? widget.id,
                   itemName: productData?.name ?? 'Unknown',
                   assetType: productData?.itemType ?? 'Unknown',
+                  currentNextServiceDue: currentNextServiceDue, // Pass the current Next Service Due
                   existingMaintenance: record,
                   onServiceAdded: (String? nextServiceDue) async {
                     print('DEBUG: ProductDetail - Maintenance edited, updating reactive state with Next Service Due: $nextServiceDue');
@@ -1814,12 +1843,20 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
                 alignment: Alignment.center,
                 child: GestureDetector(
                   onTap: () {
+                    // Get the current Next Service Due to pass to the form
+                    final productState = ref.read(productStateByIdProvider(productData?.assetId ?? widget.id));
+                    final currentNextServiceDue = productState?.nextServiceDue ?? 
+                        (productData?.nextServiceDue != null
+                            ? "${productData!.nextServiceDue!.year}-${productData!.nextServiceDue!.month.toString().padLeft(2, '0')}-${productData!.nextServiceDue!.day.toString().padLeft(2, '0')}"
+                            : null);
+                    
                     DialogPannelHelper().showAddPannel(
                       context: context,
                       addingItem: AddMaintenanceService(
                         assetId: productData?.assetId ?? widget.id,
                         itemName: productData?.name ?? 'Unknown',
                         assetType: productData?.itemType ?? 'Unknown',
+                        currentNextServiceDue: currentNextServiceDue, // Pass the current Next Service Due
                         existingMaintenance: record,
                         onServiceAdded: (String? nextServiceDue) async {
                           print('DEBUG: ProductDetail - Maintenance row edited, updating reactive state with Next Service Due: $nextServiceDue');

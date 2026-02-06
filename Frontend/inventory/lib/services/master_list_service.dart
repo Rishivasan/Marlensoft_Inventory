@@ -1,5 +1,6 @@
 import 'package:inventory/core/api/dio_client.dart';
 import 'package:inventory/model/master_list_model.dart';
+import 'package:inventory/model/pagination_model.dart';
 
 class MasterListService {
   static const String baseUrl = "http://localhost:5069";
@@ -40,6 +41,46 @@ class MasterListService {
     } catch (e) {
       print("MasterListService Error: $e");
       throw Exception("Failed to fetch master list: $e");
+    }
+  }
+
+  Future<PaginationModel<MasterListModel>> getMasterListPaginated({
+    required int pageNumber,
+    required int pageSize,
+    String? searchText,
+  }) async {
+    try {
+      print('DEBUG: MasterListService - Fetching paginated data: page=$pageNumber, size=$pageSize, search=$searchText');
+      final dio = DioClient.getDio();
+      
+      final queryParams = {
+        'pageNumber': pageNumber,
+        'pageSize': pageSize,
+        if (searchText != null && searchText.isNotEmpty) 'searchText': searchText,
+      };
+
+      final response = await dio.get(
+        "/api/enhanced-master-list/paginated",
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = response.data;
+        print('DEBUG: MasterListService - Received paginated response: totalCount=${decoded['totalCount']}, totalPages=${decoded['totalPages']}');
+
+        final paginationModel = PaginationModel<MasterListModel>.fromJson(
+          decoded,
+          (json) => MasterListModel.fromJson(json),
+        );
+
+        print('DEBUG: MasterListService - Parsed ${paginationModel.items.length} items for page $pageNumber');
+        return paginationModel;
+      } else {
+        throw Exception("Failed: ${response.statusCode} - ${response.data}");
+      }
+    } catch (e) {
+      print("MasterListService Pagination Error: $e");
+      throw Exception("Failed to fetch paginated master list: $e");
     }
   }
 }

@@ -6,10 +6,12 @@ class AddControlPoint extends StatefulWidget {
   const AddControlPoint({
     super.key, 
     required this.submit,
+    required this.templateId,
     this.existingData,
   });
 
   final VoidCallback submit;
+  final int templateId;
   final Map<String, dynamic>? existingData;
 
   @override
@@ -201,47 +203,21 @@ class _AddControlPointState extends State<AddControlPoint> {
         );
       }
 
-      // Collect form data based on selected type
-      final selectedTypeData = controlPointTypes.firstWhere(
-        (type) => type['id'].toString() == selectedType,
-        orElse: () => {'name': ''},
-      );
-      final typeName = selectedTypeData['name'].toString();
-
-      Map<String, dynamic> controlPointData = {
-        "name": _controlPointNameCtrl.text.trim(),
+      // Build the request payload matching backend DTO
+      Map<String, dynamic> requestPayload = {
+        "qcTemplateId": widget.templateId,
         "controlPointTypeId": int.tryParse(selectedType ?? '1') ?? 1,
-        "fileName": selectedFile?.name,
-        "filePath": selectedFile?.path,
-        "createdDate": DateTime.now().toIso8601String(),
-        "updatedDate": DateTime.now().toIso8601String(),
+        "controlPointName": _controlPointNameCtrl.text.trim(),
+        "targetValue": _targetValueCtrl.text.isNotEmpty ? _targetValueCtrl.text.trim() : null,
+        "unit": selectedUnit ?? "",
+        "tolerance": _toleranceValueCtrl.text.isNotEmpty ? _toleranceValueCtrl.text.trim() : null,
+        "instructions": _instructionsCtrl.text.trim(),
+        "imagePath": selectedFile?.path ?? "",
+        "sequenceOrder": 1,
       };
 
-      // Add type-specific fields
-      switch (typeName.toLowerCase()) {
-        case 'measure':
-          controlPointData.addAll({
-            "targetValue": _targetValueCtrl.text.trim(),
-            "unit": selectedUnit ?? "",
-            "toleranceValue": _toleranceValueCtrl.text.trim(),
-          });
-          break;
-        case 'visual inspection':
-          controlPointData.addAll({
-            "instructions": _instructionsCtrl.text.trim(),
-          });
-          break;
-        case 'take a picture':
-          controlPointData.addAll({
-            "comments": _commentsCtrl.text.trim(),
-          });
-          break;
-      }
-
-      // TODO: Replace with actual API call when backend is ready
-      // For now, simulate API call
-      await Future.delayed(const Duration(seconds: 1));
-      bool success = true;
+      // Call the actual API
+      bool success = await QualityService.addControlPoint(requestPayload);
 
       // Close loading dialog
       if (mounted) Navigator.of(context).pop();

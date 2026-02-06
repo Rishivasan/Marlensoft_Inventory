@@ -10,6 +10,10 @@ class DioClient {
         sendTimeout: const Duration(seconds: 8),
         headers: {
           "Content-Type": "application/json",
+          // Disable caching to ensure fresh data
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Pragma": "no-cache",
+          "Expires": "0",
         },      ),
     );
 

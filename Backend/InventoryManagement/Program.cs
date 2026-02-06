@@ -73,7 +73,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddSingleton<DapperContext>();
 
-// ? CORS (ALLOW FLUTTER WEB – DEV MODE)
+//  CORS (ALLOW FLUTTER WEB ï¿½ DEV MODE)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -107,10 +107,8 @@ builder.Services.AddScoped<IQualityService, QualityService>();
 
 var app = builder.Build();
 
-// =====================
 
 // Middleware
-// =====================
 app.UseSwagger();
 app.UseSwaggerUI();
 

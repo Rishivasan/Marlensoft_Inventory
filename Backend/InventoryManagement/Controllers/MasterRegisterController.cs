@@ -28,6 +28,11 @@ namespace InventoryManagement.Controllers
         {
             try
             {
+                // Add cache-busting headers to ensure fresh data
+                Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate");
+                Response.Headers.Add("Pragma", "no-cache");
+                Response.Headers.Add("Expires", "0");
+                
                 var data = await _service.GetEnhancedMasterListAsync();
                 return Ok(data);
             }
@@ -35,6 +40,34 @@ namespace InventoryManagement.Controllers
             {
                 Console.WriteLine($"Database connection failed: {ex.Message}");
                 return StatusCode(500, new { error = "Database connection failed", message = ex.Message });
+            }
+        }
+
+        // GET: api/enhanced-master-list/paginated
+        [HttpGet("enhanced-master-list/paginated")]
+        public async Task<IActionResult> GetEnhancedMasterListPaginated(
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? searchText = null)
+        {
+            try
+            {
+                // Add cache-busting headers to ensure fresh data
+                Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate");
+                Response.Headers.Add("Pragma", "no-cache");
+                Response.Headers.Add("Expires", "0");
+                
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1) pageSize = 10;
+                if (pageSize > 100) pageSize = 100; // Max page size limit
+
+                var data = await _service.GetEnhancedMasterListPaginatedAsync(pageNumber, pageSize, searchText);
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Pagination failed: {ex.Message}");
+                return StatusCode(500, new { error = "Pagination failed", message = ex.Message });
             }
         }
 

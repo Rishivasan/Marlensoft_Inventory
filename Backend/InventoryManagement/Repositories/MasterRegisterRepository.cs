@@ -317,7 +317,10 @@ SELECT DISTINCT
         ELSE NULL
     END AS DirectNextServiceDue,
 
-    -- REAL Next Service Due from Maintenance table (get the latest/most recent NextServiceDue for each item)
+    -- Latest Service Date from Maintenance table (to calculate next service due)
+    maint.ServiceDate AS LatestServiceDate,
+
+    -- Next Service Due from Maintenance table (stored value, may be outdated)
     maint.NextServiceDue AS MaintenanceNextServiceDue,
 
     -- REAL Availability Status from Allocation table (determine current status based on allocation records)
@@ -333,8 +336,8 @@ LEFT JOIN ToolsMaster tm ON m.ItemType = 'Tool' AND m.RefId = tm.ToolsId AND tm.
 LEFT JOIN AssetsConsumablesMaster ac ON m.ItemType IN ('Asset','Consumable') AND m.RefId = ac.AssetId AND ac.Status = 1
 LEFT JOIN MmdsMaster mm ON m.ItemType = 'MMD' AND m.RefId = mm.MmdId AND mm.Status = 1
 
--- LEFT JOIN to get the LATEST maintenance record with NextServiceDue for each item
--- Order by CreatedDate DESC to get the absolute latest record, then by ServiceDate DESC
+-- LEFT JOIN to get the LATEST maintenance record with ServiceDate for each item
+-- Order by ServiceDate DESC to get the absolute latest service, then by CreatedDate DESC
 LEFT JOIN (
     SELECT 
         AssetId,
@@ -342,11 +345,11 @@ LEFT JOIN (
         ServiceDate,
         CreatedDate,
         ROW_NUMBER() OVER (PARTITION BY AssetId ORDER BY 
-            CreatedDate DESC,
             ServiceDate DESC,
-            CASE WHEN NextServiceDue IS NOT NULL THEN 1 ELSE 0 END DESC
+            CreatedDate DESC
         ) as rn
     FROM Maintenance 
+    WHERE ServiceDate IS NOT NULL
 ) maint ON m.RefId = maint.AssetId AND maint.rn = 1
 
 -- LEFT JOIN to get the CURRENT allocation status for each item
@@ -392,6 +395,7 @@ GROUP BY
     mm.StorageLocation,
     mm.CalibrationFrequency,
     mm.NextCalibration,
+    maint.ServiceDate,
     maint.NextServiceDue,
     alloc.AvailabilityStatus,
     alloc.AssetId,
@@ -423,26 +427,30 @@ ORDER BY MAX(m.CreatedDate) DESC;
                         AvailabilityStatus = row.AvailabilityStatus ?? "Available"
                     };
 
-                    // Calculate Next Service Due - prioritize direct database values
+                    // Calculate Next Service Due with CORRECT FLOW
                     DateTime? nextServiceDue = null;
                     
-                    // ALWAYS recalculate to ensure proper dates (ignore potentially incorrect DB values)
+                    // Check if maintenance frequency exists
                     if (!string.IsNullOrEmpty(row.MaintenanceFrequency))
                     {
-                        nextServiceDue = CalculateNextServiceDate(row.CreatedDate, row.MaintenanceFrequency);
-                        Console.WriteLine($"DEBUG: Calculated NextServiceDue for {row.ItemID}: Created={row.CreatedDate:yyyy-MM-dd}, Frequency={row.MaintenanceFrequency}, NextService={nextServiceDue:yyyy-MM-dd}");
+                        // RULE 1: If maintenance history exists (LatestServiceDate), calculate from Latest Service Date
+                        if (row.LatestServiceDate != null)
+                        {
+                            nextServiceDue = CalculateNextServiceDate(row.LatestServiceDate, row.MaintenanceFrequency);
+                            Console.WriteLine($"DEBUG: Calculated from Latest Service Date for {row.ItemID}: ServiceDate={row.LatestServiceDate:yyyy-MM-dd}, Frequency={row.MaintenanceFrequency}, NextService={nextServiceDue:yyyy-MM-dd}");
+                        }
+                        // RULE 2: If NO maintenance history, calculate from Created Date
+                        else
+                        {
+                            nextServiceDue = CalculateNextServiceDate(row.CreatedDate, row.MaintenanceFrequency);
+                            Console.WriteLine($"DEBUG: Calculated from Created Date for {row.ItemID}: Created={row.CreatedDate:yyyy-MM-dd}, Frequency={row.MaintenanceFrequency}, NextService={nextServiceDue:yyyy-MM-dd}");
+                        }
                     }
-                    // Fallback to direct database value only if calculation fails
-                    else if (row.MaintenanceNextServiceDue != null)
-                    {
-                        nextServiceDue = row.MaintenanceNextServiceDue;
-                        Console.WriteLine($"DEBUG: Using maintenance record NextServiceDue for {row.ItemID}: {nextServiceDue:yyyy-MM-dd}");
-                    }
-                    // Last resort: use direct DB value
+                    // FALLBACK: Use stored NextServiceDue if no frequency
                     else if (row.DirectNextServiceDue != null)
                     {
                         nextServiceDue = row.DirectNextServiceDue;
-                        Console.WriteLine($"DEBUG: Using direct DB NextServiceDue for {row.ItemID}: {nextServiceDue:yyyy-MM-dd}");
+                        Console.WriteLine($"DEBUG: Using stored NextServiceDue for {row.ItemID}: {nextServiceDue:yyyy-MM-dd}");
                     }
                     
                     dto.NextServiceDue = nextServiceDue;
@@ -581,20 +589,21 @@ ORDER BY MAX(m.CreatedDate) DESC;
                             AvailabilityStatus = row.AvailabilityStatus ?? "Available"
                         };
 
-                        // Calculate Next Service Due - prioritize direct database values
+                        // Calculate Next Service Due with CORRECT FLOW (Fallback mode - no maintenance table)
                         DateTime? nextServiceDue = null;
                         
-                        // ALWAYS recalculate to ensure proper dates (ignore potentially incorrect DB values)
+                        // Check if maintenance frequency exists
                         if (!string.IsNullOrEmpty(row.MaintenanceFrequency))
                         {
+                            // In fallback mode, always calculate from Created Date (no maintenance table available)
                             nextServiceDue = CalculateNextServiceDate(row.CreatedDate, row.MaintenanceFrequency);
-                            Console.WriteLine($"DEBUG: Fallback - Calculated NextServiceDue for {row.ItemID}: Created={row.CreatedDate:yyyy-MM-dd}, Frequency={row.MaintenanceFrequency}, NextService={nextServiceDue:yyyy-MM-dd}");
+                            Console.WriteLine($"DEBUG: Fallback - Calculated from Created Date for {row.ItemID}: Created={row.CreatedDate:yyyy-MM-dd}, Frequency={row.MaintenanceFrequency}, NextService={nextServiceDue:yyyy-MM-dd}");
                         }
-                        // Fallback to direct database value only if calculation fails
+                        // FALLBACK: Use stored NextServiceDue if no frequency
                         else if (row.DirectNextServiceDue != null)
                         {
                             nextServiceDue = row.DirectNextServiceDue;
-                            Console.WriteLine($"DEBUG: Fallback - Using direct DB NextServiceDue for {row.ItemID}: {nextServiceDue:yyyy-MM-dd}");
+                            Console.WriteLine($"DEBUG: Fallback - Using stored NextServiceDue for {row.ItemID}: {nextServiceDue:yyyy-MM-dd}");
                         }
                         dto.NextServiceDue = nextServiceDue;
 
@@ -633,6 +642,239 @@ ORDER BY MAX(m.CreatedDate) DESC;
                 "3rd year" => createdDate.AddYears(3),
                 _ => createdDate.AddYears(1) // Default to yearly
             };
+        }
+
+        public async Task<PaginationDto<EnhancedMasterListDto>> GetEnhancedMasterListPaginatedAsync(int pageNumber, int pageSize, string? searchText = null)
+        {
+            var query = @"
+WITH MasterData AS (
+    SELECT DISTINCT
+        m.RefId AS ItemID,
+        m.ItemType AS Type,
+        
+        -- Item Name based on type
+        CASE 
+            WHEN m.ItemType = 'Tool' THEN ISNULL(tm.ToolName, 'Tool-' + m.RefId)
+            WHEN m.ItemType IN ('Asset','Consumable') THEN ISNULL(ac.AssetName, 'Asset-' + m.RefId)
+            WHEN m.ItemType = 'MMD' THEN ISNULL(mm.ModelNumber, 'MMD-' + m.RefId)
+            ELSE m.RefId
+        END AS ItemName,
+
+        -- Vendor based on type
+        CASE
+            WHEN m.ItemType = 'Tool' THEN ISNULL(tm.Vendor, '')
+            WHEN m.ItemType IN ('Asset','Consumable') THEN ISNULL(ac.Vendor, '')
+            WHEN m.ItemType = 'MMD' THEN ISNULL(mm.Vendor, '')
+            ELSE ''
+        END AS Vendor,
+
+        MAX(m.CreatedDate) AS CreatedDate,
+
+        -- Responsible Team based on type
+        CASE
+            WHEN m.ItemType = 'Tool' THEN ISNULL(tm.ResponsibleTeam, '')
+            WHEN m.ItemType IN ('Asset','Consumable') THEN ISNULL(ac.ResponsibleTeam, '')
+            WHEN m.ItemType = 'MMD' THEN ISNULL(mm.ResponsibleTeam, '')
+            ELSE ''
+        END AS ResponsibleTeam,
+
+        -- Storage Location based on type
+        CASE
+            WHEN m.ItemType = 'Tool' THEN ISNULL(tm.StorageLocation, '')
+            WHEN m.ItemType IN ('Asset','Consumable') THEN ISNULL(ac.StorageLocation, '')
+            WHEN m.ItemType = 'MMD' THEN ISNULL(mm.StorageLocation, '')
+            ELSE ''
+        END AS StorageLocation,
+
+        -- Maintenance Frequency based on type
+        CASE
+            WHEN m.ItemType = 'Tool' THEN ISNULL(tm.MaintainanceFrequency, '')
+            WHEN m.ItemType IN ('Asset','Consumable') THEN ISNULL(ac.MaintenanceFrequency, '')
+            WHEN m.ItemType = 'MMD' THEN ISNULL(mm.CalibrationFrequency, '')
+            ELSE ''
+        END AS MaintenanceFrequency,
+
+        -- Next Service Due from individual tables
+        CASE
+            WHEN m.ItemType = 'Tool' THEN tm.NextServiceDue
+            WHEN m.ItemType IN ('Asset','Consumable') THEN ac.NextServiceDue
+            WHEN m.ItemType = 'MMD' THEN mm.NextCalibration
+            ELSE NULL
+        END AS DirectNextServiceDue,
+
+        maint.NextServiceDue AS MaintenanceNextServiceDue,
+
+        CASE 
+            WHEN alloc.AvailabilityStatus IS NOT NULL THEN alloc.AvailabilityStatus
+            WHEN alloc.AssetId IS NOT NULL AND alloc.ActualReturnDate IS NULL THEN 'Allocated'
+            ELSE 'Available'
+        END AS AvailabilityStatus
+
+    FROM MasterRegister m
+
+    LEFT JOIN ToolsMaster tm ON m.ItemType = 'Tool' AND m.RefId = tm.ToolsId AND tm.Status = 1
+    LEFT JOIN AssetsConsumablesMaster ac ON m.ItemType IN ('Asset','Consumable') AND m.RefId = ac.AssetId AND ac.Status = 1
+    LEFT JOIN MmdsMaster mm ON m.ItemType = 'MMD' AND m.RefId = mm.MmdId AND mm.Status = 1
+
+    LEFT JOIN (
+        SELECT 
+            AssetId,
+            NextServiceDue,
+            ServiceDate,
+            CreatedDate,
+            ROW_NUMBER() OVER (PARTITION BY AssetId ORDER BY 
+                CreatedDate DESC,
+                ServiceDate DESC,
+                CASE WHEN NextServiceDue IS NOT NULL THEN 1 ELSE 0 END DESC
+            ) as rn
+        FROM Maintenance 
+    ) maint ON m.RefId = maint.AssetId AND maint.rn = 1
+
+    LEFT JOIN (
+        SELECT 
+            AssetId,
+            AvailabilityStatus,
+            ActualReturnDate,
+            IssuedDate,
+            CreatedDate,
+            ROW_NUMBER() OVER (PARTITION BY AssetId ORDER BY 
+                CreatedDate DESC,
+                IssuedDate DESC
+            ) as rn
+        FROM Allocation
+    ) alloc ON m.RefId = alloc.AssetId AND alloc.rn = 1
+
+    WHERE (
+        (m.ItemType = 'Tool' AND tm.ToolsId IS NOT NULL) OR
+        (m.ItemType IN ('Asset','Consumable') AND ac.AssetId IS NOT NULL) OR
+        (m.ItemType = 'MMD' AND mm.MmdId IS NOT NULL)
+    )
+    AND (@SearchText IS NULL OR @SearchText = '' OR
+        m.RefId LIKE '%' + @SearchText + '%' OR
+        CASE 
+            WHEN m.ItemType = 'Tool' THEN tm.ToolName
+            WHEN m.ItemType IN ('Asset','Consumable') THEN ac.AssetName
+            WHEN m.ItemType = 'MMD' THEN mm.ModelNumber
+            ELSE ''
+        END LIKE '%' + @SearchText + '%' OR
+        CASE
+            WHEN m.ItemType = 'Tool' THEN tm.Vendor
+            WHEN m.ItemType IN ('Asset','Consumable') THEN ac.Vendor
+            WHEN m.ItemType = 'MMD' THEN mm.Vendor
+            ELSE ''
+        END LIKE '%' + @SearchText + '%'
+    )
+
+    GROUP BY 
+        m.RefId, 
+        m.ItemType,
+        tm.ToolName,
+        tm.Vendor,
+        tm.ResponsibleTeam,
+        tm.StorageLocation,
+        tm.MaintainanceFrequency,
+        tm.NextServiceDue,
+        ac.AssetName,
+        ac.Vendor,
+        ac.ResponsibleTeam,
+        ac.StorageLocation,
+        ac.MaintenanceFrequency,
+        ac.NextServiceDue,
+        mm.ModelNumber,
+        mm.Vendor,
+        mm.ResponsibleTeam,
+        mm.StorageLocation,
+        mm.CalibrationFrequency,
+        mm.NextCalibration,
+        maint.NextServiceDue,
+        alloc.AvailabilityStatus,
+        alloc.AssetId,
+        alloc.ActualReturnDate
+)
+SELECT 
+    ItemID,
+    Type,
+    ItemName,
+    Vendor,
+    CreatedDate,
+    ResponsibleTeam,
+    StorageLocation,
+    MaintenanceFrequency,
+    DirectNextServiceDue,
+    MaintenanceNextServiceDue,
+    AvailabilityStatus,
+    COUNT(*) OVER() AS TotalCount
+FROM MasterData
+ORDER BY CreatedDate DESC
+OFFSET @Offset ROWS
+FETCH NEXT @PageSize ROWS ONLY;
+";
+
+            using var connection = _context.CreateConnection();
+
+            try
+            {
+                var offset = (pageNumber - 1) * pageSize;
+                var parameters = new { SearchText = searchText, Offset = offset, PageSize = pageSize };
+
+                var result = await connection.QueryAsync(query, parameters);
+                var resultList = result.ToList();
+
+                var totalCount = resultList.FirstOrDefault()?.TotalCount ?? 0;
+                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+                var items = new List<EnhancedMasterListDto>();
+
+                foreach (var row in resultList)
+                {
+                    var dto = new EnhancedMasterListDto
+                    {
+                        ItemID = row.ItemID ?? "",
+                        Type = row.Type ?? "",
+                        ItemName = row.ItemName ?? "",
+                        Vendor = row.Vendor ?? "",
+                        CreatedDate = row.CreatedDate,
+                        ResponsibleTeam = row.ResponsibleTeam ?? "",
+                        StorageLocation = row.StorageLocation ?? "",
+                        AvailabilityStatus = row.AvailabilityStatus ?? "Available"
+                    };
+
+                    // Calculate Next Service Due
+                    DateTime? nextServiceDue = null;
+                    
+                    if (!string.IsNullOrEmpty(row.MaintenanceFrequency))
+                    {
+                        nextServiceDue = CalculateNextServiceDate(row.CreatedDate, row.MaintenanceFrequency);
+                    }
+                    else if (row.MaintenanceNextServiceDue != null)
+                    {
+                        nextServiceDue = row.MaintenanceNextServiceDue;
+                    }
+                    else if (row.DirectNextServiceDue != null)
+                    {
+                        nextServiceDue = row.DirectNextServiceDue;
+                    }
+                    
+                    dto.NextServiceDue = nextServiceDue;
+                    items.Add(dto);
+                }
+
+                Console.WriteLine($"✓ Paginated Master List: Page {pageNumber}, Size {pageSize}, Total {totalCount} items");
+
+                return new PaginationDto<EnhancedMasterListDto>
+                {
+                    TotalCount = totalCount,
+                    PageNumber = pageNumber,
+                    PageSize = pageSize,
+                    TotalPages = totalPages,
+                    Items = items
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Pagination query failed: {ex.Message}");
+                throw;
+            }
         }
     }
 }

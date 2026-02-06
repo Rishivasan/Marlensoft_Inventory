@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inventory/model/master_list_model.dart';
+import 'package:inventory/model/pagination_model.dart';
 import 'package:inventory/services/master_list_service.dart';
+import 'package:inventory/providers/pagination_provider.dart';
 
 final masterListServiceProvider = Provider((ref) => MasterListService());
 
@@ -67,6 +69,69 @@ final masterListProvider = AsyncNotifierProvider<MasterListNotifier, List<Master
   return MasterListNotifier();
 });
 
+// Paginated Master List Provider
+class PaginatedMasterListNotifier extends AsyncNotifier<PaginationModel<MasterListModel>> {
+  @override
+  Future<PaginationModel<MasterListModel>> build() async {
+    // Watch pagination state to trigger rebuild when it changes
+    final paginationState = ref.watch(paginationProvider);
+    return await loadPaginatedData(
+      pageNumber: paginationState.currentPage,
+      pageSize: paginationState.pageSize,
+      searchText: paginationState.searchText,
+    );
+  }
+
+  Future<PaginationModel<MasterListModel>> loadPaginatedData({
+    required int pageNumber,
+    required int pageSize,
+    String? searchText,
+  }) async {
+    try {
+      print('DEBUG: PaginatedMasterListNotifier - Loading page $pageNumber with size $pageSize');
+      final service = MasterListService();
+      final paginationModel = await service.getMasterListPaginated(
+        pageNumber: pageNumber,
+        pageSize: pageSize,
+        searchText: searchText,
+      );
+
+      // Update total pages in pagination provider
+      ref.read(paginationProvider.notifier).setTotalPages(paginationModel.totalPages);
+
+      print('DEBUG: PaginatedMasterListNotifier - Loaded ${paginationModel.items.length} items');
+      return paginationModel;
+    } catch (error, stackTrace) {
+      print('DEBUG: PaginatedMasterListNotifier - Error loading: $error');
+      rethrow;
+    }
+  }
+
+  Future<void> refresh() async {
+    print('DEBUG: PaginatedMasterListNotifier - Refreshing paginated data');
+    state = const AsyncValue.loading();
+    
+    final paginationState = ref.read(paginationProvider);
+    try {
+      final paginationModel = await loadPaginatedData(
+        pageNumber: paginationState.currentPage,
+        pageSize: paginationState.pageSize,
+        searchText: paginationState.searchText,
+      );
+      state = AsyncValue.data(paginationModel);
+      print('DEBUG: PaginatedMasterListNotifier - Refresh complete');
+    } catch (error, stackTrace) {
+      print('DEBUG: PaginatedMasterListNotifier - Refresh failed: $error');
+      state = AsyncValue.error(error, stackTrace);
+    }
+  }
+}
+
+final paginatedMasterListProvider = 
+    AsyncNotifierProvider<PaginatedMasterListNotifier, PaginationModel<MasterListModel>>(() {
+  return PaginatedMasterListNotifier();
+});
+
 // Helper provider to trigger refresh
 final refreshMasterListProvider = Provider((ref) {
   return () async {
@@ -80,5 +145,13 @@ final forceRefreshMasterListProvider = Provider((ref) {
   return () async {
     print('DEBUG: Triggering master list force refresh');
     await ref.read(masterListProvider.notifier).forceRefresh();
+  };
+});
+
+// Helper provider to trigger paginated refresh
+final refreshPaginatedMasterListProvider = Provider((ref) {
+  return () async {
+    print('DEBUG: Triggering paginated master list refresh');
+    await ref.read(paginatedMasterListProvider.notifier).refresh();
   };
 });

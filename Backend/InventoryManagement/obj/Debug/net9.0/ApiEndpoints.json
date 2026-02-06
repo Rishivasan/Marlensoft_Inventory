@@ -224,6 +224,32 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "InventoryManagement.Controllers.MasterRegisterController",
+    "Method": "GetEnhancedMasterListPaginated",
+    "RelativePath": "api/enhanced-master-list/paginated",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "pageNumber",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "searchText",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "InventoryManagement.Controllers.ItemDetailsController",
     "Method": "GetItemDetails",
     "RelativePath": "api/item-details/{itemId}",

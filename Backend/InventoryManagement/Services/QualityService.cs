@@ -22,7 +22,7 @@ namespace InventoryManagement.Services
             => _repo.GetValidationTypes();
 
         public Task<int> CreateTemplate(QCTemplateDto dto)
-            => _repo.CreateQCTemplate(dto.TemplateName, dto.ValidationTypeId, dto.FinalProductId);
+            => _repo.CreateQCTemplate(dto.TemplateName, dto.ValidationTypeId, dto.FinalProductId, dto.MaterialId);
 
         public Task<IEnumerable<QCControlPointDto>> GetControlPoints(int templateId)
             => _repo.GetControlPoints(templateId);
