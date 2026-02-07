@@ -41,7 +41,7 @@
                 commandType: CommandType.StoredProcedure);
         }
 
-        public async Task<int> CreateQCTemplate(string templateName, int validationTypeId, int finalProductId, int? materialId = null)
+        public async Task<int> CreateQCTemplate(string templateName, int validationTypeId, int finalProductId, int? materialId = null, string? toolsToQualityCheck = null)
         {
             using var db = Connection;
 
@@ -50,14 +50,19 @@
             parameters.Add("@ValidationTypeId", validationTypeId);
             parameters.Add("@FinalProductId", finalProductId);
             parameters.Add("@MaterialId", materialId);
+            parameters.Add("@ToolsToQualityCheck", toolsToQualityCheck);
+            parameters.Add("@NewTemplateId", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-            // Execute and get the result directly
-            var result = await db.QueryFirstOrDefaultAsync<int>(
+            // Execute the stored procedure
+            await db.ExecuteAsync(
                 "sp_CreateQCTemplate",
                 parameters,
                 commandType: CommandType.StoredProcedure);
 
-            return result;
+            // Get the output parameter value
+            var newTemplateId = parameters.Get<int>("@NewTemplateId");
+            
+            return newTemplateId;
         }
 
         public async Task<IEnumerable<QCControlPointDto>> GetControlPoints(int templateId)

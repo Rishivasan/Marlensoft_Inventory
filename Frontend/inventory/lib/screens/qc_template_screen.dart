@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/quality_service.dart';
 import '../dialogs/dialog_pannel_helper.dart';
+import '../widgets/searchable_dropdown.dart';
 import 'add_forms/add_control_point.dart';
 
 class QCTemplateScreen extends StatefulWidget {
@@ -14,8 +15,10 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
   String? selectedValidationType;
   String? selectedMaterialComponent;
   String? selectedFinalProduct;
-  String toolsToQualityCheck = '';
   int? selectedTemplateId; // Track the selected template ID
+
+  // Text controller for Tools to quality check field
+  final TextEditingController _toolsController = TextEditingController();
 
   // Dynamic lists that will be populated from the backend
   List<Map<String, dynamic>> validationTypes = [];
@@ -27,6 +30,40 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
   List<Map<String, dynamic>> controlPoints = [];
   bool isLoadingControlPoints = false;
   bool isLoadingTemplates = false;
+  
+  // Temporary control points for untitled template (before saving)
+  List<Map<String, dynamic>> tempControlPoints = [];
+  
+  // Duplicate material tracking
+  bool hasDuplicateMaterial = false;
+  String? duplicateTemplateName;
+  
+  // Helper function to get display number based on control point type
+  String _getTypeBasedNumber(dynamic typeId) {
+    // Map control point type ID to display number
+    // 1 = Measure → Show 1
+    // 2 = Take a picture → Show 2  
+    // 3 = Visual inspection → Show 3
+    
+    // Handle null or 0
+    if (typeId == null || typeId == 0) {
+      print('WARNING: typeId is null or 0, defaulting to 1');
+      return '1';
+    }
+    
+    // Convert to int if it's a string
+    int typeIdInt;
+    if (typeId is String) {
+      typeIdInt = int.tryParse(typeId) ?? 1;
+    } else if (typeId is int) {
+      typeIdInt = typeId;
+    } else {
+      print('WARNING: typeId is unexpected type: ${typeId.runtimeType}');
+      return '1';
+    }
+    
+    return typeIdInt.toString();
+  }
 
   // Validation type code mapping
   final Map<String, String> validationTypeCodes = {
@@ -41,6 +78,12 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
     super.initState();
     _loadTemplates(); // Load templates from API first
     _loadDropdownData();
+  }
+
+  @override
+  void dispose() {
+    _toolsController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadDropdownData() async {
@@ -119,6 +162,7 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
           'finalProductId': item['FinalProductId'] ?? item['finalProductId'],
           'materialId': item['MaterialId'] ?? item['materialId'],
           'productName': item['ProductName'] ?? item['productName'],
+          'toolsToQualityCheck': item['ToolsToQualityCheck'] ?? item['toolsToQualityCheck'] ?? '',
           'isActive': false,
         }).toList();
         
@@ -168,12 +212,24 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
       // Set final product if available and load materials
       if (template['finalProductId'] != null) {
         selectedFinalProduct = template['finalProductId'].toString();
+        // Clear material selection first to avoid dropdown error
+        selectedMaterialComponent = null;
+        
         // Load materials for this product
         _loadMaterialsForProduct(template['finalProductId']).then((_) {
-          // After materials are loaded, set the selected material
+          // After materials are loaded, set the selected material if it exists in the list
           if (template['materialId'] != null) {
+            final materialIdStr = template['materialId'].toString();
+            // Check if this material ID exists in the loaded materials
+            final materialExists = materialComponents.any((m) => m['id'].toString() == materialIdStr);
+            
             setState(() {
-              selectedMaterialComponent = template['materialId'].toString();
+              if (materialExists) {
+                selectedMaterialComponent = materialIdStr;
+              } else {
+                print('WARNING: Material ID $materialIdStr not found in materials list');
+                selectedMaterialComponent = null;
+              }
             });
           }
         });
@@ -182,22 +238,32 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
         selectedMaterialComponent = null;
       }
       
-      // Clear tools field as it's not stored in backend
-      toolsToQualityCheck = '';
+      // Load tools field from template data
+      _toolsController.text = template['toolsToQualityCheck'] ?? '';
     });
   }
 
   Future<void> _loadMaterialsForProduct(int productId) async {
     try {
       final materialsData = await QualityService.getMaterials(productId);
+      
+      // Remove duplicates by material ID
+      final Map<int, Map<String, dynamic>> uniqueMaterials = {};
+      for (var item in materialsData) {
+        final id = item['MaterialId'] ?? item['materialId'];
+        if (id != null && !uniqueMaterials.containsKey(id)) {
+          uniqueMaterials[id] = {
+            'id': id,
+            'name': item['MaterialName'] ?? item['materialName'] ?? item['name'],
+            'msiCode': item['MSICode'] ?? item['msiCode'] ?? '',
+          };
+        }
+      }
+      
       setState(() {
-        materialComponents = materialsData.map((item) => {
-          'id': item['MaterialId'] ?? item['materialId'],
-          'name': item['MaterialName'] ?? item['materialName'] ?? item['name'],
-          'msiCode': item['MSICode'] ?? item['msiCode'] ?? '',
-        }).toList();
+        materialComponents = uniqueMaterials.values.toList();
       });
-      print('DEBUG: Loaded ${materialComponents.length} materials for product $productId');
+      print('DEBUG: Loaded ${materialComponents.length} unique materials for product $productId');
     } catch (e) {
       print('Error loading materials: $e');
       // Set fallback data if API fails
@@ -229,14 +295,19 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
     try {
       final controlPointsData = await QualityService.getControlPoints(selectedTemplateId!);
       setState(() {
-        controlPoints = controlPointsData.map((item) => {
-          'id': item['qcControlPointId'] ?? item['QCControlPointId'],
-          'name': item['controlPointName'] ?? item['ControlPointName'],
-          'order': item['sequenceOrder'] ?? item['SequenceOrder'] ?? 1,
-          'typeId': item['controlPointTypeId'] ?? item['ControlPointTypeId'],
-          'targetValue': item['targetValue'] ?? item['TargetValue'],
-          'unit': item['unit'] ?? item['Unit'],
-          'tolerance': item['tolerance'] ?? item['Tolerance'],
+        controlPoints = controlPointsData.map((item) {
+          // Debug: Print the raw item to see what we're getting
+          print('DEBUG Control Point: ${item}');
+          
+          return {
+            'id': item['qcControlPointId'] ?? item['QCControlPointId'],
+            'name': item['controlPointName'] ?? item['ControlPointName'],
+            'order': item['sequenceOrder'] ?? item['SequenceOrder'] ?? 1,
+            'typeId': item['controlPointTypeId'] ?? item['ControlPointTypeId'],
+            'targetValue': item['targetValue'] ?? item['TargetValue'],
+            'unit': item['unit'] ?? item['Unit'],
+            'tolerance': item['tolerance'] ?? item['Tolerance'],
+          };
         }).toList();
         isLoadingControlPoints = false;
       });
@@ -291,6 +362,29 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
       return;
     }
 
+    // NEW VALIDATION: Check for duplicate material
+    if (hasDuplicateMaterial) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('A template already exists for this material: "$duplicateTemplateName"'),
+          backgroundColor: Colors.orange,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
+
+    // NEW VALIDATION: Check if at least one control point exists
+    if (tempControlPoints.isEmpty && controlPoints.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please add at least one control point before creating the template'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     // Show loading
     showDialog(
       context: context,
@@ -333,6 +427,7 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
         'finalProductId': int.tryParse(selectedFinalProduct!) ?? 0,
         'materialId': int.tryParse(selectedMaterialComponent!) ?? 0,
         'productName': productName,
+        'toolsToQualityCheck': _toolsController.text.trim(),
       };
 
       print('DEBUG: Creating template with name: $templateName');
@@ -340,10 +435,32 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
       // Call API to create template
       final newTemplateId = await QualityService.createTemplate(templateData);
 
-      // Close loading dialog
-      if (mounted) Navigator.of(context).pop();
-
       if (newTemplateId > 0) {
+        // NEW: Add all temporary control points to the newly created template
+        if (tempControlPoints.isNotEmpty) {
+          print('DEBUG: Adding ${tempControlPoints.length} control points to template $newTemplateId');
+          
+          for (var controlPoint in tempControlPoints) {
+            try {
+              // Update the templateId for each control point
+              final controlPointData = Map<String, dynamic>.from(controlPoint);
+              controlPointData['qcTemplateId'] = newTemplateId;
+              
+              // Add control point via API
+              await QualityService.addControlPoint(controlPointData);
+            } catch (e) {
+              print('ERROR: Failed to add control point: $e');
+              // Continue with other control points even if one fails
+            }
+          }
+          
+          // Clear temporary control points after adding them
+          tempControlPoints.clear();
+        }
+        
+        // Close loading dialog
+        if (mounted) Navigator.of(context).pop();
+        
         // Reload templates from API to get the latest list
         await _loadTemplates();
         
@@ -371,10 +488,10 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
             selectedFinalProduct = null;
             selectedMaterialComponent = null;
             materialComponents.clear();
-            toolsToQualityCheck = '';
+            _toolsController.clear();
           });
           
-          // Load control points for new template (will be empty)
+          // Load control points for new template (will show the ones we just added)
           _loadControlPoints();
         }
 
@@ -438,31 +555,89 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
       selectedFinalProduct = null;
       selectedMaterialComponent = null;
       materialComponents.clear();
-      toolsToQualityCheck = '';
+      _toolsController.clear();
       selectedTemplateId = -1; // Set to untitled template ID
+      
+      // Clear both control point lists
       controlPoints.clear();
+      tempControlPoints.clear();
+      
+      // Clear duplicate material flag
+      hasDuplicateMaterial = false;
+      duplicateTemplateName = null;
+    });
+  }
+
+  void _cancelUntitledTemplate() {
+    // Reset form and remove untitled template from sidebar
+    setState(() {
+      // Remove "Untitled template" from the list
+      templates.removeWhere((t) => t['id'] == -1);
+      
+      // Clear all form fields
+      selectedValidationType = null;
+      selectedFinalProduct = null;
+      selectedMaterialComponent = null;
+      materialComponents.clear();
+      _toolsController.clear();
+      
+      // Clear both control point lists
+      controlPoints.clear();
+      tempControlPoints.clear();
+      
+      // Clear duplicate material flag
+      hasDuplicateMaterial = false;
+      duplicateTemplateName = null;
+      
+      // If there are other templates, activate the first one
+      if (templates.isNotEmpty) {
+        templates[0]['isActive'] = true;
+        selectedTemplateId = templates[0]['id'];
+        // Load template details into form
+        _loadTemplateDetails(templates[0]);
+        // Load control points for the selected template
+        _loadControlPoints();
+      } else {
+        selectedTemplateId = null;
+      }
     });
   }
 
   void _showAddControlPointDialog() {
-    // Ensure we have a selected template and it's not the untitled template
-    if (selectedTemplateId == null || selectedTemplateId == -1) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please create the template first before adding control points'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
+    // Allow adding control points even for untitled template
+    // If it's an untitled template, we'll store them temporarily
+    final isUntitledTemplate = selectedTemplateId == null || selectedTemplateId == -1;
+    
     DialogPannelHelper().showAddPannel(
       context: context,
       addingItem: AddControlPoint(
-        templateId: selectedTemplateId!,
-        submit: () {
-          // Refresh the control points list from API
-          _loadControlPoints();
+        templateId: selectedTemplateId ?? -1,
+        isTemporary: isUntitledTemplate,
+        submit: (Map<String, dynamic>? controlPointData) {
+          if (isUntitledTemplate && controlPointData != null) {
+            // Add to temporary list for untitled template
+            // Normalize the data structure to match what we expect from API
+            final normalizedData = {
+              'id': DateTime.now().millisecondsSinceEpoch, // Temporary ID
+              'name': controlPointData['controlPointName'] ?? '',
+              'order': tempControlPoints.length + 1,
+              'typeId': controlPointData['controlPointTypeId'],
+              'targetValue': controlPointData['targetValue'],
+              'unit': controlPointData['unit'],
+              'tolerance': controlPointData['tolerance'],
+              // Keep original data for API submission
+              '_originalData': controlPointData,
+            };
+            
+            setState(() {
+              tempControlPoints.add(controlPointData);
+              // Add normalized data to display list
+              controlPoints.add(normalizedData);
+            });
+          } else {
+            // Refresh the control points list from API for existing templates
+            _loadControlPoints();
+          }
         },
       ),
     );
@@ -770,7 +945,7 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                             
                             const SizedBox(width: 16),
                             
-                            // Final product dropdown
+                            // Final product dropdown (searchable)
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -792,49 +967,10 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 6),
-                                  DropdownButtonFormField<String>(
+                                  SearchableDropdown(
                                     value: selectedFinalProduct,
-                                    isExpanded: true,
-                                    decoration: InputDecoration(
-                                      hintText: 'Select the final product',
-                                      hintStyle: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w400,
-                                        color: Color.fromRGBO(144, 144, 144, 1),
-                                      ),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
-                                      ),
-                                      suffixIcon: const Icon(
-                                        Icons.keyboard_arrow_down,
-                                        size: 16,
-                                        color: Color.fromRGBO(144, 144, 144, 1),
-                                      ),
-                                    ),
-                                    hint: const Text(
-                                      'Select the final product',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Color.fromRGBO(144, 144, 144, 1),
-                                      ),
-                                    ),
-                                    items: finalProducts.map((item) {
-                                      return DropdownMenuItem<String>(
-                                        value: item['id'].toString(),
-                                        child: Text(item['name'], style: const TextStyle(fontSize: 12, color: Colors.black)),
-                                      );
-                                    }).toList(),
-                                    style: const TextStyle(fontSize: 12, color: Colors.black),
+                                    items: finalProducts,
+                                    hintText: 'Select the final product',
                                     onChanged: (String? newValue) {
                                       setState(() {
                                         selectedFinalProduct = newValue;
@@ -860,7 +996,7 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                         // Second row of form fields
                         Row(
                           children: [
-                            // Material/Component dropdown
+                            // Material/Component dropdown (searchable)
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -882,52 +1018,32 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 6),
-                                  DropdownButtonFormField<String>(
+                                  SearchableDropdown(
                                     value: selectedMaterialComponent,
-                                    isExpanded: true,
-                                    decoration: InputDecoration(
-                                      hintText: 'Select the material/component',
-                                      hintStyle: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w400,
-                                        color: Color.fromRGBO(144, 144, 144, 1),
-                                      ),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
-                                      ),
-                                      suffixIcon: const Icon(
-                                        Icons.keyboard_arrow_down,
-                                        size: 16,
-                                        color: Color.fromRGBO(144, 144, 144, 1),
-                                      ),
-                                    ),
-                                    hint: const Text(
-                                      'Select the material/component',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Color.fromRGBO(144, 144, 144, 1),
-                                      ),
-                                    ),
-                                    items: materialComponents.map((item) {
-                                      return DropdownMenuItem<String>(
-                                        value: item['id'].toString(),
-                                        child: Text(item['name'], style: const TextStyle(fontSize: 12, color: Colors.black)),
-                                      );
-                                    }).toList(),
-                                    style: const TextStyle(fontSize: 12, color: Colors.black),
+                                    items: materialComponents,
+                                    hintText: 'Select the material/component',
                                     onChanged: (String? newValue) {
                                       setState(() {
                                         selectedMaterialComponent = newValue;
+                                        
+                                        // Check if a template already exists for this material
+                                        if (newValue != null && selectedTemplateId == -1) {
+                                          final existingTemplate = templates.firstWhere(
+                                            (t) => t['materialId']?.toString() == newValue && t['id'] != -1,
+                                            orElse: () => {},
+                                          );
+                                          
+                                          if (existingTemplate.isNotEmpty) {
+                                            hasDuplicateMaterial = true;
+                                            duplicateTemplateName = existingTemplate['name'];
+                                          } else {
+                                            hasDuplicateMaterial = false;
+                                            duplicateTemplateName = null;
+                                          }
+                                        } else {
+                                          hasDuplicateMaterial = false;
+                                          duplicateTemplateName = null;
+                                        }
                                       });
                                     },
                                   ),
@@ -960,6 +1076,7 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                                   ),
                                   const SizedBox(height: 6),
                                   TextFormField(
+                                    controller: _toolsController,
                                     decoration: InputDecoration(
                                       hintText: 'Enter the required tools name',
                                       hintStyle: const TextStyle(
@@ -982,11 +1099,6 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                                       ),
                                     ),
                                     style: const TextStyle(fontSize: 12, color: Colors.black),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        toolsToQualityCheck = value;
-                                      });
-                                    },
                                   ),
                                 ],
                               ),
@@ -995,6 +1107,61 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                         ),
                         
                         const SizedBox(height: 24),
+                        
+                        // Warning banner for duplicate material
+                        if (hasDuplicateMaterial && duplicateTemplateName != null)
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            margin: const EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFEF3C7),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: const Color(0xFFF59E0B), width: 1),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.warning_amber_rounded,
+                                  color: Color(0xFFF59E0B),
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Template Already Exists',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Color(0xFF92400E),
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'A template already exists for this material: "$duplicateTemplateName"',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Color(0xFF92400E),
+                                          height: 1.4,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      const Text(
+                                        'Please select a different material or edit the existing template.',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Color(0xFF92400E),
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         
                         // QC control points section
                         Row(
@@ -1025,16 +1192,21 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                             SizedBox(
                               height: 35,
                               child: ElevatedButton(
-                                onPressed: () {
+                                // Disable for saved templates (selectedTemplateId != -1)
+                                onPressed: selectedTemplateId == -1 ? () {
                                   _showAddControlPointDialog();
-                                },
+                                } : null,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xff00599A),
+                                  backgroundColor: selectedTemplateId == -1 
+                                      ? const Color(0xff00599A) 
+                                      : const Color(0xFFD1D5DB),
                                   foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(horizontal: 16),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(6),
                                   ),
+                                  disabledBackgroundColor: const Color(0xFFD1D5DB),
+                                  disabledForegroundColor: const Color(0xFF9CA3AF),
                                 ),
                                 child: const Text(
                                   'Add control point',
@@ -1083,25 +1255,46 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                                         ],
                                       ),
                                     )
-                                  : ListView.builder(
-                                      itemCount: controlPoints.length,
-                                      itemBuilder: (context, index) {
-                                        final point = controlPoints[index];
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  border: Border.all(color: const Color(0xFFE5E7EB)),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Row(
-                                  children: [
-                                    // Drag handle
-                                    Icon(Icons.drag_indicator, color: const Color(0xFF9CA3AF), size: 16),
-                                    const SizedBox(width: 8),
+                                  : (selectedTemplateId == -1) 
+                                      // For untitled template: Use ReorderableListView (drag-and-drop enabled)
+                                      ? ReorderableListView.builder(
+                                          buildDefaultDragHandles: false, // Disable automatic drag handle!
+                                          itemCount: controlPoints.length,
+                                          onReorder: (oldIndex, newIndex) {
+                                            setState(() {
+                                              if (newIndex > oldIndex) {
+                                                newIndex -= 1;
+                                              }
+                                              final item = controlPoints.removeAt(oldIndex);
+                                              controlPoints.insert(newIndex, item);
+                                              
+                                              // Also reorder in tempControlPoints
+                                              if (oldIndex < tempControlPoints.length && newIndex < tempControlPoints.length) {
+                                                final tempItem = tempControlPoints.removeAt(oldIndex);
+                                                tempControlPoints.insert(newIndex, tempItem);
+                                              }
+                                            });
+                                          },
+                                          itemBuilder: (context, index) {
+                                            final point = controlPoints[index];
+                                            return ReorderableDragStartListener(
+                                              key: ValueKey(point['id']), // Required for ReorderableListView
+                                              index: index,
+                                              child: Container(
+                                                margin: const EdgeInsets.only(bottom: 8),
+                                                padding: const EdgeInsets.all(12),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                                                  borderRadius: BorderRadius.circular(6),
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    // Drag handle (6 dots) - This is the ONLY drag handle!
+                                                    Icon(Icons.drag_indicator, color: const Color(0xFF9CA3AF), size: 16),
+                                                    const SizedBox(width: 8),
                                     
-                                    // Order number
+                                    // Order number (based on type)
                                     Container(
                                       width: 20,
                                       height: 20,
@@ -1111,7 +1304,7 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                                       ),
                                       child: Center(
                                         child: Text(
-                                          '${point['order']}',
+                                          _getTypeBasedNumber(point['typeId']),
                                           style: const TextStyle(
                                             fontSize: 11,
                                             fontWeight: FontWeight.w500,
@@ -1134,9 +1327,9 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                                       ),
                                     ),
                                     
-                                    // Delete button
+                                    // Delete button (disabled for saved templates)
                                     IconButton(
-                                      onPressed: () async {
+                                      onPressed: selectedTemplateId == -1 ? () async {
                                         // Show confirmation dialog
                                         final confirmed = await showDialog<bool>(
                                           context: context,
@@ -1166,65 +1359,277 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                                         );
 
                                         if (confirmed == true) {
-                                          // Show loading
-                                          if (context.mounted) {
-                                            showDialog(
-                                              context: context,
-                                              barrierDismissible: false,
-                                              builder: (context) => const Center(
-                                                child: CircularProgressIndicator(),
-                                              ),
-                                            );
-                                          }
-
-                                          // Call delete API
-                                          final success = await QualityService.deleteControlPoint(point['id']);
-
-                                          // Close loading dialog
-                                          if (context.mounted) {
-                                            Navigator.of(context).pop();
-                                          }
-
-                                          if (success) {
-                                            // Refresh the list
-                                            _loadControlPoints();
+                                          // Check if this is a temporary control point (untitled template)
+                                          final isTemporary = selectedTemplateId == -1;
+                                          
+                                          if (isTemporary) {
+                                            // For temporary control points, just remove from the list
+                                            setState(() {
+                                              // Remove from both lists using the temporary ID
+                                              final pointId = point['id'];
+                                              controlPoints.removeWhere((cp) => cp['id'] == pointId);
+                                              // Also remove from temp list (find by name since we don't have normalized ID there)
+                                              tempControlPoints.removeWhere((cp) => 
+                                                cp['controlPointName'] == point['name']);
+                                            });
                                             
                                             // Show success message
                                             if (context.mounted) {
                                               ScaffoldMessenger.of(context).showSnackBar(
                                                 const SnackBar(
-                                                  content: Text('Control point deleted successfully'),
+                                                  content: Text('Control point removed'),
                                                   backgroundColor: Colors.green,
                                                   duration: Duration(seconds: 2),
                                                 ),
                                               );
                                             }
                                           } else {
-                                            // Show error message
+                                            // For saved control points, call the API
+                                            // Show loading
                                             if (context.mounted) {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                const SnackBar(
-                                                  content: Text('Failed to delete control point'),
-                                                  backgroundColor: Colors.red,
-                                                  duration: Duration(seconds: 3),
+                                              showDialog(
+                                                context: context,
+                                                barrierDismissible: false,
+                                                builder: (context) => const Center(
+                                                  child: CircularProgressIndicator(),
                                                 ),
                                               );
                                             }
+
+                                            // Call delete API
+                                            final success = await QualityService.deleteControlPoint(point['id']);
+
+                                            // Close loading dialog
+                                            if (context.mounted) {
+                                              Navigator.of(context).pop();
+                                            }
+
+                                            if (success) {
+                                              // Refresh the list
+                                              _loadControlPoints();
+                                              
+                                              // Show success message
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text('Control point deleted successfully'),
+                                                    backgroundColor: Colors.green,
+                                                    duration: Duration(seconds: 2),
+                                                  ),
+                                                );
+                                              }
+                                            } else {
+                                              // Show error message
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text('Failed to delete control point'),
+                                                    backgroundColor: Colors.red,
+                                                    duration: Duration(seconds: 3),
+                                                  ),
+                                                );
+                                              }
+                                            }
                                           }
                                         }
-                                      },
-                                      icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 16),
+                                      } : null,
+                                      icon: Icon(
+                                        Icons.delete_outline, 
+                                        color: selectedTemplateId == -1 
+                                            ? const Color(0xFFEF4444) 
+                                            : const Color(0xFFD1D5DB), 
+                                        size: 16
+                                      ),
                                       padding: EdgeInsets.zero,
                                       constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
                                     ),
                                   ],
-                                ),
-                              );
-                                      },
-                                    ),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        )
+                                      // For existing templates: Use regular ListView (no drag-and-drop)
+                                      : ListView.builder(
+                                          itemCount: controlPoints.length,
+                                          itemBuilder: (context, index) {
+                                            final point = controlPoints[index];
+                                            return Container(
+                                              margin: const EdgeInsets.only(bottom: 8),
+                                              padding: const EdgeInsets.all(12),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                border: Border.all(color: const Color(0xFFE5E7EB)),
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  // Drag handle (disabled for existing templates)
+                                                  Icon(Icons.drag_indicator, color: const Color(0xFFE5E7EB), size: 16),
+                                                  const SizedBox(width: 8),
+                                                  
+                                                  // Order number (based on type)
+                                                  Container(
+                                                    width: 20,
+                                                    height: 20,
+                                                    decoration: BoxDecoration(
+                                                      color: const Color(0xFFDCFDF7),
+                                                      borderRadius: BorderRadius.circular(10),
+                                                    ),
+                                                    child: Center(
+                                                      child: Text(
+                                                        _getTypeBasedNumber(point['typeId']),
+                                                        style: const TextStyle(
+                                                          fontSize: 11,
+                                                          fontWeight: FontWeight.w500,
+                                                          color: Color(0xFF059669),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  
+                                                  const SizedBox(width: 12),
+                                                  
+                                                  // Control point name
+                                                  Expanded(
+                                                    child: Text(
+                                                      point['name'],
+                                                      style: const TextStyle(
+                                                        fontSize: 12,
+                                                        color: Color(0xFF111827),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  
+                                                  // Delete button (disabled for saved templates)
+                                                  IconButton(
+                                                    onPressed: selectedTemplateId != -1 ? null : () async {
+                                                      // Show confirmation dialog
+                                                      final confirmed = await showDialog<bool>(
+                                                        context: context,
+                                                        builder: (context) => AlertDialog(
+                                                          title: const Text(
+                                                            'Delete Control Point',
+                                                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                                          ),
+                                                          content: Text(
+                                                            'Are you sure you want to delete "${point['name']}"?',
+                                                            style: const TextStyle(fontSize: 14),
+                                                          ),
+                                                          actions: [
+                                                            TextButton(
+                                                              onPressed: () => Navigator.of(context).pop(false),
+                                                              child: const Text('Cancel'),
+                                                            ),
+                                                            ElevatedButton(
+                                                              onPressed: () => Navigator.of(context).pop(true),
+                                                              style: ElevatedButton.styleFrom(
+                                                                backgroundColor: const Color(0xFFEF4444),
+                                                              ),
+                                                              child: const Text('Delete'),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      );
+
+                                                      if (confirmed == true) {
+                                                        // Show loading
+                                                        if (context.mounted) {
+                                                          showDialog(
+                                                            context: context,
+                                                            barrierDismissible: false,
+                                                            builder: (context) => const Center(
+                                                              child: CircularProgressIndicator(),
+                                                            ),
+                                                          );
+                                                        }
+
+                                                        // Call delete API
+                                                        final success = await QualityService.deleteControlPoint(point['id']);
+
+                                                        // Close loading dialog
+                                                        if (context.mounted) {
+                                                          Navigator.of(context).pop();
+                                                        }
+
+                                                        if (success) {
+                                                          // Refresh the list
+                                                          _loadControlPoints();
+                                                          
+                                                          // Show success message
+                                                          if (context.mounted) {
+                                                            ScaffoldMessenger.of(context).showSnackBar(
+                                                              const SnackBar(
+                                                                content: Text('Control point deleted successfully'),
+                                                                backgroundColor: Colors.green,
+                                                                duration: Duration(seconds: 2),
+                                                              ),
+                                                            );
+                                                          }
+                                                        } else {
+                                                          // Show error message
+                                                          if (context.mounted) {
+                                                            ScaffoldMessenger.of(context).showSnackBar(
+                                                              const SnackBar(
+                                                                content: Text('Failed to delete control point'),
+                                                                backgroundColor: Colors.red,
+                                                                duration: Duration(seconds: 3),
+                                                              ),
+                                                            );
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    icon: Icon(
+                                                      Icons.delete_outline, 
+                                                      color: selectedTemplateId == -1 
+                                                          ? const Color(0xFFEF4444) 
+                                                          : const Color(0xFFD1D5DB), 
+                                                      size: 16
+                                                    ),
+                                                    padding: EdgeInsets.zero,
+                                                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                        ),
                         ),
                         
                         const SizedBox(height: 16),
+                        
+                        // Info banner for untitled template
+                        if (selectedTemplateId == -1 && tempControlPoints.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            margin: const EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFDCFDF7),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: const Color(0xFF059669), width: 1),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.info_outline,
+                                  color: Color(0xFF059669),
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    '${tempControlPoints.length} control point${tempControlPoints.length > 1 ? 's' : ''} added. Click "Add new template" to save everything.',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF059669),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         
                         // Bottom buttons
                         Row(
@@ -1233,20 +1638,28 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                             SizedBox(
                               height: 35,
                               child: OutlinedButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
+                                // Disable for saved templates
+                                onPressed: selectedTemplateId == -1 ? () {
+                                  _cancelUntitledTemplate();
+                                } : null,
                                 style: OutlinedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                                  side: const BorderSide(color: Color(0xFFD1D5DB)),
+                                  side: BorderSide(
+                                    color: selectedTemplateId == -1 
+                                        ? const Color(0xFFD1D5DB) 
+                                        : const Color(0xFFE5E7EB)
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(6),
                                   ),
+                                  disabledForegroundColor: const Color(0xFF9CA3AF),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   'Cancel',
                                   style: TextStyle(
-                                    color: Color(0xFF374151),
+                                    color: selectedTemplateId == -1 
+                                        ? const Color(0xFF374151) 
+                                        : const Color(0xFF9CA3AF),
                                     fontSize: 12,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -1257,14 +1670,21 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                             SizedBox(
                               height: 35,
                               child: ElevatedButton(
-                                onPressed: _createNewTemplate,
+                                // Only enable when on untitled template AND no duplicate material
+                                onPressed: (selectedTemplateId == -1 && !hasDuplicateMaterial) 
+                                    ? _createNewTemplate 
+                                    : null,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF6B7280),
+                                  backgroundColor: (selectedTemplateId == -1 && !hasDuplicateMaterial) 
+                                      ? const Color(0xFF6B7280) 
+                                      : const Color(0xFFD1D5DB), // Lighter grey when disabled
                                   foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(horizontal: 20),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(6),
                                   ),
+                                  disabledBackgroundColor: const Color(0xFFD1D5DB),
+                                  disabledForegroundColor: const Color(0xFF9CA3AF),
                                 ),
                                 child: const Text(
                                   'Add new template',

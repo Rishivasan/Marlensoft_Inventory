@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Marlensoft_Inventory\\Backend\\InventoryManagement\\InventoryManagement.csproj": {}
+    "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Marlensoft_Inventory\\backend\\InventoryManagement\\InventoryManagement.csproj": {}
   },
   "projects": {
-    "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Marlensoft_Inventory\\Backend\\InventoryManagement\\InventoryManagement.csproj": {
+    "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Marlensoft_Inventory\\backend\\InventoryManagement\\InventoryManagement.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Marlensoft_Inventory\\Backend\\InventoryManagement\\InventoryManagement.csproj",
+        "projectUniqueName": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Marlensoft_Inventory\\backend\\InventoryManagement\\InventoryManagement.csproj",
         "projectName": "InventoryManagement",
-        "projectPath": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Marlensoft_Inventory\\Backend\\InventoryManagement\\InventoryManagement.csproj",
+        "projectPath": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Marlensoft_Inventory\\backend\\InventoryManagement\\InventoryManagement.csproj",
         "packagesPath": "C:\\Users\\RishivasanMuthukumar\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Marlensoft_Inventory\\Backend\\InventoryManagement\\obj\\",
+        "outputPath": "C:\\Users\\RishivasanMuthukumar\\Desktop\\Marlensoft\\Marlensoft_Inventory\\backend\\InventoryManagement\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

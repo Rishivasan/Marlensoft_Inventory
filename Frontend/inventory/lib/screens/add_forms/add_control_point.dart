@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'dart:typed_data';
 import '../../services/quality_service.dart';
 
 class AddControlPoint extends StatefulWidget {
@@ -8,11 +9,13 @@ class AddControlPoint extends StatefulWidget {
     required this.submit,
     required this.templateId,
     this.existingData,
+    this.isTemporary = false,
   });
 
-  final VoidCallback submit;
+  final Function(Map<String, dynamic>? controlPointData) submit;
   final int templateId;
   final Map<String, dynamic>? existingData;
+  final bool isTemporary; // Flag to indicate if this is for an untitled template
 
   @override
   State<AddControlPoint> createState() => _AddControlPointState();
@@ -32,8 +35,9 @@ class _AddControlPointState extends State<AddControlPoint> {
   String? selectedType;
   String? selectedUnit;
   
-  // File upload
-  PlatformFile? selectedFile;
+  // File upload - support multiple images
+  List<PlatformFile> selectedFiles = [];
+  Map<int, Uint8List> imageBytes = {}; // Store image bytes for preview
   
   // Dynamic lists that will be populated from the backend
   List<Map<String, String>> controlPointTypes = [];
@@ -152,29 +156,56 @@ class _AddControlPointState extends State<AddControlPoint> {
     _commentsCtrl.text = data['comments']?.toString() ?? '';
   }
 
-  Future<void> _pickFile() async {
+  Future<void> _pickFiles() async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.any,
-        allowMultiple: false,
+        type: FileType.image,
+        allowMultiple: true,
+        withData: true, // Important: Load file bytes
       );
 
       if (result != null) {
         setState(() {
-          selectedFile = result.files.first;
+          int startIndex = selectedFiles.length;
+          selectedFiles.addAll(result.files);
+          
+          // Store bytes for each new file
+          for (int i = 0; i < result.files.length; i++) {
+            if (result.files[i].bytes != null) {
+              imageBytes[startIndex + i] = result.files[i].bytes!;
+            }
+          }
         });
       }
     } catch (e) {
-      print('Error picking file: $e');
+      print('Error picking files: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error selecting file: $e'),
+            content: Text('Error selecting files: $e'),
             backgroundColor: Colors.red,
           ),
         );
       }
     }
+  }
+
+  void _removeFile(int index) {
+    setState(() {
+      selectedFiles.removeAt(index);
+      imageBytes.remove(index);
+      
+      // Reindex remaining images
+      Map<int, Uint8List> newImageBytes = {};
+      imageBytes.forEach((key, value) {
+        if (key > index) {
+          newImageBytes[key - 1] = value;
+        } else if (key < index) {
+          newImageBytes[key] = value;
+        }
+      });
+      imageBytes = newImageBytes;
+    });
   }
 
   Future<void> _submitControlPoint() async {
@@ -192,6 +223,41 @@ class _AddControlPointState extends State<AddControlPoint> {
     });
 
     try {
+      // Build the request payload matching backend DTO
+      Map<String, dynamic> requestPayload = {
+        "qcTemplateId": widget.templateId,
+        "controlPointTypeId": int.tryParse(selectedType ?? '1') ?? 1,
+        "controlPointName": _controlPointNameCtrl.text.trim(),
+        "targetValue": _targetValueCtrl.text.isNotEmpty ? _targetValueCtrl.text.trim() : null,
+        "unit": selectedUnit ?? "",
+        "tolerance": _toleranceValueCtrl.text.isNotEmpty ? _toleranceValueCtrl.text.trim() : null,
+        "instructions": _instructionsCtrl.text.trim(),
+        "imagePath": selectedFiles.isNotEmpty ? selectedFiles.map((f) => f.path).join(';') : "",
+        "sequenceOrder": 1,
+      };
+
+      // If this is a temporary control point (for untitled template), just return the data
+      if (widget.isTemporary) {
+        // Close the dialog
+        if (mounted) Navigator.of(context).pop();
+
+        // Call the submit callback with the control point data
+        widget.submit(requestPayload);
+
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Control point added! Click "Add new template" to save.'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        return;
+      }
+
+      // For existing templates, call the API
       // Show loading indicator
       if (mounted) {
         showDialog(
@@ -202,19 +268,6 @@ class _AddControlPointState extends State<AddControlPoint> {
           ),
         );
       }
-
-      // Build the request payload matching backend DTO
-      Map<String, dynamic> requestPayload = {
-        "qcTemplateId": widget.templateId,
-        "controlPointTypeId": int.tryParse(selectedType ?? '1') ?? 1,
-        "controlPointName": _controlPointNameCtrl.text.trim(),
-        "targetValue": _targetValueCtrl.text.isNotEmpty ? _targetValueCtrl.text.trim() : null,
-        "unit": selectedUnit ?? "",
-        "tolerance": _toleranceValueCtrl.text.isNotEmpty ? _toleranceValueCtrl.text.trim() : null,
-        "instructions": _instructionsCtrl.text.trim(),
-        "imagePath": selectedFile?.path ?? "",
-        "sequenceOrder": 1,
-      };
 
       // Call the actual API
       bool success = await QualityService.addControlPoint(requestPayload);
@@ -231,7 +284,7 @@ class _AddControlPointState extends State<AddControlPoint> {
         if (mounted) Navigator.of(context).pop();
 
         // Call the submit callback to refresh the list
-        widget.submit();
+        widget.submit(null);
 
         // Show success message
         if (mounted) {
@@ -327,6 +380,188 @@ class _AddControlPointState extends State<AddControlPoint> {
       default:
         return const SizedBox.shrink();
     }
+  }
+
+  // Build image upload area with preview
+  Widget _buildImageUploadArea() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Upload button area
+        InkWell(
+          onTap: _pickFiles,
+          child: Container(
+            width: double.infinity,
+            height: 120,
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: const Color.fromRGBO(210, 210, 210, 1),
+                style: BorderStyle.solid,
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.cloud_upload_outlined,
+                  size: 32,
+                  color: Color.fromRGBO(144, 144, 144, 1),
+                ),
+                const SizedBox(height: 8),
+                RichText(
+                  text: const TextSpan(
+                    children: [
+                      TextSpan(
+                        text: 'Click to upload',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF2196F3),
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                      TextSpan(
+                        text: ' or drag and drop',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color.fromRGBO(144, 144, 144, 1),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Multiple images supported',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Color.fromRGBO(144, 144, 144, 1),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        
+        // Image preview grid
+        if (selectedFiles.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: selectedFiles.asMap().entries.map((entry) {
+              final index = entry.key;
+              final file = entry.value;
+              final bytes = imageBytes[index];
+              
+              return Container(
+                width: 150,
+                height: 150,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: const Color.fromRGBO(210, 210, 210, 1),
+                    width: 1,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Stack(
+                  children: [
+                    // Image preview
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: bytes != null
+                          ? Image.memory(
+                              bytes,
+                              width: 150,
+                              height: 150,
+                              fit: BoxFit.cover,
+                            )
+                          : Container(
+                              width: 150,
+                              height: 150,
+                              color: const Color(0xFFF5F5F5),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.image,
+                                    size: 40,
+                                    color: Color.fromRGBO(144, 144, 144, 1),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                                    child: Text(
+                                      file.name,
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        color: Color.fromRGBO(88, 88, 88, 1),
+                                      ),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                    ),
+                    
+                    // Remove button
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: InkWell(
+                        onTap: () => _removeFile(index),
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.9),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                    // File info overlay
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.7),
+                          borderRadius: const BorderRadius.only(
+                            bottomLeft: Radius.circular(8),
+                            bottomRight: Radius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          '${(file.size / 1024).toStringAsFixed(1)} KB',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.white,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ],
+    );
   }
 
   // Build fields for Measure type
@@ -436,104 +671,8 @@ class _AddControlPointState extends State<AddControlPoint> {
         ),
         const SizedBox(height: 24),
 
-        // File upload area
-        Container(
-          width: double.infinity,
-          height: 120,
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: const Color.fromRGBO(210, 210, 210, 1),
-              style: BorderStyle.solid,
-              width: 2,
-            ),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: selectedFile != null
-              ? Container(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.description,
-                        size: 32,
-                        color: Color(0xFF4CAF50),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        selectedFile!.name,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF4CAF50),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${(selectedFile!.size / 1024).toStringAsFixed(1)} KB',
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: Color.fromRGBO(144, 144, 144, 1),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            selectedFile = null;
-                          });
-                        },
-                        child: const Text(
-                          'Remove file',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.red,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : InkWell(
-                  onTap: _pickFile,
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.cloud_upload_outlined,
-                          size: 32,
-                          color: Color.fromRGBO(144, 144, 144, 1),
-                        ),
-                        const SizedBox(height: 8),
-                        RichText(
-                          text: const TextSpan(
-                            children: [
-                              TextSpan(
-                                text: 'Click to upload',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF2196F3),
-                                  decoration: TextDecoration.underline,
-                                ),
-                              ),
-                              TextSpan(
-                                text: ' or drag and drop',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color.fromRGBO(144, 144, 144, 1),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-        ),
+        // Image upload area with preview
+        _buildImageUploadArea(),
         const SizedBox(height: 24),
       ],
     );
@@ -543,107 +682,11 @@ class _AddControlPointState extends State<AddControlPoint> {
   Widget _buildVisualInspectionFields() {
     return Column(
       children: [
-        // File upload area FIRST
-        Container(
-          width: double.infinity,
-          height: 120,
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: const Color.fromRGBO(210, 210, 210, 1),
-              style: BorderStyle.solid,
-              width: 2,
-            ),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: selectedFile != null
-              ? Container(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.description,
-                        size: 32,
-                        color: Color(0xFF4CAF50),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        selectedFile!.name,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF4CAF50),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${(selectedFile!.size / 1024).toStringAsFixed(1)} KB',
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: Color.fromRGBO(144, 144, 144, 1),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            selectedFile = null;
-                          });
-                        },
-                        child: const Text(
-                          'Remove file',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.red,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : InkWell(
-                  onTap: _pickFile,
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.cloud_upload_outlined,
-                          size: 32,
-                          color: Color.fromRGBO(144, 144, 144, 1),
-                        ),
-                        const SizedBox(height: 8),
-                        RichText(
-                          text: const TextSpan(
-                            children: [
-                              TextSpan(
-                                text: 'Click to upload',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF2196F3),
-                                  decoration: TextDecoration.underline,
-                                ),
-                              ),
-                              TextSpan(
-                                text: ' or drag and drop',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color.fromRGBO(144, 144, 144, 1),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-        ),
+        // Image upload area with preview
+        _buildImageUploadArea(),
         const SizedBox(height: 24),
 
-        // Instructions field SECOND
+        // Instructions field
         TextFormField(
           controller: _instructionsCtrl,
           maxLines: 3,
@@ -665,107 +708,11 @@ class _AddControlPointState extends State<AddControlPoint> {
   Widget _buildTakePictureFields() {
     return Column(
       children: [
-        // File upload area FIRST
-        Container(
-          width: double.infinity,
-          height: 120,
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: const Color.fromRGBO(210, 210, 210, 1),
-              style: BorderStyle.solid,
-              width: 2,
-            ),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: selectedFile != null
-              ? Container(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.description,
-                        size: 32,
-                        color: Color(0xFF4CAF50),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        selectedFile!.name,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF4CAF50),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${(selectedFile!.size / 1024).toStringAsFixed(1)} KB',
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: Color.fromRGBO(144, 144, 144, 1),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            selectedFile = null;
-                          });
-                        },
-                        child: const Text(
-                          'Remove file',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.red,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : InkWell(
-                  onTap: _pickFile,
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.cloud_upload_outlined,
-                          size: 32,
-                          color: Color.fromRGBO(144, 144, 144, 1),
-                        ),
-                        const SizedBox(height: 8),
-                        RichText(
-                          text: const TextSpan(
-                            children: [
-                              TextSpan(
-                                text: 'Click to upload',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF2196F3),
-                                  decoration: TextDecoration.underline,
-                                ),
-                              ),
-                              TextSpan(
-                                text: ' or drag and drop',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color.fromRGBO(144, 144, 144, 1),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-        ),
+        // Image upload area with preview
+        _buildImageUploadArea(),
         const SizedBox(height: 24),
 
-        // Comments field SECOND
+        // Comments field
         TextFormField(
           controller: _commentsCtrl,
           maxLines: 3,

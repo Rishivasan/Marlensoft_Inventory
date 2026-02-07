@@ -248,4 +248,3 @@ C:\Users\RishivasanMuthukumar\Desktop\Marlensoft\Marlensoft_Inventory\Backend\In
 C:\Users\RishivasanMuthukumar\Desktop\Marlensoft\Marlensoft_Inventory\Backend\InventoryManagement\obj\Debug\net9.0\InventoryManagement.pdb
 C:\Users\RishivasanMuthukumar\Desktop\Marlensoft\Marlensoft_Inventory\Backend\InventoryManagement\obj\Debug\net9.0\InventoryManagement.genruntimeconfig.cache
 C:\Users\RishivasanMuthukumar\Desktop\Marlensoft\Marlensoft_Inventory\Backend\InventoryManagement\obj\Debug\net9.0\ref\InventoryManagement.dll
-C:\Users\RishivasanMuthukumar\Desktop\Marlensoft\Marlensoft_Inventory\Backend\InventoryManagement\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
