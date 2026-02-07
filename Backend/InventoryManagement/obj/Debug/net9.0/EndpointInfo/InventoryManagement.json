@@ -1688,6 +1688,11 @@
           "finalProductId": {
             "type": "integer",
             "format": "int32"
+          },
+          "materialId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           }
         },
         "additionalProperties": false
