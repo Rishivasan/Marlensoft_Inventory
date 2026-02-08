@@ -324,6 +324,96 @@ class ApiService {
     }
   }
 
+  // Get paginated maintenance records for an asset
+  Future<Map<String, dynamic>> getMaintenancePaginated(
+    String assetId, {
+    int pageNumber = 1,
+    int pageSize = 5,
+    String? searchText,
+    String? sortColumn,
+    String? sortDirection,
+  }) async {
+    print('DEBUG: API - getMaintenancePaginated called with: assetId=$assetId, page=$pageNumber, size=$pageSize');
+    try {
+      final queryParams = {
+        'pageNumber': pageNumber.toString(),
+        'pageSize': pageSize.toString(),
+        if (searchText != null && searchText.isNotEmpty) 'searchText': searchText,
+        if (sortColumn != null && sortColumn.isNotEmpty) 'sortColumn': sortColumn,
+        if (sortDirection != null && sortDirection.isNotEmpty) 'sortDirection': sortDirection,
+      };
+      
+      final uri = Uri.parse('$baseUrl/api/maintenance/paginated/$assetId')
+          .replace(queryParameters: queryParams);
+      
+      print('DEBUG: API - Calling paginated URL: $uri');
+      
+      final response = await http.get(
+        uri,
+        headers: {"Content-Type": "application/json"},
+      ).timeout(const Duration(seconds: 10));
+      
+      print('DEBUG: API - Paginated maintenance response status: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        print('DEBUG: API - Paginated response: totalCount=${data['totalCount']}, page=${data['pageNumber']}, totalPages=${data['totalPages']}');
+        return data;
+      } else {
+        print('DEBUG: API - Paginated maintenance failed: ${response.statusCode}');
+        throw Exception('Failed to load paginated maintenance');
+      }
+    } catch (e) {
+      print('DEBUG: API - Error fetching paginated maintenance: $e');
+      rethrow;
+    }
+  }
+
+  // Get paginated allocation records for an asset
+  Future<Map<String, dynamic>> getAllocationsPaginated(
+    String assetId, {
+    int pageNumber = 1,
+    int pageSize = 5,
+    String? searchText,
+    String? sortColumn,
+    String? sortDirection,
+  }) async {
+    print('DEBUG: API - getAllocationsPaginated called with: assetId=$assetId, page=$pageNumber, size=$pageSize');
+    try {
+      final queryParams = {
+        'pageNumber': pageNumber.toString(),
+        'pageSize': pageSize.toString(),
+        if (searchText != null && searchText.isNotEmpty) 'searchText': searchText,
+        if (sortColumn != null && sortColumn.isNotEmpty) 'sortColumn': sortColumn,
+        if (sortDirection != null && sortDirection.isNotEmpty) 'sortDirection': sortDirection,
+      };
+      
+      final uri = Uri.parse('$baseUrl/api/allocation/paginated/$assetId')
+          .replace(queryParameters: queryParams);
+      
+      print('DEBUG: API - Calling paginated URL: $uri');
+      
+      final response = await http.get(
+        uri,
+        headers: {"Content-Type": "application/json"},
+      ).timeout(const Duration(seconds: 10));
+      
+      print('DEBUG: API - Paginated allocation response status: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        print('DEBUG: API - Paginated response: totalCount=${data['totalCount']}, page=${data['pageNumber']}, totalPages=${data['totalPages']}');
+        return data;
+      } else {
+        print('DEBUG: API - Paginated allocation failed: ${response.statusCode}');
+        throw Exception('Failed to load paginated allocations');
+      }
+    } catch (e) {
+      print('DEBUG: API - Error fetching paginated allocations: $e');
+      rethrow;
+    }
+  }
+
   // Add new allocation record
   Future<Map<String, dynamic>> addAllocationRecord(Map<String, dynamic> allocationData) async {
     try {

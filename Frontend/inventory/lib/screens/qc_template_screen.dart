@@ -19,12 +19,16 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
 
   // Text controller for Tools to quality check field
   final TextEditingController _toolsController = TextEditingController();
+  
+  // Text controller for template search
+  final TextEditingController _templateSearchController = TextEditingController();
 
   // Dynamic lists that will be populated from the backend
   List<Map<String, dynamic>> validationTypes = [];
   List<Map<String, dynamic>> materialComponents = [];
   List<Map<String, dynamic>> finalProducts = [];
   List<Map<String, dynamic>> templates = [];
+  List<Map<String, dynamic>> filteredTemplates = []; // Filtered templates for search
 
   // Control points loaded from API - no dummy data
   List<Map<String, dynamic>> controlPoints = [];
@@ -37,6 +41,20 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
   // Duplicate material tracking
   bool hasDuplicateMaterial = false;
   String? duplicateTemplateName;
+  
+  // Filter templates based on search query
+  void _filterTemplates(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        filteredTemplates = templates;
+      } else {
+        filteredTemplates = templates.where((template) {
+          final templateName = template['name'].toString().toLowerCase();
+          return templateName.contains(query.toLowerCase());
+        }).toList();
+      }
+    });
+  }
   
   // Helper function to get display number based on control point type
   String _getTypeBasedNumber(dynamic typeId) {
@@ -83,6 +101,7 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
   @override
   void dispose() {
     _toolsController.dispose();
+    _templateSearchController.dispose();
     super.dispose();
   }
 
@@ -166,6 +185,9 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
           'isActive': false,
         }).toList();
         
+        // Initialize filtered templates
+        filteredTemplates = templates;
+        
         // Set the first template as active if there are any templates
         if (templates.isNotEmpty) {
           templates[0]['isActive'] = true;
@@ -184,6 +206,7 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
       print('Error loading templates: $e');
       setState(() {
         templates = [];
+        filteredTemplates = [];
         isLoadingTemplates = false;
       });
       
@@ -550,6 +573,9 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
         templates.firstWhere((t) => t['id'] == -1)['isActive'] = true;
       }
       
+      // Update filtered templates
+      filteredTemplates = templates;
+      
       // Clear all form fields
       selectedValidationType = null;
       selectedFinalProduct = null;
@@ -643,51 +669,67 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
     );
   }
 
+  // Track active tab
+  int _activeTabIndex = 0;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF3F4F6),
       body: Column(
         children: [
-          // Header tabs at the very top without background
+          // Tab header at the top
           Container(
-            width: double.infinity,
-            padding: const EdgeInsets.only(left: 24, top: 16, bottom: 0),
+            color: const Color(0xFFF3F4F6),
+            padding: const EdgeInsets.only(left: 0, top: 0, right: 24, bottom: 0),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: const BoxDecoration(
-                    color: Color(0xff00599A),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(6),
-                      topRight: Radius.circular(6),
+                // Quality check customization tab
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _activeTabIndex = 0;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: _activeTabIndex == 0 ? Colors.white : const Color(0xFF6B7280) ,
+                      borderRadius: BorderRadius.circular(4),
                     ),
-                  ),
-                  child: const Text(
-                    'Quality check customization',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
+                    child: Text(
+                      'Quality check customization',
+                      style: TextStyle(
+                        color: _activeTabIndex == 0 ?const Color(0xff00599A) : Colors.transparent,
+                        fontSize: 12,
+                        fontWeight: _activeTabIndex == 0 ? FontWeight.w600 : FontWeight.normal,
+                      ),
                     ),
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFE5E7EB),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(6),
-                      topRight: Radius.circular(6),
+                
+                const SizedBox(width: 8),
+                
+                // Production process customization tab
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _activeTabIndex = 1;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: _activeTabIndex == 1 ? const Color(0xff00599A) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(4),
                     ),
-                  ),
-                  child: const Text(
-                    'Production process customization',
-                    style: TextStyle(
-                      color: Color(0xFF6B7280),
-                      fontSize: 13,
-                      fontWeight: FontWeight.normal,
+                    child: Text(
+                      'Production process customization',
+                      style: TextStyle(
+                        color: _activeTabIndex == 1 ? Colors.white : const Color(0xFF6B7280),
+                        fontSize: 11,
+                        fontWeight: _activeTabIndex == 1 ? FontWeight.w600 : FontWeight.normal,
+                      ),
                     ),
                   ),
                 ),
@@ -698,7 +740,8 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
           // Description text
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.only(left: 24, right: 24, top: 16, bottom: 16),
+            color: Colors.white,
+            padding: const EdgeInsets.only(left: 13, right: 24, top: 20, bottom: 20),
             child: const Text(
               'Here, please define a rule for which open offers shall be followed-up at the customers and what shall happen, in case the follow-up is unsuccessful.',
               style: TextStyle(
@@ -713,124 +756,175 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
           Expanded(
             child: Row(
               children: [
-                // Left sidebar with templates
-                Container(
-                  width: 250,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    border: Border(
-                      right: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+                // Left sidebar with templates (25% of width)
+                Expanded(
+                  flex: 25,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
                     ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Add new template button
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: 35,
-                          child: OutlinedButton(
-                            onPressed: _prepareNewTemplate,
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: Color(0xff00599A)),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Add new template button (full width, no padding)
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 1),
+
+                          //margin: const EdgeInsets.all(12),
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: 40,
+                            child: OutlinedButton(
+                              onPressed: _prepareNewTemplate,
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Color(0xff00599A)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
                               ),
-                            ),
-                            child: const Text(
-                              'Add new template',
-                              style: TextStyle(
-                                color: Color(0xff00599A),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
+                              child: const Text(
+                                'Add new template',
+                                style: TextStyle(
+                                  color: Color(0xff00599A),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      
-                      // Templates list
-                      Expanded(
-                        child: isLoadingTemplates
-                            ? const Center(
-                                child: CircularProgressIndicator(),
-                              )
-                            : templates.isEmpty
-                                ? Center(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.description_outlined,
-                                          size: 48,
-                                          color: Colors.grey[400],
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Text(
-                                          'No templates yet',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.grey[600],
-                                            fontWeight: FontWeight.w500,
+                        
+                        // Search field
+                        Container(
+                          //margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 1),
+                          
+                          margin: const EdgeInsets.all(12.0),
+                          height: 40,
+                          child: TextField(
+                            controller: _templateSearchController,
+                            onChanged: _filterTemplates,
+                            decoration: InputDecoration(
+                              hintText: 'Search templates...',
+                              hintStyle: const TextStyle(
+                                fontSize: 12,
+                                color: Color.fromRGBO(144, 144, 144, 1),
+                              ),
+                              prefixIcon: const Icon(
+                                Icons.search,
+                                size: 18,
+                                color: Color.fromRGBO(144, 144, 144, 1),
+                              ),
+                              suffixIcon: _templateSearchController.text.isNotEmpty
+                                  ? IconButton(
+                                      icon: const Icon(
+                                        Icons.clear,
+                                        size: 18,
+                                        color: Color.fromRGBO(144, 144, 144, 1),
+                                      ),
+                                      onPressed: () {
+                                        _templateSearchController.clear();
+                                        _filterTemplates('');
+                                      },
+                                    )
+                                  : null,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(6),
+                                borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(6),
+                                borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(6),
+                                borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
+                              ),
+                            ),
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                        
+                        // Templates list
+                        Expanded(
+                          child: isLoadingTemplates
+                              ? const Center(
+                                  child: CircularProgressIndicator(),
+                                )
+                              : filteredTemplates.isEmpty
+                                  ? Center(
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.description_outlined,
+                                            size: 48,
+                                            color: Colors.grey[400],
                                           ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          'Click "Add new template" to create one',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey[500],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                : ListView.builder(
-                                    itemCount: templates.length,
-                                    itemBuilder: (context, index) {
-                                      final template = templates[index];
-                                      final isActive = template['isActive'] as bool;
-                                      
-                                      return Container(
-                                        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
-                                        decoration: BoxDecoration(
-                                          color: isActive ? const Color(0xFFE3F2FD) : Colors.transparent,
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        child: ListTile(
-                                          title: Text(
-                                            template['name'],
+                                          const SizedBox(height: 16),
+                                          Text(
+                                            'No templates yet',
                                             style: TextStyle(
-                                              fontSize: 12,
-                                              color: isActive ? const Color(0xff00599A) : const Color(0xFF374151),
-                                              fontWeight: isActive ? FontWeight.w500 : FontWeight.normal,
+                                              fontSize: 14,
+                                              color: Colors.grey[600],
+                                              fontWeight: FontWeight.w500,
                                             ),
                                           ),
-                                          dense: true,
-                                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                                          onTap: () {
-                                            // If clicking on "Untitled template", do nothing (it's already active)
-                                            if (template['id'] == -1) {
-                                              return;
-                                            }
-                                            
-                                            setState(() {
-                                              // Remove "Untitled template" if it exists
-                                              templates.removeWhere((t) => t['id'] == -1);
-                                              
-                                              // Deactivate all templates
-                                              for (var t in templates) {
-                                                t['isActive'] = false;
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'Click "Add new template" to create one',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[500],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  : ListView.builder(
+                                      itemCount: filteredTemplates.length,
+                                      itemBuilder: (context, index) {
+                                        final template = filteredTemplates[index];
+                                        final isActive = template['isActive'] as bool;
+                                        
+                                        return Container(
+                                          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                                          decoration: BoxDecoration(
+                                            color: isActive ? const Color(0xFFE3F2FD) : Colors.transparent,
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: ListTile(
+                                            title: Text(
+                                              template['name'],
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: isActive ? const Color(0xff00599A) : const Color(0xFF374151),
+                                                fontWeight: isActive ? FontWeight.w500 : FontWeight.normal,
+                                              ),
+                                            ),
+                                            dense: true,
+                                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                                            onTap: () {
+                                              // If clicking on "Untitled template", do nothing (it's already active)
+                                              if (template['id'] == -1) {
+                                                return;
                                               }
                                               
-                                              // Activate the clicked template
-                                              template['isActive'] = true;
-                                              selectedTemplateId = template['id'];
-                                            });
-                                            
-                                            // Load template details into form
+                                              setState(() {
+                                                // Remove "Untitled template" if it exists
+                                                templates.removeWhere((t) => t['id'] == -1);
+                                                
+                                                // Deactivate all templates
+                                                for (var t in templates) {
+                                                  t['isActive'] = false;
+                                                }
+                                                
+                                                // Activate the clicked template
+                                                template['isActive'] = true;
+                                                selectedTemplateId = template['id'];
+                                              });
+                                              
+                                              // Load template details into form
                                             _loadTemplateDetails(template);
                                             
                                             // Load control points for the newly selected template
@@ -843,13 +937,17 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                       ),
                     ],
                   ),
+                  ),
                 ),
                 
-                // Main content area
+                // Main content area (75% of width)
                 Expanded(
+                  flex: 75,
                   child: Container(
                     color: Colors.white,
-                    padding: const EdgeInsets.all(24),
+                    //padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.only(left: 8, right: 16, top: 0, bottom: 16),
+
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -870,237 +968,219 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                           children: [
                             // Validation type dropdown
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  RichText(
-                                    text: const TextSpan(
-                                      text: 'Validation type ',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Color(0xFF374151),
-                                        fontWeight: FontWeight.normal,
-                                      ),
-                                      children: [
-                                        TextSpan(
-                                          text: '*',
-                                          style: TextStyle(color: Colors.red),
-                                        ),
-                                      ],
-                                    ),
+                              child: DropdownButtonFormField<String>(
+                                value: selectedValidationType,
+                                isExpanded: true,
+                                decoration: InputDecoration(
+                                  labelText: 'Validation type *',
+                                  labelStyle: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color.fromRGBO(144, 144, 144, 1),
                                   ),
-                                  const SizedBox(height: 6),
-                                  DropdownButtonFormField<String>(
-                                    value: selectedValidationType,
-                                    isExpanded: true,
-                                    decoration: InputDecoration(
-                                      hintText: 'Select the validation type',
-                                      hintStyle: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w400,
-                                        color: Color.fromRGBO(144, 144, 144, 1),
-                                      ),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
-                                      ),
-                                      suffixIcon: const Icon(
-                                        Icons.keyboard_arrow_down,
-                                        size: 16,
-                                        color: Color.fromRGBO(144, 144, 144, 1),
-                                      ),
-                                    ),
-                                    hint: const Text(
-                                      'Select the validation type',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Color.fromRGBO(144, 144, 144, 1),
-                                      ),
-                                    ),
-                                    items: validationTypes.map((item) {
-                                      return DropdownMenuItem<String>(
-                                        value: item['id'].toString(),
-                                        child: Text(item['name'], style: const TextStyle(fontSize: 12, color: Colors.black)),
-                                      );
-                                    }).toList(),
-                                    style: const TextStyle(fontSize: 12, color: Colors.black),
-                                    onChanged: (String? newValue) {
-                                      setState(() {
-                                        selectedValidationType = newValue;
-                                      });
-                                    },
+                                  hintText: 'Select the validation type',
+                                  hintStyle: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color.fromRGBO(144, 144, 144, 1),
                                   ),
-                                ],
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
+                                  ),
+                                  floatingLabelStyle: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color.fromRGBO(88, 88, 88, 1),
+                                  ),
+                                  suffixIcon: const Icon(
+                                    Icons.keyboard_arrow_down,
+                                    size: 16,
+                                    color: Color.fromRGBO(144, 144, 144, 1),
+                                  ),
+                                ),
+                                hint: const Text(
+                                  'Select the validation type',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Color.fromRGBO(144, 144, 144, 1),
+                                  ),
+                                ),
+                                items: validationTypes.map((item) {
+                                  return DropdownMenuItem<String>(
+                                    value: item['id'].toString(),
+                                    child: Text(item['name'], style: const TextStyle(fontSize: 12, color: Colors.black)),
+                                  );
+                                }).toList(),
+                                style: const TextStyle(fontSize: 12, color: Colors.black),
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    selectedValidationType = newValue;
+                                  });
+                                },
                               ),
                             ),
                             
-                            const SizedBox(width: 16),
+                            const SizedBox(width: 24),
                             
                             // Final product dropdown (searchable)
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  RichText(
-                                    text: const TextSpan(
-                                      text: 'Final product ',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Color(0xFF374151),
-                                        fontWeight: FontWeight.normal,
-                                      ),
-                                      children: [
-                                        TextSpan(
-                                          text: '*',
-                                          style: TextStyle(color: Colors.red),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  SearchableDropdown(
-                                    value: selectedFinalProduct,
-                                    items: finalProducts,
-                                    hintText: 'Select the final product',
-                                    onChanged: (String? newValue) {
-                                      setState(() {
-                                        selectedFinalProduct = newValue;
-                                        // Clear material selection when product changes
-                                        selectedMaterialComponent = null;
-                                        materialComponents.clear();
-                                      });
-                                      
-                                      // Load materials for the selected product
-                                      if (newValue != null) {
-                                        _loadMaterialsForProduct(int.parse(newValue));
-                                      }
-                                    },
-                                  ),
-                                ],
+                              child: SearchableDropdown(
+                                value: selectedFinalProduct,
+                                items: finalProducts,
+                                hintText: 'Select the final product',
+                                labelText: 'Final product *',
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    selectedFinalProduct = newValue;
+                                    // Clear material selection when product changes
+                                    selectedMaterialComponent = null;
+                                    materialComponents.clear();
+                                  });
+                                  
+                                  // Load materials for the selected product
+                                  if (newValue != null) {
+                                    _loadMaterialsForProduct(int.parse(newValue));
+                                  }
+                                },
                               ),
                             ),
                           ],
                         ),
                         
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 14),
                         
                         // Second row of form fields
                         Row(
                           children: [
                             // Material/Component dropdown (searchable)
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  RichText(
-                                    text: const TextSpan(
-                                      text: 'Material/Component ',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Color(0xFF374151),
-                                        fontWeight: FontWeight.normal,
-                                      ),
-                                      children: [
-                                        TextSpan(
-                                          text: '*',
-                                          style: TextStyle(color: Colors.red),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  SearchableDropdown(
-                                    value: selectedMaterialComponent,
-                                    items: materialComponents,
-                                    hintText: 'Select the material/component',
-                                    onChanged: (String? newValue) {
-                                      setState(() {
-                                        selectedMaterialComponent = newValue;
+                              child: SearchableDropdown(
+                                value: selectedMaterialComponent,
+                                items: materialComponents,
+                                hintText: 'Select the material/component',
+                                labelText: 'Material/Component *',
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    selectedMaterialComponent = newValue;
+                                    
+                                    // Check if a template already exists for this material
+                                    if (newValue != null && selectedTemplateId == -1) {
+                                      final existingTemplate = templates.firstWhere(
+                                        (t) => t['materialId']?.toString() == newValue && t['id'] != -1,
+                                        orElse: () => {},
+                                      );
+                                      
+                                      if (existingTemplate.isNotEmpty) {
+                                        hasDuplicateMaterial = true;
+                                        duplicateTemplateName = existingTemplate['name'];
                                         
-                                        // Check if a template already exists for this material
-                                        if (newValue != null && selectedTemplateId == -1) {
-                                          final existingTemplate = templates.firstWhere(
-                                            (t) => t['materialId']?.toString() == newValue && t['id'] != -1,
-                                            orElse: () => {},
-                                          );
-                                          
-                                          if (existingTemplate.isNotEmpty) {
-                                            hasDuplicateMaterial = true;
-                                            duplicateTemplateName = existingTemplate['name'];
-                                          } else {
-                                            hasDuplicateMaterial = false;
-                                            duplicateTemplateName = null;
-                                          }
-                                        } else {
-                                          hasDuplicateMaterial = false;
-                                          duplicateTemplateName = null;
-                                        }
-                                      });
-                                    },
-                                  ),
-                                ],
+                                        // Show SnackBar warning
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Row(
+                                              children: [
+                                                const Icon(
+                                                  Icons.warning_amber_rounded,
+                                                  color: Colors.white,
+                                                  size: 20,
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      const Text(
+                                                        'Template Already Exists',
+                                                        style: TextStyle(
+                                                          fontSize: 13,
+                                                          fontWeight: FontWeight.w600,
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 4),
+                                                      Text(
+                                                        'A template already exists for this material: "${existingTemplate['name']}"',
+                                                        style: const TextStyle(
+                                                          fontSize: 12,
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            backgroundColor: const Color(0xFFF59E0B),
+                                            duration: const Duration(seconds: 4),
+                                            behavior: SnackBarBehavior.floating,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                        );
+                                      } else {
+                                        hasDuplicateMaterial = false;
+                                        duplicateTemplateName = null;
+                                      }
+                                    } else {
+                                      hasDuplicateMaterial = false;
+                                      duplicateTemplateName = null;
+                                    }
+                                  });
+                                },
                               ),
                             ),
                             
-                            const SizedBox(width: 16),
+                            const SizedBox(width: 24),
                             
                             // Tools to quality check text field
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  RichText(
-                                    text: const TextSpan(
-                                      text: 'Tools to quality check ',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Color(0xFF374151),
-                                        fontWeight: FontWeight.normal,
-                                      ),
-                                      children: [
-                                        TextSpan(
-                                          text: '*',
-                                          style: TextStyle(color: Colors.red),
-                                        ),
-                                      ],
-                                    ),
+                              child: TextFormField(
+                                controller: _toolsController,
+                                decoration: InputDecoration(
+                                  labelText: 'Tools to quality check *',
+                                  labelStyle: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color.fromRGBO(144, 144, 144, 1),
                                   ),
-                                  const SizedBox(height: 6),
-                                  TextFormField(
-                                    controller: _toolsController,
-                                    decoration: InputDecoration(
-                                      hintText: 'Enter the required tools name',
-                                      hintStyle: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w400,
-                                        color: Color.fromRGBO(144, 144, 144, 1),
-                                      ),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
-                                      ),
-                                    ),
-                                    style: const TextStyle(fontSize: 12, color: Colors.black),
+                                  hintText: 'Enter the required tools name',
+                                  hintStyle: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color.fromRGBO(144, 144, 144, 1),
                                   ),
-                                ],
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
+                                  ),
+                                  floatingLabelStyle: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color.fromRGBO(88, 88, 88, 1),
+                                  ),
+                                ),
+                                style: const TextStyle(fontSize: 12, color: Colors.black),
                               ),
                             ),
                           ],
@@ -1108,60 +1188,6 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                         
                         const SizedBox(height: 24),
                         
-                        // Warning banner for duplicate material
-                        if (hasDuplicateMaterial && duplicateTemplateName != null)
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            margin: const EdgeInsets.only(bottom: 16),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFEF3C7),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: const Color(0xFFF59E0B), width: 1),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.warning_amber_rounded,
-                                  color: Color(0xFFF59E0B),
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        'Template Already Exists',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: Color(0xFF92400E),
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'A template already exists for this material: "$duplicateTemplateName"',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: Color(0xFF92400E),
-                                          height: 1.4,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      const Text(
-                                        'Please select a different material or edit the existing template.',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: Color(0xFF92400E),
-                                          fontStyle: FontStyle.italic,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                         
                         // QC control points section
                         Row(
@@ -1226,29 +1252,47 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                                   child: CircularProgressIndicator(),
                                 )
                               : controlPoints.isEmpty
-                                  ? Center(
+                                  ? Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(48),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF9FAFB),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: const Color(0xFFE5E7EB),
+                                          width: 1,
+                                        ),
+                                      ),
                                       child: Column(
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
-                                          Icon(
-                                            Icons.checklist,
-                                            size: 48,
-                                            color: Colors.grey[400],
+                                          Container(
+                                            width: 32,
+                                            height: 32,
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFE5E7EB),
+                                              borderRadius: BorderRadius.circular(32),
+                                            ),
+                                            child: const Icon(
+                                              Icons.add,
+                                              size: 16,
+                                              color: Color(0xFF9CA3AF),
+                                            ),
                                           ),
                                           const SizedBox(height: 16),
                                           Text(
-                                            'No control points yet',
+                                            'No QC control points added yet',
                                             style: TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.grey[600],
-                                              fontWeight: FontWeight.w500,
+                                              fontSize: 12,
+                                              color: Colors.grey[700],
+                                              fontWeight: FontWeight.w600,
                                             ),
                                           ),
                                           const SizedBox(height: 8),
                                           Text(
-                                            'Click "Add control point" to create one',
+                                            'Add your first inspection check above',
                                             style: TextStyle(
-                                              fontSize: 12,
+                                              fontSize: 11,
                                               color: Colors.grey[500],
                                             ),
                                           ),
@@ -1308,7 +1352,7 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                                           style: const TextStyle(
                                             fontSize: 11,
                                             fontWeight: FontWeight.w500,
-                                            color: Color(0xFF059669),
+                                            color: Color(0xff00599A),
                                           ),
                                         ),
                                       ),
@@ -1473,7 +1517,7 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                                                     width: 20,
                                                     height: 20,
                                                     decoration: BoxDecoration(
-                                                      color: const Color(0xFFDCFDF7),
+                                                      color: const Color.fromRGBO(0, 89, 154, 0.1),
                                                       borderRadius: BorderRadius.circular(10),
                                                     ),
                                                     child: Center(
@@ -1482,7 +1526,7 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                                                         style: const TextStyle(
                                                           fontSize: 11,
                                                           fontWeight: FontWeight.w500,
-                                                          color: Color(0xFF059669),
+                                                          color: Color(0xff00599A),
                                                         ),
                                                       ),
                                                     ),
@@ -1676,7 +1720,7 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                                     : null,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: (selectedTemplateId == -1 && !hasDuplicateMaterial) 
-                                      ? const Color(0xFF6B7280) 
+                                      ? const Color(0xff00599A) 
                                       : const Color(0xFFD1D5DB), // Lighter grey when disabled
                                   foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(horizontal: 20),

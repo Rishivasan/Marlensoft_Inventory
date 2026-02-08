@@ -72,6 +72,15 @@ class SortableHeader extends ConsumerWidget {
     // Active sort - show direction with blue color
     switch (sortState.direction) {
       case SortDirection.ascending:
+        // Ascending: blue down arrow
+        return SvgPicture.asset(
+          "assets/images/Icon_arrowdown.svg", 
+          width: 14, 
+          height: 14, 
+          colorFilter: const ColorFilter.mode(Color(0xFF00599A), BlendMode.srcIn),
+        );
+      case SortDirection.descending:
+        // Descending: blue up arrow (rotated)
         return Transform.rotate(
           angle: 3.14159, // 180 degrees - arrow up
           child: SvgPicture.asset(
@@ -81,15 +90,7 @@ class SortableHeader extends ConsumerWidget {
             colorFilter: const ColorFilter.mode(Color(0xFF00599A), BlendMode.srcIn),
           ),
         );
-      case SortDirection.descending:
-        return SvgPicture.asset(
-          "assets/images/Icon_arrowdown.svg", 
-          width: 14, 
-          height: 14, 
-          colorFilter: const ColorFilter.mode(Color(0xFF00599A), BlendMode.srcIn),
-        );
       case SortDirection.none:
-      default:
         return SvgPicture.asset(
           "assets/images/Icon_arrowdown.svg", 
           width: 14, 

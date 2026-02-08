@@ -5,12 +5,16 @@ class PaginationState {
   final int pageSize;
   final int totalPages;
   final String searchText;
+  final String? sortColumn;
+  final String? sortDirection; // 'asc' or 'desc'
 
   PaginationState({
     this.currentPage = 1,
     this.pageSize = 10,
     this.totalPages = 0,
     this.searchText = '',
+    this.sortColumn,
+    this.sortDirection,
   });
 
   PaginationState copyWith({
@@ -18,12 +22,16 @@ class PaginationState {
     int? pageSize,
     int? totalPages,
     String? searchText,
+    String? sortColumn,
+    String? sortDirection,
   }) {
     return PaginationState(
       currentPage: currentPage ?? this.currentPage,
       pageSize: pageSize ?? this.pageSize,
       totalPages: totalPages ?? this.totalPages,
       searchText: searchText ?? this.searchText,
+      sortColumn: sortColumn ?? this.sortColumn,
+      sortDirection: sortDirection ?? this.sortDirection,
     );
   }
 }
@@ -70,6 +78,14 @@ class PaginationNotifier extends Notifier<PaginationState> {
     state = state.copyWith(
       searchText: text,
       currentPage: 1, // Reset to first page when searching
+    );
+  }
+
+  void setSorting(String? column, String? direction) {
+    state = state.copyWith(
+      sortColumn: column,
+      sortDirection: direction,
+      currentPage: 1, // Reset to first page when sorting changes
     );
   }
 

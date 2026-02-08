@@ -644,7 +644,7 @@ ORDER BY MAX(m.CreatedDate) DESC;
             };
         }
 
-        public async Task<PaginationDto<EnhancedMasterListDto>> GetEnhancedMasterListPaginatedAsync(int pageNumber, int pageSize, string? searchText = null)
+        public async Task<PaginationDto<EnhancedMasterListDto>> GetEnhancedMasterListPaginatedAsync(int pageNumber, int pageSize, string? searchText = null, string? sortColumn = null, string? sortDirection = null)
         {
             var query = @"
 WITH MasterData AS (
@@ -805,10 +805,38 @@ SELECT
     AvailabilityStatus,
     COUNT(*) OVER() AS TotalCount
 FROM MasterData
-ORDER BY CreatedDate DESC
+{ORDER_BY_CLAUSE}
 OFFSET @Offset ROWS
 FETCH NEXT @PageSize ROWS ONLY;
 ";
+
+            // Build dynamic ORDER BY clause
+            var orderByClause = "ORDER BY CreatedDate DESC"; // Default
+            
+            if (!string.IsNullOrEmpty(sortColumn))
+            {
+                var direction = sortDirection?.ToUpper() == "DESC" ? "DESC" : "ASC";
+                
+                // Map frontend column names to database column names
+                var columnMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "itemId", "ItemID" },
+                    { "type", "Type" },
+                    { "itemName", "ItemName" },
+                    { "vendor", "Vendor" },
+                    { "storageLocation", "StorageLocation" },
+                    { "responsibleTeam", "ResponsibleTeam" },
+                    { "nextServiceDue", "COALESCE(MaintenanceNextServiceDue, DirectNextServiceDue)" },
+                    { "availabilityStatus", "AvailabilityStatus" }
+                };
+                
+                if (columnMap.TryGetValue(sortColumn, out var dbColumn))
+                {
+                    orderByClause = $"ORDER BY {dbColumn} {direction}";
+                }
+            }
+            
+            query = query.Replace("{ORDER_BY_CLAUSE}", orderByClause);
 
             using var connection = _context.CreateConnection();
 

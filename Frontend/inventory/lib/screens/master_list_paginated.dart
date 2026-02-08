@@ -20,11 +20,41 @@ class MasterListPaginatedScreen extends ConsumerStatefulWidget {
 
 class _MasterListPaginatedScreenState extends ConsumerState<MasterListPaginatedScreen> {
   final TextEditingController _searchController = TextEditingController();
+  
+  // Track selected items
+  final Set<String> _selectedItems = {};
+  bool _selectAll = false;
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+  
+  void _toggleSelectAll(bool? value, List<MasterListModel> items) {
+    setState(() {
+      _selectAll = value ?? false;
+      if (_selectAll) {
+        // Select all items on current page
+        _selectedItems.addAll(items.map((item) => item.assetId));
+      } else {
+        // Deselect all items on current page
+        for (var item in items) {
+          _selectedItems.remove(item.assetId);
+        }
+      }
+    });
+  }
+  
+  void _toggleItemSelection(String assetId, bool? value) {
+    setState(() {
+      if (value == true) {
+        _selectedItems.add(assetId);
+      } else {
+        _selectedItems.remove(assetId);
+        _selectAll = false; // Uncheck "select all" if any item is unchecked
+      }
+    });
   }
 
   void _onSearch() {
@@ -211,7 +241,7 @@ class _MasterListPaginatedScreenState extends ConsumerState<MasterListPaginatedS
               color: Color(0xFFF9FAFB),
             ),
             children: [
-              _buildHeaderCell(''),
+              _buildHeaderCellWithCheckbox(items),
               _buildHeaderCell('Item ID'),
               _buildHeaderCell('Type'),
               _buildHeaderCell('Item Name'),
@@ -244,11 +274,30 @@ class _MasterListPaginatedScreenState extends ConsumerState<MasterListPaginatedS
       ),
     );
   }
+  
+  Widget _buildHeaderCellWithCheckbox(List<MasterListModel> items) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Checkbox(
+        value: _selectAll,
+        onChanged: (value) => _toggleSelectAll(value, items),
+        activeColor: const Color(0xFF0066CC),
+      ),
+    );
+  }
 
   TableRow _buildDataRow(MasterListModel item) {
+    final isSelected = _selectedItems.contains(item.assetId);
+    
     return TableRow(
       children: [
-        _buildDataCell(Checkbox(value: false, onChanged: (val) {})),
+        _buildDataCell(
+          Checkbox(
+            value: isSelected,
+            onChanged: (value) => _toggleItemSelection(item.assetId, value),
+            activeColor: const Color(0xFF0066CC),
+          ),
+        ),
         _buildDataCell(Text(item.assetId)),
         _buildDataCell(Text(item.type)),
         _buildDataCell(Text(item.name)),

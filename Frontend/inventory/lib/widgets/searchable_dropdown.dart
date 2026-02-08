@@ -4,6 +4,7 @@ class SearchableDropdown extends StatefulWidget {
   final String? value;
   final List<Map<String, dynamic>> items;
   final String hintText;
+  final String? labelText;
   final Function(String?) onChanged;
   final String? Function(String?)? validator;
 
@@ -12,6 +13,7 @@ class SearchableDropdown extends StatefulWidget {
     required this.value,
     required this.items,
     required this.hintText,
+    this.labelText,
     required this.onChanged,
     this.validator,
   }) : super(key: key);
@@ -101,26 +103,33 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
                 children: [
                   // Search field
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.all(0),
                     child: TextField(
                       controller: _searchController,
                       autofocus: true,
                       decoration: InputDecoration(
                         hintText: 'Search...',
-                        hintStyle: const TextStyle(fontSize: 12),
-                        prefixIcon: const Icon(Icons.search, size: 20),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        hintStyle: const TextStyle(
+                          fontSize: 12,
+                          color: Color.fromRGBO(144, 144, 144, 1),
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          size: 18,
+                          color: Color.fromRGBO(144, 144, 144, 1),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(0),
                           borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(0),
                           borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1)),
+                          borderRadius: BorderRadius.circular(0),
+                          borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
                         ),
                       ),
                       style: const TextStyle(fontSize: 12),
@@ -205,42 +214,61 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
 
   @override
   Widget build(BuildContext context) {
-    return CompositedTransformTarget(
-      link: _layerLink,
-      child: InkWell(
-        onTap: _toggleDropdown,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: _isDropdownOpen 
-                  ? const Color.fromRGBO(0, 89, 154, 1) 
-                  : const Color.fromRGBO(210, 210, 210, 1),
-              width: _isDropdownOpen ? 1.2 : 1,
-            ),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  widget.value == null ? widget.hintText : _getSelectedItemName(),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: widget.value == null 
-                        ? const Color.fromRGBO(144, 144, 144, 1) 
-                        : Colors.black,
+    return InputDecorator(
+      decoration: InputDecoration(
+        labelText: widget.labelText,
+        labelStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+          color: Color.fromRGBO(144, 144, 144, 1),
+        ),
+        floatingLabelStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+          color: Color.fromRGBO(88, 88, 88, 1),
+        ),
+        contentPadding: EdgeInsets.zero,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
+        ),
+      ),
+      child: CompositedTransformTarget(
+        link: _layerLink,
+        child: InkWell(
+          onTap: _toggleDropdown,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.value == null ? widget.hintText : _getSelectedItemName(),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: widget.value == null 
+                          ? const Color.fromRGBO(144, 144, 144, 1) 
+                          : Colors.black,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              Icon(
-                _isDropdownOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                size: 16,
-                color: const Color.fromRGBO(144, 144, 144, 1),
-              ),
-            ],
+                Icon(
+                  _isDropdownOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                  size: 16,
+                  color: const Color.fromRGBO(144, 144, 144, 1),
+                ),
+              ],
+            ),
           ),
         ),
       ),

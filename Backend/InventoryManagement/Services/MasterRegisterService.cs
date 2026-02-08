@@ -23,9 +23,9 @@ namespace InventoryManagement.Services
             return await _repo.GetEnhancedMasterListAsync();
         }
 
-        public async Task<PaginationDto<EnhancedMasterListDto>> GetEnhancedMasterListPaginatedAsync(int pageNumber, int pageSize, string? searchText = null)
+        public async Task<PaginationDto<EnhancedMasterListDto>> GetEnhancedMasterListPaginatedAsync(int pageNumber, int pageSize, string? searchText = null, string? sortColumn = null, string? sortDirection = null)
         {
-            return await _repo.GetEnhancedMasterListPaginatedAsync(pageNumber, pageSize, searchText);
+            return await _repo.GetEnhancedMasterListPaginatedAsync(pageNumber, pageSize, searchText, sortColumn, sortDirection);
         }
     }
 }

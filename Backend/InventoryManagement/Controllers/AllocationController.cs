@@ -25,6 +25,136 @@ namespace InventoryManagement.Controllers
             return Ok(allocations);
         }
 
+        [HttpGet("paginated/{assetId}")]
+        public async Task<ActionResult> GetAllocationsPaginated(
+            string assetId,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 5,
+            [FromQuery] string? searchText = null,
+            [FromQuery] string? sortColumn = null,
+            [FromQuery] string? sortDirection = null)
+        {
+            Console.WriteLine($"=== ALLOCATION PAGINATED: AssetId={assetId}, Page={pageNumber}, Size={pageSize}, Search={searchText}, Sort={sortColumn} {sortDirection} ===");
+            
+            try
+            {
+                using var connection = _context.CreateConnection();
+                
+                var query = @"
+WITH AllocationData AS (
+    SELECT 
+        AllocationId,
+        AssetType,
+        AssetId,
+        ItemName,
+        EmployeeId,
+        EmployeeName,
+        TeamName,
+        Purpose,
+        IssuedDate,
+        ExpectedReturnDate,
+        ActualReturnDate,
+        AvailabilityStatus,
+        CreatedDate
+    FROM Allocation
+    WHERE AssetId = @AssetId
+    AND (@SearchText IS NULL OR @SearchText = '' OR
+        EmployeeId LIKE '%' + @SearchText + '%' OR
+        EmployeeName LIKE '%' + @SearchText + '%' OR
+        TeamName LIKE '%' + @SearchText + '%' OR
+        Purpose LIKE '%' + @SearchText + '%' OR
+        AvailabilityStatus LIKE '%' + @SearchText + '%')
+)
+SELECT 
+    *,
+    COUNT(*) OVER() AS TotalCount
+FROM AllocationData
+{ORDER_BY_CLAUSE}
+OFFSET @Offset ROWS
+FETCH NEXT @PageSize ROWS ONLY;
+";
+
+                // Build dynamic ORDER BY clause
+                var orderByClause = "ORDER BY IssuedDate DESC"; // Default
+                
+                if (!string.IsNullOrEmpty(sortColumn))
+                {
+                    var direction = sortDirection?.ToUpper() == "DESC" ? "DESC" : "ASC";
+                    
+                    var columnMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        { "issuedDate", "IssuedDate" },
+                        { "employeeId", "EmployeeId" },
+                        { "employeeName", "EmployeeName" },
+                        { "teamName", "TeamName" },
+                        { "purpose", "Purpose" },
+                        { "expectedReturnDate", "ExpectedReturnDate" },
+                        { "actualReturnDate", "ActualReturnDate" },
+                        { "availabilityStatus", "AvailabilityStatus" }
+                    };
+                    
+                    if (columnMap.TryGetValue(sortColumn, out var dbColumn))
+                    {
+                        orderByClause = $"ORDER BY {dbColumn} {direction}";
+                    }
+                }
+                
+                query = query.Replace("{ORDER_BY_CLAUSE}", orderByClause);
+
+                var offset = (pageNumber - 1) * pageSize;
+                var parameters = new { AssetId = assetId, SearchText = searchText, Offset = offset, PageSize = pageSize };
+
+                var result = await connection.QueryAsync(query, parameters);
+                var resultList = result.ToList();
+
+                var totalCount = resultList.FirstOrDefault()?.TotalCount ?? 0;
+                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+                var items = resultList.Select(row => new AllocationEntity
+                {
+                    AllocationId = row.AllocationId,
+                    AssetType = row.AssetType,
+                    AssetId = row.AssetId,
+                    ItemName = row.ItemName,
+                    EmployeeId = row.EmployeeId,
+                    EmployeeName = row.EmployeeName,
+                    TeamName = row.TeamName,
+                    Purpose = row.Purpose,
+                    IssuedDate = row.IssuedDate,
+                    ExpectedReturnDate = row.ExpectedReturnDate,
+                    ActualReturnDate = row.ActualReturnDate,
+                    AvailabilityStatus = row.AvailabilityStatus,
+                    CreatedDate = row.CreatedDate
+                }).ToList();
+
+                Console.WriteLine($"✓ Paginated Allocation: Page {pageNumber}, Size {pageSize}, Total {totalCount} items");
+
+                return Ok(new
+                {
+                    totalCount,
+                    pageNumber,
+                    pageSize,
+                    totalPages,
+                    items
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Allocation pagination query failed: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                
+                // Return empty pagination result
+                return Ok(new
+                {
+                    totalCount = 0,
+                    pageNumber,
+                    pageSize,
+                    totalPages = 0,
+                    items = new List<AllocationEntity>()
+                });
+            }
+        }
+
         [HttpGet("{assetId}")]
         public async Task<ActionResult<IEnumerable<AllocationEntity>>> GetAllocationsByAssetId(string assetId)
         {

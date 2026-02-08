@@ -48,15 +48,19 @@ class MasterListService {
     required int pageNumber,
     required int pageSize,
     String? searchText,
+    String? sortColumn,
+    String? sortDirection,
   }) async {
     try {
-      print('DEBUG: MasterListService - Fetching paginated data: page=$pageNumber, size=$pageSize, search=$searchText');
+      print('DEBUG: MasterListService - Fetching paginated data: page=$pageNumber, size=$pageSize, search=$searchText, sort=$sortColumn $sortDirection');
       final dio = DioClient.getDio();
       
       final queryParams = {
         'pageNumber': pageNumber,
         'pageSize': pageSize,
         if (searchText != null && searchText.isNotEmpty) 'searchText': searchText,
+        if (sortColumn != null && sortColumn.isNotEmpty) 'sortColumn': sortColumn,
+        if (sortDirection != null && sortDirection.isNotEmpty) 'sortDirection': sortDirection,
       };
 
       final response = await dio.get(

@@ -48,7 +48,9 @@ namespace InventoryManagement.Controllers
         public async Task<IActionResult> GetEnhancedMasterListPaginated(
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10,
-            [FromQuery] string? searchText = null)
+            [FromQuery] string? searchText = null,
+            [FromQuery] string? sortColumn = null,
+            [FromQuery] string? sortDirection = null)
         {
             try
             {
@@ -61,7 +63,7 @@ namespace InventoryManagement.Controllers
                 if (pageSize < 1) pageSize = 10;
                 if (pageSize > 100) pageSize = 100; // Max page size limit
 
-                var data = await _service.GetEnhancedMasterListPaginatedAsync(pageNumber, pageSize, searchText);
+                var data = await _service.GetEnhancedMasterListPaginatedAsync(pageNumber, pageSize, searchText, sortColumn, sortDirection);
                 return Ok(data);
             }
             catch (Exception ex)

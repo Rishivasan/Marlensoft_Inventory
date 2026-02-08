@@ -79,6 +79,8 @@ class PaginatedMasterListNotifier extends AsyncNotifier<PaginationModel<MasterLi
       pageNumber: paginationState.currentPage,
       pageSize: paginationState.pageSize,
       searchText: paginationState.searchText,
+      sortColumn: paginationState.sortColumn,
+      sortDirection: paginationState.sortDirection,
     );
   }
 
@@ -86,14 +88,18 @@ class PaginatedMasterListNotifier extends AsyncNotifier<PaginationModel<MasterLi
     required int pageNumber,
     required int pageSize,
     String? searchText,
+    String? sortColumn,
+    String? sortDirection,
   }) async {
     try {
-      print('DEBUG: PaginatedMasterListNotifier - Loading page $pageNumber with size $pageSize');
+      print('DEBUG: PaginatedMasterListNotifier - Loading page $pageNumber with size $pageSize, sort: $sortColumn $sortDirection');
       final service = MasterListService();
       final paginationModel = await service.getMasterListPaginated(
         pageNumber: pageNumber,
         pageSize: pageSize,
         searchText: searchText,
+        sortColumn: sortColumn,
+        sortDirection: sortDirection,
       );
 
       // Update total pages in pagination provider
@@ -117,6 +123,8 @@ class PaginatedMasterListNotifier extends AsyncNotifier<PaginationModel<MasterLi
         pageNumber: paginationState.currentPage,
         pageSize: paginationState.pageSize,
         searchText: paginationState.searchText,
+        sortColumn: paginationState.sortColumn,
+        sortDirection: paginationState.sortDirection,
       );
       state = AsyncValue.data(paginationModel);
       print('DEBUG: PaginatedMasterListNotifier - Refresh complete');

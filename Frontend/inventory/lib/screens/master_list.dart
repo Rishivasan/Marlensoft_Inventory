@@ -9,7 +9,6 @@ import 'package:inventory/providers/search_provider.dart';
 import 'package:inventory/providers/sorting_provider.dart';
 import 'package:inventory/providers/product_state_provider.dart';
 import 'package:inventory/providers/next_service_provider.dart';
-import 'package:inventory/utils/sorting_utils.dart';
 import 'package:inventory/widgets/top_layer.dart';
 import 'package:inventory/widgets/sortable_header.dart';
 import 'package:inventory/widgets/pagination_controls.dart';
@@ -18,19 +17,57 @@ import 'package:inventory/model/master_list_model.dart';
 import 'package:provider/provider.dart' as provider;
 
 @RoutePage()
-class MasterListScreen extends ConsumerWidget {
+class MasterListScreen extends ConsumerStatefulWidget {
   const MasterListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MasterListScreen> createState() => _MasterListScreenState();
+}
+
+class _MasterListScreenState extends ConsumerState<MasterListScreen> {
+  
+  void _toggleSelectAll(bool? value, List<MasterListModel> items) {
+    final selectAllNotifier = ref.read(selectAllProvider.notifier);
+    final selectedItemsNotifier = ref.read(selectedItemsProvider.notifier);
+    
+    final shouldSelectAll = value ?? false;
+    selectAllNotifier.set(shouldSelectAll);
+    
+    if (shouldSelectAll) {
+      // Select all items on current page using refId
+      selectedItemsNotifier.selectAll(items);
+    } else {
+      // Deselect all items
+      selectedItemsNotifier.clearAll();
+    }
+  }
+  
+  void _toggleItemSelection(String refId, bool? value) {
+    print('DEBUG: _toggleItemSelection called for $refId with value $value');
+    final selectedItemsNotifier = ref.read(selectedItemsProvider.notifier);
+    final selectAllNotifier = ref.read(selectAllProvider.notifier);
+    
+    selectedItemsNotifier.toggleItem(refId);
+    
+    if (value == false) {
+      // Uncheck "select all" if any item is unchecked
+      selectAllNotifier.set(false);
+    }
+    
+    print('DEBUG: Selected items count: ${ref.read(selectedItemsProvider).length}');
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // Watch the PAGINATED master list async for loading states
     final paginatedDataAsync = ref.watch(paginatedMasterListProvider);
     // Watch pagination state
     final paginationState = ref.watch(paginationProvider);
     // Watch the search query
     final searchQuery = ref.watch(masterListSearchQueryProvider);
-    // Watch the sort state
-    final sortState = ref.watch(sortProvider);
+    // Watch selection state
+    final selectedItems = ref.watch(selectedItemsProvider);
+    final selectAll = ref.watch(selectAllProvider);
 
     return Container(
       padding: const EdgeInsets.only(top: 12),
@@ -99,7 +136,7 @@ class MasterListScreen extends ConsumerWidget {
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: _buildTable(context, ref, rawItems),
+                        child: _buildTable(context, ref, rawItems, selectedItems, selectAll),
                       ),
                     ),
                     
@@ -130,9 +167,8 @@ class MasterListScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTable(BuildContext context, WidgetRef ref, List<MasterListModel> items) {
+  Widget _buildTable(BuildContext context, WidgetRef ref, List<MasterListModel> items, Set<String> selectedItems, bool selectAll) {
     final ScrollController horizontalScrollController = ScrollController();
-    Set<MasterListModel> _selectedItems = {};
 
     return SingleChildScrollView(
       controller: horizontalScrollController,
@@ -155,9 +191,9 @@ class MasterListScreen extends ConsumerWidget {
                   child: Transform.scale(
                     scale: 0.7,
                     child: Checkbox(
-                      value: false,
-                      tristate: true,
-                      onChanged: (val) {},
+                      value: selectAll,
+                      tristate: false,
+                      onChanged: (val) => _toggleSelectAll(val, items),
                       activeColor: const Color(0xFF00599A),
                       checkColor: Colors.white,
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -169,48 +205,245 @@ class MasterListScreen extends ConsumerWidget {
                   sortKey: "itemId",
                   width: 150,
                   sortProvider: sortProvider,
+                  onTap: () {
+                    final sortState = ref.read(sortProvider);
+                    String? sortColumn;
+                    String? sortDirection;
+                    
+                    if (sortState.sortColumn == "itemId") {
+                      // Same column clicked
+                      if (sortState.direction == SortDirection.none) {
+                        // First click: none -> ascending
+                        sortColumn = "itemId";
+                        sortDirection = "asc";
+                      } else if (sortState.direction == SortDirection.ascending) {
+                        // Second click: ascending -> descending
+                        sortColumn = "itemId";
+                        sortDirection = "desc";
+                      } else {
+                        // Third click: descending -> none
+                        sortColumn = null;
+                        sortDirection = null;
+                      }
+                    } else {
+                      // Different column clicked - start with ascending
+                      sortColumn = "itemId";
+                      sortDirection = "asc";
+                    }
+                    
+                    ref.read(paginationProvider.notifier).setSorting(sortColumn, sortDirection);
+                    ref.invalidate(paginatedMasterListProvider);
+                  },
                 ),
                 SortableHeader(
                   title: "Type",
                   sortKey: "type",
                   width: 120,
                   sortProvider: sortProvider,
+                  onTap: () {
+                    final sortState = ref.read(sortProvider);
+                    String? sortColumn;
+                    String? sortDirection;
+                    
+                    if (sortState.sortColumn == "type") {
+                      if (sortState.direction == SortDirection.none) {
+                        sortColumn = "type";
+                        sortDirection = "asc";
+                      } else if (sortState.direction == SortDirection.ascending) {
+                        sortColumn = "type";
+                        sortDirection = "desc";
+                      } else {
+                        sortColumn = null;
+                        sortDirection = null;
+                      }
+                    } else {
+                      sortColumn = "type";
+                      sortDirection = "asc";
+                    }
+                    
+                    ref.read(paginationProvider.notifier).setSorting(sortColumn, sortDirection);
+                    ref.invalidate(paginatedMasterListProvider);
+                  },
                 ),
                 SortableHeader(
                   title: "Item Name",
                   sortKey: "itemName",
                   width: 180,
                   sortProvider: sortProvider,
+                  onTap: () {
+                    final sortState = ref.read(sortProvider);
+                    String? sortColumn;
+                    String? sortDirection;
+                    
+                    if (sortState.sortColumn == "itemName") {
+                      if (sortState.direction == SortDirection.none) {
+                        sortColumn = "itemName";
+                        sortDirection = "asc";
+                      } else if (sortState.direction == SortDirection.ascending) {
+                        sortColumn = "itemName";
+                        sortDirection = "desc";
+                      } else {
+                        sortColumn = null;
+                        sortDirection = null;
+                      }
+                    } else {
+                      sortColumn = "itemName";
+                      sortDirection = "asc";
+                    }
+                    
+                    ref.read(paginationProvider.notifier).setSorting(sortColumn, sortDirection);
+                    ref.invalidate(paginatedMasterListProvider);
+                  },
                 ),
                 SortableHeader(
                   title: "Supplier",
                   sortKey: "vendor",
                   width: 160,
                   sortProvider: sortProvider,
+                  onTap: () {
+                    final sortState = ref.read(sortProvider);
+                    String? sortColumn;
+                    String? sortDirection;
+                    
+                    if (sortState.sortColumn == "vendor") {
+                      if (sortState.direction == SortDirection.none) {
+                        sortColumn = "vendor";
+                        sortDirection = "asc";
+                      } else if (sortState.direction == SortDirection.ascending) {
+                        sortColumn = "vendor";
+                        sortDirection = "desc";
+                      } else {
+                        sortColumn = null;
+                        sortDirection = null;
+                      }
+                    } else {
+                      sortColumn = "vendor";
+                      sortDirection = "asc";
+                    }
+                    
+                    ref.read(paginationProvider.notifier).setSorting(sortColumn, sortDirection);
+                    ref.invalidate(paginatedMasterListProvider);
+                  },
                 ),
                 SortableHeader(
                   title: "Location",
                   sortKey: "storageLocation",
                   width: 160,
                   sortProvider: sortProvider,
+                  onTap: () {
+                    final sortState = ref.read(sortProvider);
+                    String? sortColumn;
+                    String? sortDirection;
+                    
+                    if (sortState.sortColumn == "storageLocation") {
+                      if (sortState.direction == SortDirection.none) {
+                        sortColumn = "storageLocation";
+                        sortDirection = "asc";
+                      } else if (sortState.direction == SortDirection.ascending) {
+                        sortColumn = "storageLocation";
+                        sortDirection = "desc";
+                      } else {
+                        sortColumn = null;
+                        sortDirection = null;
+                      }
+                    } else {
+                      sortColumn = "storageLocation";
+                      sortDirection = "asc";
+                    }
+                    
+                    ref.read(paginationProvider.notifier).setSorting(sortColumn, sortDirection);
+                    ref.invalidate(paginatedMasterListProvider);
+                  },
                 ),
                 SortableHeader(
                   title: "Responsible Team",
                   sortKey: "responsibleTeam",
                   width: 180,
                   sortProvider: sortProvider,
+                  onTap: () {
+                    final sortState = ref.read(sortProvider);
+                    String? sortColumn;
+                    String? sortDirection;
+                    
+                    if (sortState.sortColumn == "responsibleTeam") {
+                      if (sortState.direction == SortDirection.none) {
+                        sortColumn = "responsibleTeam";
+                        sortDirection = "asc";
+                      } else if (sortState.direction == SortDirection.ascending) {
+                        sortColumn = "responsibleTeam";
+                        sortDirection = "desc";
+                      } else {
+                        sortColumn = null;
+                        sortDirection = null;
+                      }
+                    } else {
+                      sortColumn = "responsibleTeam";
+                      sortDirection = "asc";
+                    }
+                    
+                    ref.read(paginationProvider.notifier).setSorting(sortColumn, sortDirection);
+                    ref.invalidate(paginatedMasterListProvider);
+                  },
                 ),
                 SortableHeader(
                   title: "Next Service Due",
                   sortKey: "nextServiceDue",
                   width: 150,
                   sortProvider: sortProvider,
+                  onTap: () {
+                    final sortState = ref.read(sortProvider);
+                    String? sortColumn;
+                    String? sortDirection;
+                    
+                    if (sortState.sortColumn == "nextServiceDue") {
+                      if (sortState.direction == SortDirection.none) {
+                        sortColumn = "nextServiceDue";
+                        sortDirection = "asc";
+                      } else if (sortState.direction == SortDirection.ascending) {
+                        sortColumn = "nextServiceDue";
+                        sortDirection = "desc";
+                      } else {
+                        sortColumn = null;
+                        sortDirection = null;
+                      }
+                    } else {
+                      sortColumn = "nextServiceDue";
+                      sortDirection = "asc";
+                    }
+                    
+                    ref.read(paginationProvider.notifier).setSorting(sortColumn, sortDirection);
+                    ref.invalidate(paginatedMasterListProvider);
+                  },
                 ),
                 SortableHeader(
                   title: "Status",
                   sortKey: "availabilityStatus",
                   width: 140,
                   sortProvider: sortProvider,
+                  onTap: () {
+                    final sortState = ref.read(sortProvider);
+                    String? sortColumn;
+                    String? sortDirection;
+                    
+                    if (sortState.sortColumn == "availabilityStatus") {
+                      if (sortState.direction == SortDirection.none) {
+                        sortColumn = "availabilityStatus";
+                        sortDirection = "asc";
+                      } else if (sortState.direction == SortDirection.ascending) {
+                        sortColumn = "availabilityStatus";
+                        sortDirection = "desc";
+                      } else {
+                        sortColumn = null;
+                        sortDirection = null;
+                      }
+                    } else {
+                      sortColumn = "availabilityStatus";
+                      sortDirection = "asc";
+                    }
+                    
+                    ref.read(paginationProvider.notifier).setSorting(sortColumn, sortDirection);
+                    ref.invalidate(paginatedMasterListProvider);
+                  },
                 ),
                 Container(
                   width: 50,
@@ -237,17 +470,26 @@ class MasterListScreen extends ConsumerWidget {
                       ),
                       child: Row(
                         children: [
-                          Container(
-                            width: 60,
-                            alignment: Alignment.center,
-                            child: Transform.scale(
-                              scale: 0.7,
-                              child: Checkbox(
-                                value: false,
-                                onChanged: (value) {},
-                                activeColor: const Color(0xFF00599A),
-                                checkColor: Colors.white,
-                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          // Checkbox with its own tap handler to prevent row click
+                          GestureDetector(
+                            onTap: () {
+                              print('DEBUG: GestureDetector onTap called for ${item.refId}');
+                              // Toggle checkbox without navigating
+                              _toggleItemSelection(item.refId, !selectedItems.contains(item.refId));
+                            },
+                            child: Container(
+                              width: 60,
+                              alignment: Alignment.center,
+                              color: Colors.transparent, // Make the entire area clickable
+                              child: Transform.scale(
+                                scale: 0.7,
+                                child: Checkbox(
+                                  value: selectedItems.contains(item.refId),
+                                  onChanged: (value) => _toggleItemSelection(item.refId, value),
+                                  activeColor: const Color(0xFF00599A),
+                                  checkColor: Colors.white,
+                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
                               ),
                             ),
                           ),

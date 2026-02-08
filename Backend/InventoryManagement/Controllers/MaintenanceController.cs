@@ -115,6 +115,138 @@ namespace InventoryManagement.Controllers
             }
         }
 
+        [HttpGet("paginated/{assetId}")]
+        public async Task<ActionResult> GetMaintenancePaginated(
+            string assetId,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 5,
+            [FromQuery] string? searchText = null,
+            [FromQuery] string? sortColumn = null,
+            [FromQuery] string? sortDirection = null)
+        {
+            Console.WriteLine($"=== MAINTENANCE PAGINATED: AssetId={assetId}, Page={pageNumber}, Size={pageSize}, Search={searchText}, Sort={sortColumn} {sortDirection} ===");
+            
+            try
+            {
+                using var connection = _context.CreateConnection();
+                
+                var query = @"
+WITH MaintenanceData AS (
+    SELECT 
+        MaintenanceId,
+        AssetType,
+        AssetId,
+        ItemName,
+        ServiceDate,
+        ServiceProviderCompany,
+        ServiceEngineerName,
+        ServiceType,
+        NextServiceDue,
+        ServiceNotes,
+        MaintenanceStatus,
+        Cost,
+        ResponsibleTeam,
+        CreatedDate
+    FROM Maintenance
+    WHERE AssetId = @AssetId
+    AND (@SearchText IS NULL OR @SearchText = '' OR
+        ServiceProviderCompany LIKE '%' + @SearchText + '%' OR
+        ServiceEngineerName LIKE '%' + @SearchText + '%' OR
+        ServiceType LIKE '%' + @SearchText + '%' OR
+        MaintenanceStatus LIKE '%' + @SearchText + '%' OR
+        ResponsibleTeam LIKE '%' + @SearchText + '%')
+)
+SELECT 
+    *,
+    COUNT(*) OVER() AS TotalCount
+FROM MaintenanceData
+{ORDER_BY_CLAUSE}
+OFFSET @Offset ROWS
+FETCH NEXT @PageSize ROWS ONLY;
+";
+
+                // Build dynamic ORDER BY clause
+                var orderByClause = "ORDER BY ServiceDate DESC"; // Default
+                
+                if (!string.IsNullOrEmpty(sortColumn))
+                {
+                    var direction = sortDirection?.ToUpper() == "DESC" ? "DESC" : "ASC";
+                    
+                    var columnMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        { "serviceDate", "ServiceDate" },
+                        { "serviceProviderCompany", "ServiceProviderCompany" },
+                        { "serviceEngineerName", "ServiceEngineerName" },
+                        { "serviceType", "ServiceType" },
+                        { "responsibleTeam", "ResponsibleTeam" },
+                        { "nextServiceDue", "NextServiceDue" },
+                        { "cost", "Cost" },
+                        { "maintenanceStatus", "MaintenanceStatus" }
+                    };
+                    
+                    if (columnMap.TryGetValue(sortColumn, out var dbColumn))
+                    {
+                        orderByClause = $"ORDER BY {dbColumn} {direction}";
+                    }
+                }
+                
+                query = query.Replace("{ORDER_BY_CLAUSE}", orderByClause);
+
+                var offset = (pageNumber - 1) * pageSize;
+                var parameters = new { AssetId = assetId, SearchText = searchText, Offset = offset, PageSize = pageSize };
+
+                var result = await connection.QueryAsync(query, parameters);
+                var resultList = result.ToList();
+
+                var totalCount = resultList.FirstOrDefault()?.TotalCount ?? 0;
+                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+                var items = resultList.Select(row => new MaintenanceEntity
+                {
+                    MaintenanceId = row.MaintenanceId,
+                    AssetType = row.AssetType,
+                    AssetId = row.AssetId,
+                    ItemName = row.ItemName,
+                    ServiceDate = row.ServiceDate,
+                    ServiceProviderCompany = row.ServiceProviderCompany,
+                    ServiceEngineerName = row.ServiceEngineerName,
+                    ServiceType = row.ServiceType,
+                    NextServiceDue = row.NextServiceDue,
+                    ServiceNotes = row.ServiceNotes,
+                    MaintenanceStatus = row.MaintenanceStatus,
+                    Cost = row.Cost,
+                    ResponsibleTeam = row.ResponsibleTeam,
+                    CreatedDate = row.CreatedDate
+                }).ToList();
+
+                Console.WriteLine($"✓ Paginated Maintenance: Page {pageNumber}, Size {pageSize}, Total {totalCount} items");
+
+                return Ok(new
+                {
+                    totalCount,
+                    pageNumber,
+                    pageSize,
+                    totalPages,
+                    items
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Maintenance pagination query failed: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                
+                // Return empty pagination result
+                return Ok(new
+                {
+                    totalCount = 0,
+                    pageNumber,
+                    pageSize,
+                    totalPages = 0,
+                    items = new List<MaintenanceEntity>()
+                });
+            }
+        }
+
         [HttpGet("{assetId}")]
         public async Task<ActionResult<IEnumerable<MaintenanceEntity>>> GetMaintenanceByAssetId(string assetId)
         {

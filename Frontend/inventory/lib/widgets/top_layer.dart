@@ -249,8 +249,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:inventory/dialogs/dialog_pannel_helper.dart';
 import 'package:inventory/providers/master_list_provider.dart';
+import 'package:inventory/providers/pagination_provider.dart';
 import 'package:inventory/providers/selection_provider.dart';
-import 'package:inventory/providers/search_provider.dart';
 import 'package:inventory/screens/add_forms/add_asset.dart';
 import 'package:inventory/screens/add_forms/add_consumable.dart';
 import 'package:inventory/screens/add_forms/add_mmd.dart';
@@ -272,8 +272,8 @@ class _TopLayerState extends ConsumerState<TopLayer> {
   @override
   void initState() {
     super.initState();
-    // Initialize search controller with current search query
-    _searchController.text = ref.read(masterListSearchQueryProvider);
+    // Initialize search controller with current search query from pagination provider
+    _searchController.text = ref.read(paginationProvider).searchText;
     
     // Listen to search controller changes
     _searchController.addListener(_onSearchChanged);
@@ -292,13 +292,19 @@ class _TopLayerState extends ConsumerState<TopLayer> {
     
     // Start new timer for debounced search
     _debounceTimer = Timer(const Duration(milliseconds: 300), () {
-      ref.read(masterListSearchQueryProvider.notifier).state = _searchController.text;
+      // Update pagination provider's search text (used by paginated master list)
+      ref.read(paginationProvider.notifier).setSearchText(_searchController.text);
+      // Also invalidate the paginated provider to trigger refresh
+      ref.invalidate(paginatedMasterListProvider);
     });
   }
 
   void _clearSearch() {
     _searchController.clear();
-    ref.read(masterListSearchQueryProvider.notifier).state = '';
+    // Clear search in pagination provider
+    ref.read(paginationProvider.notifier).setSearchText('');
+    // Invalidate to trigger refresh
+    ref.invalidate(paginatedMasterListProvider);
   }
 
   @override
@@ -419,8 +425,9 @@ class _TopLayerState extends ConsumerState<TopLayer> {
                                     print('DEBUG: TopLayer - Tool submitted, refreshing master list');
                                     // Small delay to ensure database transaction completes
                                     await Future.delayed(const Duration(milliseconds: 300));
-                                    // Force refresh master list immediately
+                                    // Force refresh both paginated and non-paginated master lists
                                     await ref.read(forceRefreshMasterListProvider)();
+                                    ref.invalidate(paginatedMasterListProvider);
                                   },
                                 ),
                               );
@@ -432,8 +439,9 @@ class _TopLayerState extends ConsumerState<TopLayer> {
                                     print('DEBUG: TopLayer - Asset submitted, refreshing master list');
                                     // Small delay to ensure database transaction completes
                                     await Future.delayed(const Duration(milliseconds: 300));
-                                    // Force refresh master list immediately
+                                    // Force refresh both paginated and non-paginated master lists
                                     await ref.read(forceRefreshMasterListProvider)();
+                                    ref.invalidate(paginatedMasterListProvider);
                                   },
                                 ),
                               );
@@ -445,8 +453,9 @@ class _TopLayerState extends ConsumerState<TopLayer> {
                                     print('DEBUG: TopLayer - MMD submitted, refreshing master list');
                                     // Small delay to ensure database transaction completes
                                     await Future.delayed(const Duration(milliseconds: 300));
-                                    // Force refresh master list immediately
+                                    // Force refresh both paginated and non-paginated master lists
                                     await ref.read(forceRefreshMasterListProvider)();
+                                    ref.invalidate(paginatedMasterListProvider);
                                   },
                                 ),
                               );
@@ -458,8 +467,9 @@ class _TopLayerState extends ConsumerState<TopLayer> {
                                     print('DEBUG: TopLayer - Consumable submitted, refreshing master list');
                                     // Small delay to ensure database transaction completes
                                     await Future.delayed(const Duration(milliseconds: 300));
-                                    // Force refresh master list immediately
+                                    // Force refresh both paginated and non-paginated master lists
                                     await ref.read(forceRefreshMasterListProvider)();
+                                    ref.invalidate(paginatedMasterListProvider);
                                   },
                                 ),
                               );
@@ -762,8 +772,9 @@ class _TopLayerState extends ConsumerState<TopLayer> {
 
         print('Result snackbar shown');
 
-        // Refresh list
-        ref.invalidate(masterListProvider);
+        // Force refresh both master list providers using the helper providers
+        await ref.read(forceRefreshMasterListProvider)();
+        await ref.read(refreshPaginatedMasterListProvider)();
         print('List refreshed');
         
       } else if (asyncValue.isLoading) {
