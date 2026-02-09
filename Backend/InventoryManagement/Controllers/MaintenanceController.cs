@@ -150,11 +150,18 @@ WITH MaintenanceData AS (
     FROM Maintenance
     WHERE AssetId = @AssetId
     AND (@SearchText IS NULL OR @SearchText = '' OR
+        AssetType LIKE '%' + @SearchText + '%' OR
+        AssetId LIKE '%' + @SearchText + '%' OR
+        ItemName LIKE '%' + @SearchText + '%' OR
         ServiceProviderCompany LIKE '%' + @SearchText + '%' OR
         ServiceEngineerName LIKE '%' + @SearchText + '%' OR
         ServiceType LIKE '%' + @SearchText + '%' OR
+        ServiceNotes LIKE '%' + @SearchText + '%' OR
         MaintenanceStatus LIKE '%' + @SearchText + '%' OR
-        ResponsibleTeam LIKE '%' + @SearchText + '%')
+        ResponsibleTeam LIKE '%' + @SearchText + '%' OR
+        CONVERT(VARCHAR, ServiceDate, 120) LIKE '%' + @SearchText + '%' OR
+        CONVERT(VARCHAR, NextServiceDue, 120) LIKE '%' + @SearchText + '%' OR
+        CONVERT(VARCHAR, Cost, 10) LIKE '%' + @SearchText + '%')
 )
 SELECT 
     *,

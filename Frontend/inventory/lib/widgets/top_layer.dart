@@ -1,248 +1,5 @@
-// import 'package:flutter/material.dart';
-// import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:flutter_svg/flutter_svg.dart';
-// import 'package:inventory/dialogs/dialog_pannel_helper.dart';
-// import 'package:inventory/providers/master_list_provider.dart';
-// import 'package:inventory/screens/add_forms/add_asset.dart';
-// import 'package:inventory/screens/add_forms/add_consumable.dart';
-// import 'package:inventory/screens/add_forms/add_mmd.dart';
-// import 'package:inventory/screens/add_forms/add_tool.dart';
-
-// class TopLayer extends ConsumerWidget {
-//   const TopLayer({super.key});
-
-//   bool get isButtonEnabled => true;
-
-//   @override
-//   Widget build(BuildContext context, WidgetRef ref) {
-//     return Container(
-//       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-//       child: Column(
-//         children: [
-//           Row(
-//             children: [
-//               SizedBox(
-//                 width: 440,
-//                 height: 35,
-//                 child: SearchBar(
-//                   elevation: const WidgetStatePropertyAll(0),
-//                   backgroundColor: const WidgetStatePropertyAll(Colors.white),
-//                   hintText: 'Search',
-//                   padding: const WidgetStatePropertyAll(
-//                     EdgeInsetsGeometry.only(left: 6, bottom: 2),
-//                   ),
-//                   hintStyle: WidgetStatePropertyAll(
-//                     Theme.of(context).textTheme.bodyMedium,
-//                   ),
-//                   shape: WidgetStatePropertyAll(
-//                     RoundedRectangleBorder(
-//                       side: const BorderSide(color: Color(0xff909090), width: 1),
-//                       borderRadius: BorderRadius.circular(6),
-//                     ),
-//                   ),
-//                   trailing: [
-//                     IconButton(
-//                       onPressed: () {},
-//                       icon: SvgPicture.asset("assets/images/Vector.svg", width: 12),
-//                     ),
-//                   ],
-//                 ),
-//               ),
-//               Expanded(
-//                 child: Row(
-//                   mainAxisAlignment: MainAxisAlignment.end,
-//                   children: [
-//                     MaterialButton(
-//                       onPressed: () {},
-//                       height: 45,
-//                       minWidth: 90,
-//                       shape: RoundedRectangleBorder(
-//                         borderRadius: BorderRadius.circular(8),
-//                         side: BorderSide(
-//                           color: isButtonEnabled
-//                               ? Theme.of(context).primaryColor
-//                               : const Color.fromRGBO(144, 144, 144, 100),
-//                           width: 1,
-//                         ),
-//                       ),
-//                       child: Text(
-//                         "Delete",
-//                         style: TextStyle(
-//                           color: isButtonEnabled
-//                               ? Theme.of(context).primaryColor
-//                               : const Color.fromRGBO(144, 144, 144, 100),
-//                         ),
-//                       ),
-//                     ),
-//                     const SizedBox(width: 20),
-//                     MaterialButton(
-//                       onPressed: () {},
-//                       height: 45,
-//                       minWidth: 90,
-//                       shape: RoundedRectangleBorder(
-//                         borderRadius: BorderRadius.circular(8),
-//                         side: BorderSide(
-//                           color: isButtonEnabled
-//                               ? Theme.of(context).primaryColor
-//                               : const Color.fromRGBO(144, 144, 144, 1),
-//                           width: 1,
-//                         ),
-//                       ),
-//                       child: Text(
-//                         "Export",
-//                         style: TextStyle(
-//                           color: isButtonEnabled
-//                               ? Theme.of(context).primaryColor
-//                               : const Color.fromRGBO(144, 144, 144, 1),
-//                         ),
-//                       ),
-//                     ),
-//                     const SizedBox(width: 20),
-
-//                     SizedBox(
-//                       width: 160,
-//                       height: 42,
-//                       child: PopupMenuButton<String>(
-//                         color: Colors.white,
-//                         elevation: 0,
-//                         offset: const Offset(0, 45),
-//                         shape: RoundedRectangleBorder(
-//                           borderRadius: BorderRadius.circular(8),
-//                           side: const BorderSide(color: Color(0xff00599A), width: 1),
-//                         ),
-//                         onSelected: (value) {
-//                           Future.delayed(const Duration(milliseconds: 150), () {
-//                             if (value == "tool") {
-//                               DialogPannelHelper().showAddPannel(
-//                                 context: context,
-//                                 addingItem: AddTool(
-//                                   submit: () {
-//                                     // ✅ STEP 6: Refresh list after submit
-//                                     ref.invalidate(masterListProvider);
-//                                   },
-//                                 ),
-//                               );
-//                             } else if (value == "asset") {
-//                               DialogPannelHelper().showAddPannel(
-//                                 context: context,
-//                                 addingItem: AddAsset(
-//                                   submit: () {
-//                                     ref.invalidate(masterListProvider);
-//                                   },
-//                                 ),
-//                               );
-//                             } else if (value == "mmd") {
-//                               DialogPannelHelper().showAddPannel(
-//                                 context: context,
-//                                 addingItem: AddMmd(
-//                                   submit: () {
-//                                     ref.invalidate(masterListProvider);
-//                                   },
-//                                 ),
-//                               );
-//                             } else if (value == "consumable") {
-//                               DialogPannelHelper().showAddPannel(
-//                                 context: context,
-//                                 addingItem: AddConsumable(
-//                                   submit: () {
-//                                     ref.invalidate(masterListProvider);
-//                                   },
-//                                 ),
-//                               );
-//                             }
-//                           });
-//                         },
-//                         itemBuilder: (context) => const [
-//                           PopupMenuItem(
-//                             value: "tool",
-//                             child: Text(
-//                               "Add tool",
-//                               style: TextStyle(
-//                                 color: Color(0xff00599A),
-//                                 fontSize: 13,
-//                                 fontWeight: FontWeight.w600,
-//                               ),
-//                             ),
-//                           ),
-//                           PopupMenuDivider(height: 1, thickness: 1, color: Color(0xff00599A)),
-//                           PopupMenuItem(
-//                             value: "asset",
-//                             child: Text(
-//                               "Add asset",
-//                               style: TextStyle(
-//                                 color: Color(0xff00599A),
-//                                 fontSize: 13,
-//                                 fontWeight: FontWeight.w600,
-//                               ),
-//                             ),
-//                           ),
-//                           PopupMenuDivider(height: 1, thickness: 1, color: Color(0xff00599A)),
-//                           PopupMenuItem(
-//                             value: "mmd",
-//                             child: Text(
-//                               "Add MMD",
-//                               style: TextStyle(
-//                                 color: Color(0xff00599A),
-//                                 fontSize: 13,
-//                                 fontWeight: FontWeight.w600,
-//                               ),
-//                             ),
-//                           ),
-//                           PopupMenuDivider(height: 1, thickness: 1, color: Color(0xff00599A)),
-//                           PopupMenuItem(
-//                             value: "consumable",
-//                             child: Text(
-//                               "Add consumable",
-//                               style: TextStyle(
-//                                 color: Color(0xff00599A),
-//                                 fontSize: 13,
-//                                 fontWeight: FontWeight.w600,
-//                               ),
-//                             ),
-//                           ),
-//                         ],
-//                         child: ElevatedButton(
-//                           onPressed: null,
-//                           style: ElevatedButton.styleFrom(
-//                             backgroundColor: const Color(0xff00599A),
-//                             foregroundColor: Colors.white,
-//                             padding: const EdgeInsets.symmetric(horizontal: 14),
-//                             shape: RoundedRectangleBorder(
-//                               borderRadius: BorderRadius.circular(8),
-//                             ),
-//                           ),
-//                           child: const Row(
-//                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                             children: [
-//                               Text(
-//                                 "Add new item",
-//                                 style: TextStyle(
-//                                   color: Colors.white,
-//                                   fontSize: 12,
-//                                   fontWeight: FontWeight.w600,
-//                                 ),
-//                               ),
-//                               Icon(Icons.keyboard_arrow_down, color: Colors.white),
-//                             ],
-//                           ),
-//                         ),
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//               ),
-//             ],
-//           ),
-//           const SizedBox(height: 10),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
-
 import 'dart:async';
-import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -321,7 +78,7 @@ class _TopLayerState extends ConsumerState<TopLayer> {
             children: [
               SizedBox(
                 width: 440,
-                height: 35,
+                height: 40,
                 child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
@@ -402,8 +159,8 @@ class _TopLayerState extends ConsumerState<TopLayer> {
 
                     // Add new item button
                     SizedBox(
-                      width: 160,
-                      height: 42,
+                      width: 157,
+                      height: 40,
                       child: PopupMenuButton<String>(
                         color: Colors.white,
                         elevation: 0,
@@ -586,7 +343,7 @@ class _TopLayerState extends ConsumerState<TopLayer> {
   }) {
     return SizedBox(
       width: 90, // Fixed width to match button size
-      height: 42, // Same height as "Add new item" button
+      height: 40, // Same height as "Add new item
       child: MouseRegion(
         cursor: isEnabled ? SystemMouseCursors.click : SystemMouseCursors.forbidden,
         child: StatefulBuilder(
@@ -619,7 +376,7 @@ class _TopLayerState extends ConsumerState<TopLayer> {
                 child: Text(
                   text,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight: FontWeight.w500,
                     color: isEnabled 
                         ? (isHovered ? const Color(0xff00599A) : const Color(0xFF6B7280))
@@ -659,7 +416,7 @@ class _TopLayerState extends ConsumerState<TopLayer> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.orange),
+            style: TextButton.styleFrom(foregroundColor: Color(0xff00599A)),
             child: const Text('Delete'),
           ),
         ],

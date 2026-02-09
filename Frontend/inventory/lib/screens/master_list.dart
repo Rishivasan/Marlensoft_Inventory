@@ -207,27 +207,14 @@ class _MasterListScreenState extends ConsumerState<MasterListScreen> {
                   sortProvider: sortProvider,
                   onTap: () {
                     final sortState = ref.read(sortProvider);
-                    String? sortColumn;
-                    String? sortDirection;
+                    String sortColumn = "itemId";
+                    String sortDirection;
                     
                     if (sortState.sortColumn == "itemId") {
-                      // Same column clicked
-                      if (sortState.direction == SortDirection.none) {
-                        // First click: none -> ascending
-                        sortColumn = "itemId";
-                        sortDirection = "asc";
-                      } else if (sortState.direction == SortDirection.ascending) {
-                        // Second click: ascending -> descending
-                        sortColumn = "itemId";
-                        sortDirection = "desc";
-                      } else {
-                        // Third click: descending -> none
-                        sortColumn = null;
-                        sortDirection = null;
-                      }
+                      // Same column clicked - toggle direction
+                      sortDirection = sortState.direction == SortDirection.ascending ? "desc" : "asc";
                     } else {
                       // Different column clicked - start with ascending
-                      sortColumn = "itemId";
                       sortDirection = "asc";
                     }
                     
@@ -242,22 +229,12 @@ class _MasterListScreenState extends ConsumerState<MasterListScreen> {
                   sortProvider: sortProvider,
                   onTap: () {
                     final sortState = ref.read(sortProvider);
-                    String? sortColumn;
-                    String? sortDirection;
+                    String sortColumn = "type";
+                    String sortDirection;
                     
                     if (sortState.sortColumn == "type") {
-                      if (sortState.direction == SortDirection.none) {
-                        sortColumn = "type";
-                        sortDirection = "asc";
-                      } else if (sortState.direction == SortDirection.ascending) {
-                        sortColumn = "type";
-                        sortDirection = "desc";
-                      } else {
-                        sortColumn = null;
-                        sortDirection = null;
-                      }
+                      sortDirection = sortState.direction == SortDirection.ascending ? "desc" : "asc";
                     } else {
-                      sortColumn = "type";
                       sortDirection = "asc";
                     }
                     
@@ -272,22 +249,12 @@ class _MasterListScreenState extends ConsumerState<MasterListScreen> {
                   sortProvider: sortProvider,
                   onTap: () {
                     final sortState = ref.read(sortProvider);
-                    String? sortColumn;
-                    String? sortDirection;
+                    String sortColumn = "itemName";
+                    String sortDirection;
                     
                     if (sortState.sortColumn == "itemName") {
-                      if (sortState.direction == SortDirection.none) {
-                        sortColumn = "itemName";
-                        sortDirection = "asc";
-                      } else if (sortState.direction == SortDirection.ascending) {
-                        sortColumn = "itemName";
-                        sortDirection = "desc";
-                      } else {
-                        sortColumn = null;
-                        sortDirection = null;
-                      }
+                      sortDirection = sortState.direction == SortDirection.ascending ? "desc" : "asc";
                     } else {
-                      sortColumn = "itemName";
                       sortDirection = "asc";
                     }
                     
@@ -302,22 +269,12 @@ class _MasterListScreenState extends ConsumerState<MasterListScreen> {
                   sortProvider: sortProvider,
                   onTap: () {
                     final sortState = ref.read(sortProvider);
-                    String? sortColumn;
-                    String? sortDirection;
+                    String sortColumn = "vendor";
+                    String sortDirection;
                     
                     if (sortState.sortColumn == "vendor") {
-                      if (sortState.direction == SortDirection.none) {
-                        sortColumn = "vendor";
-                        sortDirection = "asc";
-                      } else if (sortState.direction == SortDirection.ascending) {
-                        sortColumn = "vendor";
-                        sortDirection = "desc";
-                      } else {
-                        sortColumn = null;
-                        sortDirection = null;
-                      }
+                      sortDirection = sortState.direction == SortDirection.ascending ? "desc" : "asc";
                     } else {
-                      sortColumn = "vendor";
                       sortDirection = "asc";
                     }
                     
@@ -332,22 +289,12 @@ class _MasterListScreenState extends ConsumerState<MasterListScreen> {
                   sortProvider: sortProvider,
                   onTap: () {
                     final sortState = ref.read(sortProvider);
-                    String? sortColumn;
-                    String? sortDirection;
+                    String sortColumn = "storageLocation";
+                    String sortDirection;
                     
                     if (sortState.sortColumn == "storageLocation") {
-                      if (sortState.direction == SortDirection.none) {
-                        sortColumn = "storageLocation";
-                        sortDirection = "asc";
-                      } else if (sortState.direction == SortDirection.ascending) {
-                        sortColumn = "storageLocation";
-                        sortDirection = "desc";
-                      } else {
-                        sortColumn = null;
-                        sortDirection = null;
-                      }
+                      sortDirection = sortState.direction == SortDirection.ascending ? "desc" : "asc";
                     } else {
-                      sortColumn = "storageLocation";
                       sortDirection = "asc";
                     }
                     
@@ -362,22 +309,12 @@ class _MasterListScreenState extends ConsumerState<MasterListScreen> {
                   sortProvider: sortProvider,
                   onTap: () {
                     final sortState = ref.read(sortProvider);
-                    String? sortColumn;
-                    String? sortDirection;
+                    String sortColumn = "responsibleTeam";
+                    String sortDirection;
                     
                     if (sortState.sortColumn == "responsibleTeam") {
-                      if (sortState.direction == SortDirection.none) {
-                        sortColumn = "responsibleTeam";
-                        sortDirection = "asc";
-                      } else if (sortState.direction == SortDirection.ascending) {
-                        sortColumn = "responsibleTeam";
-                        sortDirection = "desc";
-                      } else {
-                        sortColumn = null;
-                        sortDirection = null;
-                      }
+                      sortDirection = sortState.direction == SortDirection.ascending ? "desc" : "asc";
                     } else {
-                      sortColumn = "responsibleTeam";
                       sortDirection = "asc";
                     }
                     
@@ -392,22 +329,12 @@ class _MasterListScreenState extends ConsumerState<MasterListScreen> {
                   sortProvider: sortProvider,
                   onTap: () {
                     final sortState = ref.read(sortProvider);
-                    String? sortColumn;
-                    String? sortDirection;
+                    String sortColumn = "nextServiceDue";
+                    String sortDirection;
                     
                     if (sortState.sortColumn == "nextServiceDue") {
-                      if (sortState.direction == SortDirection.none) {
-                        sortColumn = "nextServiceDue";
-                        sortDirection = "asc";
-                      } else if (sortState.direction == SortDirection.ascending) {
-                        sortColumn = "nextServiceDue";
-                        sortDirection = "desc";
-                      } else {
-                        sortColumn = null;
-                        sortDirection = null;
-                      }
+                      sortDirection = sortState.direction == SortDirection.ascending ? "desc" : "asc";
                     } else {
-                      sortColumn = "nextServiceDue";
                       sortDirection = "asc";
                     }
                     
@@ -422,22 +349,12 @@ class _MasterListScreenState extends ConsumerState<MasterListScreen> {
                   sortProvider: sortProvider,
                   onTap: () {
                     final sortState = ref.read(sortProvider);
-                    String? sortColumn;
-                    String? sortDirection;
+                    String sortColumn = "availabilityStatus";
+                    String sortDirection;
                     
                     if (sortState.sortColumn == "availabilityStatus") {
-                      if (sortState.direction == SortDirection.none) {
-                        sortColumn = "availabilityStatus";
-                        sortDirection = "asc";
-                      } else if (sortState.direction == SortDirection.ascending) {
-                        sortColumn = "availabilityStatus";
-                        sortDirection = "desc";
-                      } else {
-                        sortColumn = null;
-                        sortDirection = null;
-                      }
+                      sortDirection = sortState.direction == SortDirection.ascending ? "desc" : "asc";
                     } else {
-                      sortColumn = "availabilityStatus";
                       sortDirection = "asc";
                     }
                     

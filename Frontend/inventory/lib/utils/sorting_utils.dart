@@ -11,7 +11,7 @@ class SortingUtils {
     SortDirection direction,
     dynamic Function(T, String) valueExtractor,
   ) {
-    if (sortColumn == null || direction == SortDirection.none) {
+    if (sortColumn == null) {
       return items;
     }
 

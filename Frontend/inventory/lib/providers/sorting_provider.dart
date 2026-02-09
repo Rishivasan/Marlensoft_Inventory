@@ -43,17 +43,11 @@ class SortNotifier extends Notifier<SortState> {
     final currentState = state;
     
     if (currentState.sortColumn == column) {
-      // Same column clicked - cycle through directions
-      switch (currentState.direction) {
-        case SortDirection.none:
-          state = SortState(sortColumn: column, direction: SortDirection.ascending);
-          break;
-        case SortDirection.ascending:
-          state = SortState(sortColumn: column, direction: SortDirection.descending);
-          break;
-        case SortDirection.descending:
-          state = const SortState(sortColumn: null, direction: SortDirection.none);
-          break;
+      // Same column clicked - toggle between ascending and descending
+      if (currentState.direction == SortDirection.ascending) {
+        state = SortState(sortColumn: column, direction: SortDirection.descending);
+      } else {
+        state = SortState(sortColumn: column, direction: SortDirection.ascending);
       }
     } else {
       // Different column clicked - start with ascending

@@ -458,7 +458,7 @@ ORDER BY MAX(m.CreatedDate) DESC;
                     list.Add(dto);
                 }
 
-                Console.WriteLine($"✓ Enhanced Master List: Successfully fetched {list.Count} items with real maintenance/allocation data");
+                Console.WriteLine($" Enhanced Master List: Successfully fetched {list.Count} items with real maintenance/allocation data");
                 
                 // Log some statistics about the data
                 var itemsWithNextServiceDue = list.Count(x => x.NextServiceDue != null);
@@ -470,7 +470,7 @@ ORDER BY MAX(m.CreatedDate) DESC;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"⚠️  Enhanced query failed: {ex.Message}");
+                Console.WriteLine($"  Enhanced query failed: {ex.Message}");
                 Console.WriteLine("Falling back to simplified query without maintenance/allocation data...");
                 
                 // Fallback to simplified query without maintenance/allocation joins
@@ -610,12 +610,12 @@ ORDER BY MAX(m.CreatedDate) DESC;
                         fallbackList.Add(dto);
                     }
 
-                    Console.WriteLine($"✓ Fallback query successful: {fallbackList.Count} items (calculated next service dates from created date + frequency)");
+                    Console.WriteLine($" Fallback query successful: {fallbackList.Count} items (calculated next service dates from created date + frequency)");
                     return fallbackList;
                 }
                 catch (Exception fallbackEx)
                 {
-                    Console.WriteLine($"❌ Fallback query also failed: {fallbackEx.Message}");
+                    Console.WriteLine($" Fallback query also failed: {fallbackEx.Message}");
                     Console.WriteLine($"Stack trace: {fallbackEx.StackTrace}");
                     return new List<EnhancedMasterListDto>();
                 }
@@ -751,6 +751,7 @@ WITH MasterData AS (
     )
     AND (@SearchText IS NULL OR @SearchText = '' OR
         m.RefId LIKE '%' + @SearchText + '%' OR
+        m.ItemType LIKE '%' + @SearchText + '%' OR
         CASE 
             WHEN m.ItemType = 'Tool' THEN tm.ToolName
             WHEN m.ItemType IN ('Asset','Consumable') THEN ac.AssetName
@@ -762,7 +763,31 @@ WITH MasterData AS (
             WHEN m.ItemType IN ('Asset','Consumable') THEN ac.Vendor
             WHEN m.ItemType = 'MMD' THEN mm.Vendor
             ELSE ''
-        END LIKE '%' + @SearchText + '%'
+        END LIKE '%' + @SearchText + '%' OR
+        CASE
+            WHEN m.ItemType = 'Tool' THEN tm.ResponsibleTeam
+            WHEN m.ItemType IN ('Asset','Consumable') THEN ac.ResponsibleTeam
+            WHEN m.ItemType = 'MMD' THEN mm.ResponsibleTeam
+            ELSE ''
+        END LIKE '%' + @SearchText + '%' OR
+        CASE
+            WHEN m.ItemType = 'Tool' THEN tm.StorageLocation
+            WHEN m.ItemType IN ('Asset','Consumable') THEN ac.StorageLocation
+            WHEN m.ItemType = 'MMD' THEN mm.StorageLocation
+            ELSE ''
+        END LIKE '%' + @SearchText + '%' OR
+        CASE 
+            WHEN alloc.AvailabilityStatus IS NOT NULL THEN alloc.AvailabilityStatus
+            WHEN alloc.AssetId IS NOT NULL AND alloc.ActualReturnDate IS NULL THEN 'Allocated'
+            ELSE 'Available'
+        END LIKE '%' + @SearchText + '%' OR
+        CONVERT(VARCHAR, CASE
+            WHEN m.ItemType = 'Tool' THEN tm.NextServiceDue
+            WHEN m.ItemType IN ('Asset','Consumable') THEN ac.NextServiceDue
+            WHEN m.ItemType = 'MMD' THEN mm.NextCalibration
+            ELSE NULL
+        END, 120) LIKE '%' + @SearchText + '%' OR
+        CONVERT(VARCHAR, maint.NextServiceDue, 120) LIKE '%' + @SearchText + '%'
     )
 
     GROUP BY 

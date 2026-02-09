@@ -7,22 +7,26 @@ class SearchableDropdown extends StatefulWidget {
   final String? labelText;
   final Function(String?) onChanged;
   final String? Function(String?)? validator;
+  final bool enabled;
+  final VoidCallback? onOpen;
 
   const SearchableDropdown({
-    Key? key,
+    super.key,
     required this.value,
     required this.items,
     required this.hintText,
     this.labelText,
     required this.onChanged,
     this.validator,
-  }) : super(key: key);
+    this.enabled = true,
+    this.onOpen,
+  });
 
   @override
-  State<SearchableDropdown> createState() => _SearchableDropdownState();
+  State<SearchableDropdown> createState() => SearchableDropdownState();
 }
 
-class _SearchableDropdownState extends State<SearchableDropdown> {
+class SearchableDropdownState extends State<SearchableDropdown> {
   final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> _filteredItems = [];
   bool _isDropdownOpen = false;
@@ -58,9 +62,13 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
   }
 
   void _toggleDropdown() {
+    if (!widget.enabled) return;
+    
     if (_isDropdownOpen) {
       _removeOverlay();
     } else {
+      // Notify parent that this dropdown is opening
+      widget.onOpen?.call();
       _showOverlay();
     }
   }
@@ -77,127 +85,160 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
     });
   }
 
+  // Public method to close dropdown from parent
+  void closeDropdown() {
+    if (_isDropdownOpen) {
+      _removeOverlay();
+      setState(() {});
+    }
+  }
+
   OverlayEntry _createOverlayEntry() {
     RenderBox renderBox = context.findRenderObject() as RenderBox;
     var size = renderBox.size;
 
     return OverlayEntry(
-      builder: (context) => Positioned(
-        width: size.width,
-        child: CompositedTransformFollower(
-          link: _layerLink,
-          showWhenUnlinked: false,
-          offset: Offset(0.0, size.height + 5.0),
-          child: Material(
-            elevation: 4.0,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              constraints: const BoxConstraints(maxHeight: 300),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color.fromRGBO(210, 210, 210, 1)),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Search field
-                  Padding(
-                    padding: const EdgeInsets.all(0),
-                    child: TextField(
-                      controller: _searchController,
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        hintText: 'Search...',
-                        hintStyle: const TextStyle(
-                          fontSize: 12,
-                          color: Color.fromRGBO(144, 144, 144, 1),
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.search,
-                          size: 18,
-                          color: Color.fromRGBO(144, 144, 144, 1),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(0),
-                          borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(0),
-                          borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(0),
-                          borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
-                        ),
-                      ),
-                      style: const TextStyle(fontSize: 12),
-                      onChanged: (value) {
-                        setState(() {
-                          if (value.isEmpty) {
-                            // Show all items when search is empty
-                            _filteredItems = widget.items;
-                          } else {
-                            // Filter items based on search
-                            _filteredItems = widget.items
-                                .where((item) => item['name']
-                                    .toString()
-                                    .toLowerCase()
-                                    .contains(value.toLowerCase()))
-                                .toList();
-                          }
-                        });
-                        // Rebuild overlay
-                        _overlayEntry?.markNeedsBuild();
-                      },
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  // Items list
-                  Flexible(
-                    child: _filteredItems.isEmpty
-                        ? const Padding(
-                            padding: EdgeInsets.all(16.0),
-                            child: Text(
-                              'No items found',
-                              style: TextStyle(fontSize: 12, color: Colors.grey),
-                            ),
-                          )
-                        : ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: _filteredItems.length,
-                            itemBuilder: (context, index) {
-                              final item = _filteredItems[index];
-                              final isSelected = widget.value == item['id'].toString();
-                              
-                              return InkWell(
-                                onTap: () {
-                                  widget.onChanged(item['id'].toString());
-                                  _searchController.clear();
-                                  _filteredItems = widget.items;
-                                  _removeOverlay();
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                  color: isSelected ? const Color(0xFFE3F2FD) : null,
-                                  child: Text(
-                                    item['name'],
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: isSelected ? const Color(0xff00599A) : Colors.black,
-                                      fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                ],
+      builder: (context) => GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () {
+          // Close dropdown when clicking outside
+          _removeOverlay();
+          setState(() {});
+        },
+        child: Stack(
+          children: [
+            // Transparent overlay to capture outside clicks
+            Positioned.fill(
+              child: Container(
+                color: Colors.transparent,
               ),
             ),
-          ),
+            // Dropdown content
+            Positioned(
+              width: size.width,
+              child: CompositedTransformFollower(
+                link: _layerLink,
+                showWhenUnlinked: false,
+                offset: Offset(0.0, size.height + 5.0),
+                child: GestureDetector(
+                  onTap: () {
+                    // Prevent closing when clicking inside dropdown
+                  },
+                  child: Material(
+                    elevation: 4.0,
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      constraints: const BoxConstraints(maxHeight: 300),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color.fromRGBO(210, 210, 210, 1)),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Search field
+                          Padding(
+                            padding: const EdgeInsets.all(0),
+                            child: TextField(
+                              controller: _searchController,
+                              autofocus: true,
+                              decoration: InputDecoration(
+                                hintText: 'Search...',
+                                hintStyle: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color.fromRGBO(144, 144, 144, 1),
+                                ),
+                                prefixIcon: const Icon(
+                                  Icons.search,
+                                  size: 18,
+                                  color: Color.fromRGBO(144, 144, 144, 1),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(0),
+                                  borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(0),
+                                  borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(0),
+                                  borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
+                                ),
+                              ),
+                              style: const TextStyle(fontSize: 12),
+                              onChanged: (value) {
+                                setState(() {
+                                  if (value.isEmpty) {
+                                    // Show all items when search is empty
+                                    _filteredItems = widget.items;
+                                  } else {
+                                    // Filter items based on search
+                                    _filteredItems = widget.items
+                                        .where((item) => item['name']
+                                            .toString()
+                                            .toLowerCase()
+                                            .contains(value.toLowerCase()))
+                                        .toList();
+                                  }
+                                });
+                                // Rebuild overlay
+                                _overlayEntry?.markNeedsBuild();
+                              },
+                            ),
+                          ),
+                          const Divider(height: 1),
+                          // Items list
+                          Flexible(
+                            child: _filteredItems.isEmpty
+                                ? const Padding(
+                                    padding: EdgeInsets.all(16.0),
+                                    child: Text(
+                                      'No items found',
+                                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: _filteredItems.length,
+                                    itemBuilder: (context, index) {
+                                      final item = _filteredItems[index];
+                                      final isSelected = widget.value == item['id'].toString();
+                                      
+                                      return InkWell(
+                                        onTap: () {
+                                          widget.onChanged(item['id'].toString());
+                                          _searchController.clear();
+                                          _filteredItems = widget.items;
+                                          _removeOverlay();
+                                          setState(() {});
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                          color: isSelected ? const Color(0xFFE3F2FD) : null,
+                                          child: Text(
+                                            item['name'],
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: isSelected ? const Color(0xff00599A) : Colors.black,
+                                              fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -214,60 +255,67 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
 
   @override
   Widget build(BuildContext context) {
-    return InputDecorator(
-      decoration: InputDecoration(
-        labelText: widget.labelText,
-        labelStyle: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-          color: Color.fromRGBO(144, 144, 144, 1),
+    return Opacity(
+      opacity: widget.enabled ? 1.0 : 0.5,
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: widget.labelText,
+          labelStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: Color.fromRGBO(144, 144, 144, 1),
+          ),
+          floatingLabelStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: Color.fromRGBO(88, 88, 88, 1),
+          ),
+          contentPadding: EdgeInsets.zero,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
+          ),
+          disabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
+          ),
         ),
-        floatingLabelStyle: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-          color: Color.fromRGBO(88, 88, 88, 1),
-        ),
-        contentPadding: EdgeInsets.zero,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
-        ),
-      ),
-      child: CompositedTransformTarget(
-        link: _layerLink,
-        child: InkWell(
-          onTap: _toggleDropdown,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    widget.value == null ? widget.hintText : _getSelectedItemName(),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: widget.value == null 
-                          ? const Color.fromRGBO(144, 144, 144, 1) 
-                          : Colors.black,
+        child: CompositedTransformTarget(
+          link: _layerLink,
+          child: InkWell(
+            onTap: widget.enabled ? _toggleDropdown : null,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.value == null ? widget.hintText : _getSelectedItemName(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: widget.value == null 
+                            ? const Color.fromRGBO(144, 144, 144, 1) 
+                            : Colors.black,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                Icon(
-                  _isDropdownOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                  size: 16,
-                  color: const Color.fromRGBO(144, 144, 144, 1),
-                ),
-              ],
+                  Icon(
+                    _isDropdownOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    size: 16,
+                    color: const Color.fromRGBO(144, 144, 144, 1),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -59,8 +59,8 @@ class TableHeaderHelper {
   }
 
   static Widget _buildSortIcon(SortState sortState, bool isCurrentSort) {
-    if (!isCurrentSort || sortState.direction == SortDirection.none) {
-      // Default arrow down icon (gray)
+    // Show gray arrow for non-active columns
+    if (!isCurrentSort) {
       return SvgPicture.asset(
         "assets/images/Icon_arrowdown.svg", 
         width: 14, 
@@ -70,32 +70,25 @@ class TableHeaderHelper {
     }
 
     // Active sort - show direction with blue color
-    switch (sortState.direction) {
-      case SortDirection.ascending:
-        return Transform.rotate(
-          angle: 3.14159, // 180 degrees - arrow up
-          child: SvgPicture.asset(
-            "assets/images/Icon_arrowdown.svg", 
-            width: 14, 
-            height: 14, 
-            colorFilter: const ColorFilter.mode(Color(0xFF00599A), BlendMode.srcIn),
-          ),
-        );
-      case SortDirection.descending:
-        return SvgPicture.asset(
+    if (sortState.direction == SortDirection.ascending) {
+      // Ascending: blue up arrow (rotated)
+      return Transform.rotate(
+        angle: 3.14159, // 180 degrees - arrow up
+        child: SvgPicture.asset(
           "assets/images/Icon_arrowdown.svg", 
           width: 14, 
           height: 14, 
           colorFilter: const ColorFilter.mode(Color(0xFF00599A), BlendMode.srcIn),
-        );
-      case SortDirection.none:
-      default:
-        return SvgPicture.asset(
-          "assets/images/Icon_arrowdown.svg", 
-          width: 14, 
-          height: 14, 
-          colorFilter: const ColorFilter.mode(Color(0xFF9CA3AF), BlendMode.srcIn),
-        );
+        ),
+      );
+    } else {
+      // Descending: blue down arrow
+      return SvgPicture.asset(
+        "assets/images/Icon_arrowdown.svg", 
+        width: 14, 
+        height: 14, 
+        colorFilter: const ColorFilter.mode(Color(0xFF00599A), BlendMode.srcIn),
+      );
     }
   }
 }

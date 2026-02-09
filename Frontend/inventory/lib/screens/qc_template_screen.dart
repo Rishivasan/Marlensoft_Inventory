@@ -22,6 +22,10 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
   
   // Text controller for template search
   final TextEditingController _templateSearchController = TextEditingController();
+  
+  // GlobalKeys for searchable dropdowns to control them
+  final GlobalKey<SearchableDropdownState> _finalProductDropdownKey = GlobalKey();
+  final GlobalKey<SearchableDropdownState> _materialDropdownKey = GlobalKey();
 
   // Dynamic lists that will be populated from the backend
   List<Map<String, dynamic>> validationTypes = [];
@@ -41,6 +45,12 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
   // Duplicate material tracking
   bool hasDuplicateMaterial = false;
   String? duplicateTemplateName;
+  
+  // Close all searchable dropdowns
+  void _closeAllDropdowns() {
+    _finalProductDropdownKey.currentState?.closeDropdown();
+    _materialDropdownKey.currentState?.closeDropdown();
+  }
   
   // Filter templates based on search query
   void _filterTemplates(String query) {
@@ -694,13 +704,13 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
-                      color: _activeTabIndex == 0 ? Colors.white : const Color(0xFF6B7280) ,
+                      color: _activeTabIndex == 0 ? Colors.white :  Colors.transparent ,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       'Quality check customization',
                       style: TextStyle(
-                        color: _activeTabIndex == 0 ?const Color(0xff00599A) : Colors.transparent,
+                        color: _activeTabIndex == 0 ?const Color(0xff00599A) : const Color(0xFF6B7280),
                         fontSize: 12,
                         fontWeight: _activeTabIndex == 0 ? FontWeight.w600 : FontWeight.normal,
                       ),
@@ -720,13 +730,13 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
-                      color: _activeTabIndex == 1 ? const Color(0xff00599A) : Colors.transparent,
+                      color: _activeTabIndex == 1 ?  Colors.white :  Colors.transparent ,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       'Production process customization',
                       style: TextStyle(
-                        color: _activeTabIndex == 1 ? Colors.white : const Color(0xFF6B7280),
+                        color: _activeTabIndex == 1 ?const Color(0xff00599A) :const Color(0xFF6B7280),
                         fontSize: 11,
                         fontWeight: _activeTabIndex == 1 ? FontWeight.w600 : FontWeight.normal,
                       ),
@@ -737,27 +747,53 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
             ),
           ),
           
-          // Description text
-          Container(
-            width: double.infinity,
-            color: Colors.white,
-            padding: const EdgeInsets.only(left: 13, right: 24, top: 20, bottom: 20),
-            child: const Text(
-              'Here, please define a rule for which open offers shall be followed-up at the customers and what shall happen, in case the follow-up is unsuccessful.',
-              style: TextStyle(
-                fontSize: 12,
-                color: Color(0xFF6B7280),
-                height: 1.4,
-              ),
-            ),
-          ),
-          
-          // Main content row with sidebar and form
+          // Conditional content based on active tab
           Expanded(
-            child: Row(
-              children: [
-                // Left sidebar with templates (25% of width)
-                Expanded(
+            child: _activeTabIndex == 1
+                ? // Show full-page "Under Construction" screen for Production process customization
+                  Container(
+                    padding: const EdgeInsets.only(top: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            'assets/Images/under_construction.png',
+                            fit: BoxFit.contain,
+                            width: 420,
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : // Show Quality Check Customization content with description and sidebar
+                  Column(
+                    children: [
+                      // Description text
+                      Container(
+                        width: double.infinity,
+                        color: Colors.white,
+                        padding: const EdgeInsets.only(left: 13, right: 24, top: 20, bottom: 20),
+                        child: const Text(
+                          'Here, please define a rule for which open offers shall be followed-up at the customers and what shall happen, in case the follow-up is unsuccessful.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF6B7280),
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                      
+                      // Main content row with sidebar and form
+                      Expanded(
+                        child: Row(
+                          children: [
+                            // Left sidebar with templates (25% of width)
+                            Expanded(
                   flex: 25,
                   child: Container(
                     decoration: const BoxDecoration(
@@ -888,9 +924,11 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                                         final isActive = template['isActive'] as bool;
                                         
                                         return Container(
-                                          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                                          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                                           decoration: BoxDecoration(
-                                            color: isActive ? const Color(0xFFE3F2FD) : Colors.transparent,
+                                            color: isActive 
+                                                ? const Color(0xFFE3F2FD) 
+                                                : const Color.fromRGBO(247, 247, 247, 0.7),
                                             borderRadius: BorderRadius.circular(4),
                                           ),
                                           child: ListTile(
@@ -1022,11 +1060,16 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                                   );
                                 }).toList(),
                                 style: const TextStyle(fontSize: 12, color: Colors.black),
-                                onChanged: (String? newValue) {
-                                  setState(() {
-                                    selectedValidationType = newValue;
-                                  });
-                                },
+                                onChanged: (selectedTemplateId == -1 || selectedTemplateId == null) 
+                                    ? (String? newValue) {
+                                        // Close all searchable dropdowns when validation type changes
+                                        _closeAllDropdowns();
+                                        
+                                        setState(() {
+                                          selectedValidationType = newValue;
+                                        });
+                                      }
+                                    : null, // Disable dropdown for existing templates
                               ),
                             ),
                             
@@ -1035,10 +1078,16 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                             // Final product dropdown (searchable)
                             Expanded(
                               child: SearchableDropdown(
+                                key: _finalProductDropdownKey,
                                 value: selectedFinalProduct,
                                 items: finalProducts,
                                 hintText: 'Select the final product',
                                 labelText: 'Final product *',
+                                enabled: (selectedTemplateId == -1 || selectedTemplateId == null) && selectedValidationType != null,
+                                onOpen: () {
+                                  // Close material dropdown when final product opens
+                                  _materialDropdownKey.currentState?.closeDropdown();
+                                },
                                 onChanged: (String? newValue) {
                                   setState(() {
                                     selectedFinalProduct = newValue;
@@ -1065,10 +1114,16 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                             // Material/Component dropdown (searchable)
                             Expanded(
                               child: SearchableDropdown(
+                                key: _materialDropdownKey,
                                 value: selectedMaterialComponent,
                                 items: materialComponents,
                                 hintText: 'Select the material/component',
                                 labelText: 'Material/Component *',
+                                enabled: (selectedTemplateId == -1 || selectedTemplateId == null) && selectedFinalProduct != null,
+                                onOpen: () {
+                                  // Close final product dropdown when material opens
+                                  _finalProductDropdownKey.currentState?.closeDropdown();
+                                },
                                 onChanged: (String? newValue) {
                                   setState(() {
                                     selectedMaterialComponent = newValue;
@@ -1148,6 +1203,7 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                             Expanded(
                               child: TextFormField(
                                 controller: _toolsController,
+                                enabled: (selectedTemplateId == -1 || selectedTemplateId == null),
                                 decoration: InputDecoration(
                                   labelText: 'Tools to quality check *',
                                   labelStyle: const TextStyle(
@@ -1191,58 +1247,68 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                         
                         // QC control points section
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'QC control points configuration',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF111827),
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                const Text(
-                                  'Here, please define a rule for which open offers shall be followed-up at the customers and what shall happen, in case the follow-up is unsuccessful.',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFF6B7280),
-                                    height: 1.4,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(
-                              height: 35,
-                              child: ElevatedButton(
-                                // Disable for saved templates (selectedTemplateId != -1)
-                                onPressed: selectedTemplateId == -1 ? () {
-                                  _showAddControlPointDialog();
-                                } : null,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: selectedTemplateId == -1 
-                                      ? const Color(0xff00599A) 
-                                      : const Color(0xFFD1D5DB),
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  disabledBackgroundColor: const Color(0xFFD1D5DB),
-                                  disabledForegroundColor: const Color(0xFF9CA3AF),
-                                ),
-                                child: const Text(
-                                  'Add control point',
-                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+
+    /// 👇 THIS MAKES TEXT WRAP PROPERLY
+    Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Text(
+            'QC control points configuration',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF111827),
+            ),
+          ),
+          SizedBox(height: 4),
+          Text(
+            'Here, please define a rule for which open offers shall be followed-up at the customers and what shall happen, in case the follow-up is unsuccessful.',
+            style: TextStyle(
+              fontSize: 12,
+              color: Color(0xFF6B7280),
+              height: 1.4,
+            ),
+            softWrap: true,        // ensures wrapping
+            overflow: TextOverflow.visible,
+          ),
+        ],
+      ),
+    ),
+
+    const SizedBox(width: 12), // small gap between text & button
+
+    SizedBox(
+      height: 35,
+      child: ElevatedButton(
+        onPressed: selectedTemplateId == -1
+            ? () {
+                _showAddControlPointDialog();
+              }
+            : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: selectedTemplateId == -1
+              ? const Color(0xff00599A)
+              : const Color(0xFFD1D5DB),
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6),
+          ),
+          disabledBackgroundColor: const Color(0xFFD1D5DB),
+          disabledForegroundColor: const Color(0xFF9CA3AF),
+        ),
+        child: const Text(
+          'Add control point',
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+        ),
+      ),
+    ),
+  ],
+),
+
                         const SizedBox(height: 16),
                         
                         // Control points list
@@ -1745,7 +1811,11 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
               ],
             ),
           ),
+                    ],
+                  ),
+          ),
         ],
+      
       ),
     );
   }

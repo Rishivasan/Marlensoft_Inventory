@@ -59,11 +59,17 @@ WITH AllocationData AS (
     FROM Allocation
     WHERE AssetId = @AssetId
     AND (@SearchText IS NULL OR @SearchText = '' OR
+        AssetType LIKE '%' + @SearchText + '%' OR
+        AssetId LIKE '%' + @SearchText + '%' OR
+        ItemName LIKE '%' + @SearchText + '%' OR
         EmployeeId LIKE '%' + @SearchText + '%' OR
         EmployeeName LIKE '%' + @SearchText + '%' OR
         TeamName LIKE '%' + @SearchText + '%' OR
         Purpose LIKE '%' + @SearchText + '%' OR
-        AvailabilityStatus LIKE '%' + @SearchText + '%')
+        AvailabilityStatus LIKE '%' + @SearchText + '%' OR
+        CONVERT(VARCHAR, IssuedDate, 120) LIKE '%' + @SearchText + '%' OR
+        CONVERT(VARCHAR, ExpectedReturnDate, 120) LIKE '%' + @SearchText + '%' OR
+        CONVERT(VARCHAR, ActualReturnDate, 120) LIKE '%' + @SearchText + '%')
 )
 SELECT 
     *,
