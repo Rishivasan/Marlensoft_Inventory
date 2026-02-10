@@ -220,11 +220,63 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
   }
 
   Future<void> _selectDate(TextEditingController controller, {bool isServiceDate = false}) async {
+    // For Next Service Due Date, validate that Service Date is selected first
+    if (!isServiceDate && _serviceDateController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select the service date first'),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+    
+    // Parse the current date from the controller, fallback to DateTime.now()
+    DateTime initialDate = DateTime.now();
+    if (controller.text.isNotEmpty) {
+      try {
+        final parsedDate = DateTime.parse(controller.text);
+        // Ensure the parsed date is within the valid range
+        final minDate = DateTime(2000);
+        final maxDate = DateTime(2100);
+        if (parsedDate.isAfter(minDate) && parsedDate.isBefore(maxDate)) {
+          initialDate = parsedDate;
+        }
+      } catch (e) {
+        // If parsing fails, use current date
+        initialDate = DateTime.now();
+      }
+    }
+    
+    // Determine the minimum selectable date based on the field type
+    DateTime firstDate = DateTime(2000);
+    
+    // For Next Service Due Date, it cannot be before the Service Date
+    if (!isServiceDate) {
+      // This is the Next Service Due Date field
+      if (_serviceDateController.text.isNotEmpty) {
+        try {
+          final serviceDate = DateTime.parse(_serviceDateController.text);
+          // Next service due must be on or after the service date
+          firstDate = serviceDate;
+          
+          // If the current initial date is before the service date, set it to service date
+          if (initialDate.isBefore(serviceDate)) {
+            initialDate = serviceDate;
+          }
+        } catch (e) {
+          // If service date parsing fails, use default range
+          firstDate = DateTime(2000);
+        }
+      }
+    }
+    
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: DateTime(2100),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -239,8 +291,31 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
     if (picked != null) {
       controller.text = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
       
-      // If this is the service date field, auto-calculate next service due
+      // If this is the service date field, validate and handle next service due date
       if (isServiceDate) {
+        // Check if next service due date is already set and is before the new service date
+        if (_nextServiceDateController.text.isNotEmpty) {
+          try {
+            final nextServiceDate = DateTime.parse(_nextServiceDateController.text);
+            if (nextServiceDate.isBefore(picked)) {
+              // Clear the next service due date as it's now invalid
+              _nextServiceDateController.clear();
+              
+              // Show a message to inform the user
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Next service due date cleared as it was before the new service date'),
+                  backgroundColor: Colors.blue,
+                  duration: Duration(seconds: 3),
+                ),
+              );
+            }
+          } catch (e) {
+            // If parsing fails, just continue
+          }
+        }
+        
+        // Auto-calculate next service due
         _calculateNextServiceDue(picked);
       }
     }
@@ -477,23 +552,27 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
                   Row(
                     children: [
                       Expanded(
-                        child: TextFormField(
-                          controller: _serviceDateController,
-                          readOnly: true,
-                          decoration: _inputDecoration(
-                            label: _requiredLabel("Service date"),
-                            hint: "Select the service date",
-                            suffixIcon: const Icon(
-                              Icons.calendar_today,
-                              size: 16,
-                              color: Color.fromRGBO(144, 144, 144, 1),
+                        child: GestureDetector(
+                          onTap: () => _selectDate(_serviceDateController, isServiceDate: true),
+                          child: AbsorbPointer(
+                            child: TextFormField(
+                              controller: _serviceDateController,
+                              readOnly: true,
+                              decoration: _inputDecoration(
+                                label: _requiredLabel("Service date"),
+                                hint: "Select the service date",
+                                suffixIcon: const Icon(
+                                  Icons.calendar_today,
+                                  size: 16,
+                                  color: Color.fromRGBO(144, 144, 144, 1),
+                                ),
+                              ),
+                              style: const TextStyle(fontSize: 12),
+                              validator: (v) => (v == null || v.isEmpty)
+                                  ? "The field cannot be empty"
+                                  : null,
                             ),
                           ),
-                          style: const TextStyle(fontSize: 12),
-                          onTap: () => _selectDate(_serviceDateController, isServiceDate: true),
-                          validator: (v) => (v == null || v.isEmpty)
-                              ? "The field cannot be empty"
-                              : null,
                         ),
                       ),
                       const SizedBox(width: 24),
@@ -587,23 +666,45 @@ class _AddMaintenanceServiceState extends State<AddMaintenanceService> {
                       ),
                       const SizedBox(width: 24),
                       Expanded(
-                        child: TextFormField(
-                          controller: _nextServiceDateController,
-                          readOnly: true,
-                          decoration: _inputDecoration(
-                            label: _requiredLabel("Next service due date"),
-                            hint: "Select the next service due date",
-                            suffixIcon: const Icon(
-                              Icons.calendar_today,
-                              size: 16,
-                              color: Color.fromRGBO(144, 144, 144, 1),
+                        child: GestureDetector(
+                          onTap: () => _selectDate(_nextServiceDateController),
+                          child: AbsorbPointer(
+                            child: TextFormField(
+                              controller: _nextServiceDateController,
+                              readOnly: true,
+                              decoration: _inputDecoration(
+                                label: _requiredLabel("Next service due date"),
+                                hint: "Select the next service due date",
+                                suffixIcon: const Icon(
+                                  Icons.calendar_today,
+                                  size: 16,
+                                  color: Color.fromRGBO(144, 144, 144, 1),
+                                ),
+                              ),
+                              style: const TextStyle(fontSize: 12),
+                              validator: (v) {
+                                if (v == null || v.isEmpty) {
+                                  return "The field cannot be empty";
+                                }
+                                
+                                // Validate that next service due is not before service date
+                                if (_serviceDateController.text.isNotEmpty) {
+                                  try {
+                                    final serviceDate = DateTime.parse(_serviceDateController.text);
+                                    final nextServiceDate = DateTime.parse(v);
+                                    
+                                    if (nextServiceDate.isBefore(serviceDate)) {
+                                      return "Next service due cannot be before service date";
+                                    }
+                                  } catch (e) {
+                                    return "Invalid date format";
+                                  }
+                                }
+                                
+                                return null;
+                              },
                             ),
                           ),
-                          style: const TextStyle(fontSize: 12),
-                          onTap: () => _selectDate(_nextServiceDateController),
-                          validator: (v) => (v == null || v.isEmpty)
-                              ? "The field cannot be empty"
-                              : null,
                         ),
                       ),
                     ],

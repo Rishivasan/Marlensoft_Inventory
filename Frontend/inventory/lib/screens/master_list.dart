@@ -9,6 +9,7 @@ import 'package:inventory/providers/search_provider.dart';
 import 'package:inventory/providers/sorting_provider.dart';
 import 'package:inventory/providers/product_state_provider.dart';
 import 'package:inventory/providers/next_service_provider.dart';
+import 'package:inventory/services/next_service_sync_service.dart';
 import 'package:inventory/widgets/top_layer.dart';
 import 'package:inventory/widgets/sortable_header.dart';
 import 'package:inventory/widgets/pagination_controls.dart';
@@ -92,6 +93,15 @@ class _MasterListScreenState extends ConsumerState<MasterListScreen> {
                       nextServiceProvider.updateNextServiceDate(item.assetId, item.nextServiceDue!);
                     }
                   }
+                  
+                  // Sync Next Service Due dates from maintenance records
+                  final syncService = ref.read(nextServiceSyncServiceProvider);
+                  final assetIds = rawItems.map((item) => item.assetId).toList();
+                  syncService.syncNextServiceDueForAssets(assetIds, ref).then((_) {
+                    print('DEBUG: Synced Next Service Due for ${assetIds.length} master list items');
+                  }).catchError((e) {
+                    print('DEBUG: Master list sync failed: $e');
+                  });
                 });
                 
                 // Show message if no results found

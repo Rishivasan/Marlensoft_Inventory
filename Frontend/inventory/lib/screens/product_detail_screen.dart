@@ -5,6 +5,7 @@ import 'package:inventory/model/master_list_model.dart';
 import 'package:inventory/model/maintenance_model.dart';
 import 'package:inventory/model/allocation_model.dart';
 import 'package:inventory/services/api_service.dart';
+import 'package:inventory/services/next_service_sync_service.dart';
 import 'package:inventory/dialogs/dialog_pannel_helper.dart';
 import 'package:inventory/screens/add_forms/add_maintenance_service.dart';
 import 'package:inventory/screens/add_forms/add_allocation.dart';
@@ -146,6 +147,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
         print('  - Location: ${data.location}');
         print('  - ResponsibleTeam: ${data.responsibleTeam}');
         print('  - AvailabilityStatus: ${data.availabilityStatus}');
+        print('  - NextServiceDue from DB: ${data.nextServiceDue}');
 
         setState(() {
           productData = data;
@@ -154,7 +156,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
 
         // Load maintenance and allocation data after product data is loaded
         print('DEBUG: Loading maintenance data for assetId: ${data.assetId}');
-        _loadMaintenanceData(data.assetId);
+        await _loadMaintenanceData(data.assetId);
+        
+        // IMPORTANT: Update Next Service Due from the most recent maintenance record
+        await _updateNextServiceDueFromMaintenance();
+        
+        // Also refresh the master list to ensure it shows the updated date
+        await _safeRefreshMasterList();
+        
         _loadAllocationData(data.assetId);
       } else {
         print('DEBUG: No product data found, using placeholder');
@@ -174,6 +183,55 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
       });
       _loadMaintenanceData(widget.id);
       _loadAllocationData(widget.id);
+    }
+  }
+
+  // NEW METHOD: Update Next Service Due from the most recent maintenance record
+  Future<void> _updateNextServiceDueFromMaintenance() async {
+    if (productData == null) {
+      print('DEBUG: No product data to update Next Service Due');
+      return;
+    }
+
+    try {
+      // Use the sync service to get the latest Next Service Due from maintenance records
+      final syncService = ref.read(nextServiceSyncServiceProvider);
+      await syncService.syncNextServiceDueForAsset(productData!.assetId, ref);
+      
+      print('DEBUG: Successfully synced Next Service Due for asset: ${productData!.assetId}');
+    } catch (e) {
+      print('DEBUG: Error syncing Next Service Due from maintenance: $e');
+      
+      // Fallback to the old method if sync service fails
+      if (maintenanceRecords.isNotEmpty) {
+        MaintenanceModel? mostRecentMaintenance;
+        for (var maintenance in maintenanceRecords) {
+          if (maintenance.nextServiceDue != null) {
+            if (mostRecentMaintenance == null || 
+                maintenance.serviceDate!.isAfter(mostRecentMaintenance.serviceDate!)) {
+              mostRecentMaintenance = maintenance;
+            }
+          }
+        }
+
+        if (mostRecentMaintenance?.nextServiceDue != null) {
+          final latestNextServiceDue = mostRecentMaintenance!.nextServiceDue!;
+          print('DEBUG: Fallback - Found most recent Next Service Due from maintenance: $latestNextServiceDue');
+          
+          // Update the reactive state provider
+          if (mounted) {
+            final updateProductState = ref.read(updateProductStateProvider);
+            final nextServiceDueString = "${latestNextServiceDue.year}-${latestNextServiceDue.month.toString().padLeft(2, '0')}-${latestNextServiceDue.day.toString().padLeft(2, '0')}";
+            
+            updateProductState(
+              productData!.assetId,
+              nextServiceDue: nextServiceDueString,
+            );
+            
+            print('DEBUG: Fallback - Updated reactive state with Next Service Due: $nextServiceDueString');
+          }
+        }
+      }
     }
   }
 
@@ -240,61 +298,21 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
 
       print('DEBUG: Maintenance API returned ${maintenance.length} records');
 
-      // If no data from API, add some sample data for testing UI
-      List<MaintenanceModel> finalMaintenanceList = maintenance;
-      if (maintenance.isEmpty) {
-        print(
-          'DEBUG: No maintenance data from API, adding sample data for UI testing',
-        );
-        finalMaintenanceList = [
-          MaintenanceModel(
-            maintenanceId: 1,
-            assetType: 'MMD',
-            assetId: assetId,
-            itemName: 'Sample Item',
-            serviceDate: DateTime(2024, 4, 6),
-            serviceProviderCompany: 'ABC Calibration Lab',
-            serviceEngineerName: 'Ravi',
-            serviceType: 'Calibration',
-            nextServiceDue: DateTime(2024, 12, 1),
-            serviceNotes: 'Calibration completed',
-            maintenanceStatus: 'Completed',
-            cost: 5000.0,
-            responsibleTeam: 'Production Team A',
-            createdDate: DateTime.now(),
-          ),
-          MaintenanceModel(
-            maintenanceId: 2,
-            assetType: 'Tool',
-            assetId: assetId,
-            itemName: 'Sample Item',
-            serviceDate: DateTime(2024, 3, 15),
-            serviceProviderCompany: 'TechFix Pros',
-            serviceEngineerName: 'Alex Turner',
-            serviceType: 'Preventive',
-            nextServiceDue: DateTime(2024, 9, 15),
-            serviceNotes: 'Routine maintenance',
-            maintenanceStatus: 'Completed',
-            cost: 2300.0,
-            responsibleTeam: 'Production Team B',
-            createdDate: DateTime.now(),
-          ),
-        ];
-      }
-
       setState(() {
-        maintenanceRecords = finalMaintenanceList;
-        filteredMaintenanceRecords =
-            finalMaintenanceList; // Initialize filtered list
+        maintenanceRecords = maintenance;
+        filteredMaintenanceRecords = maintenance; // Initialize filtered list
         loadingMaintenance = false;
       });
 
-      if (finalMaintenanceList.isEmpty) {
+      if (maintenance.isEmpty) {
         print('DEBUG: No maintenance records found for asset: $assetId');
       } else {
         print(
-          'DEBUG: Found maintenance records: ${finalMaintenanceList.map((m) => '${m.serviceProviderCompany} - ${m.serviceType}').toList()}',
+          'DEBUG: Found maintenance records: ${maintenance.map((m) => '${m.serviceProviderCompany} - ${m.serviceType} - NextDue: ${m.nextServiceDue}').toList()}',
         );
+        
+        // IMPORTANT: Update Next Service Due from maintenance records after loading
+        await _updateNextServiceDueFromMaintenance();
       }
     } catch (e) {
       print('DEBUG: Error loading maintenance data: $e');
@@ -317,43 +335,17 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
 
       print('DEBUG: Allocation API returned ${allocations.length} records');
 
-      // If no data from API, add some sample data for testing UI
-      List<AllocationModel> finalAllocationList = allocations;
-      if (allocations.isEmpty) {
-        print(
-          'DEBUG: No allocation data from API, adding sample data for UI testing',
-        );
-        finalAllocationList = [
-          AllocationModel(
-            allocationId: 1,
-            assetType: 'Tool',
-            assetId: assetId,
-            itemName: 'Sample Item',
-            employeeId: 'EMP05322',
-            employeeName: 'John Smith',
-            teamName: 'Production Team A',
-            purpose: 'Manufacturing',
-            issuedDate: DateTime(2026, 1, 28),
-            expectedReturnDate: DateTime(2026, 1, 29),
-            actualReturnDate: DateTime(2026, 1, 30),
-            availabilityStatus: 'Overdue',
-            createdDate: DateTime.now(),
-          ),
-        ];
-      }
-
       setState(() {
-        allocationRecords = finalAllocationList;
-        filteredAllocationRecords =
-            finalAllocationList; // Initialize filtered list
+        allocationRecords = allocations;
+        filteredAllocationRecords = allocations; // Initialize filtered list
         loadingAllocation = false;
       });
 
-      if (finalAllocationList.isEmpty) {
+      if (allocations.isEmpty) {
         print('DEBUG: No allocation records found for asset: $assetId');
       } else {
         print(
-          'DEBUG: Found allocation records: ${finalAllocationList.map((a) => '${a.employeeName} - ${a.purpose}').toList()}',
+          'DEBUG: Found allocation records: ${allocations.map((a) => '${a.employeeName} - ${a.purpose}').toList()}',
         );
       }
     } catch (e) {
@@ -636,8 +628,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
         children: [
           // Product Image
           Container(
-            width: 100, // Reduced from 120
-            height: 100, // Reduced from 120
+            width: 150, // Reduced from 120
+            height: 150, // Reduced from 120
             decoration: BoxDecoration(
               color: const Color(0xFFF3F4F6),
               borderRadius: BorderRadius.circular(6), // Reduced from 8

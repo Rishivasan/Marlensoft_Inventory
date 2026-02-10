@@ -572,6 +572,16 @@ class _AddToolState extends State<AddTool> {
       initialDate: current ?? now,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color.fromRGBO(0, 89, 154, 1),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) onPicked(picked);
   }
@@ -838,24 +848,22 @@ class _AddToolState extends State<AddTool> {
                       Expanded(
                         child: TextFormField(
                           readOnly: true,
+                          onTap: () {
+                            _pickDate(
+                              context: context,
+                              current: selectedPoDate,
+                              onPicked: (d) {
+                                setState(() => selectedPoDate = d);
+                              },
+                            );
+                          },
                           decoration: _inputDecoration(
                             label: _requiredLabel("PO date"),
                             hint: "Select the purchase order date",
-                            suffixIcon: IconButton(
-                              icon: const Icon(
-                                Icons.calendar_today_outlined,
-                                size: 16,
-                                color: Color.fromRGBO(144, 144, 144, 1),
-                              ),
-                              onPressed: () {
-                                _pickDate(
-                                  context: context,
-                                  current: selectedPoDate,
-                                  onPicked: (d) {
-                                    setState(() => selectedPoDate = d);
-                                  },
-                                );
-                              },
+                            suffixIcon: const Icon(
+                              Icons.calendar_today_outlined,
+                              size: 16,
+                              color: Color.fromRGBO(144, 144, 144, 1),
                             ),
                           ),
                           style: const TextStyle(fontSize: 12),
@@ -890,24 +898,22 @@ class _AddToolState extends State<AddTool> {
                       Expanded(
                         child: TextFormField(
                           readOnly: true,
+                          onTap: () {
+                            _pickDate(
+                              context: context,
+                              current: selectedInvoiceDate,
+                              onPicked: (d) {
+                                setState(() => selectedInvoiceDate = d);
+                              },
+                            );
+                          },
                           decoration: _inputDecoration(
                             label: _requiredLabel("Invoice date"),
                             hint: "Select the invoice date",
-                            suffixIcon: IconButton(
-                              icon: const Icon(
-                                Icons.calendar_today_outlined,
-                                size: 16,
-                                color: Color.fromRGBO(144, 144, 144, 1),
-                              ),
-                              onPressed: () {
-                                _pickDate(
-                                  context: context,
-                                  current: selectedInvoiceDate,
-                                  onPicked: (d) {
-                                    setState(() => selectedInvoiceDate = d);
-                                  },
-                                );
-                              },
+                            suffixIcon: const Icon(
+                              Icons.calendar_today_outlined,
+                              size: 16,
+                              color: Color.fromRGBO(144, 144, 144, 1),
                             ),
                           ),
                           style: const TextStyle(fontSize: 12),
@@ -1107,24 +1113,22 @@ class _AddToolState extends State<AddTool> {
                       Expanded(
                         child: TextFormField(
                           readOnly: true,
+                          onTap: () {
+                            _pickDate(
+                              context: context,
+                              current: selectedLastAuditDate,
+                              onPicked: (d) {
+                                setState(() => selectedLastAuditDate = d);
+                              },
+                            );
+                          },
                           decoration: _inputDecoration(
                             label: _requiredLabel("Last audit date"),
                             hint: "Select the last audit date",
-                            suffixIcon: IconButton(
-                              icon: const Icon(
-                                Icons.calendar_today_outlined,
-                                size: 16,
-                                color: Color.fromRGBO(144, 144, 144, 1),
-                              ),
-                              onPressed: () {
-                                _pickDate(
-                                  context: context,
-                                  current: selectedLastAuditDate,
-                                  onPicked: (d) {
-                                    setState(() => selectedLastAuditDate = d);
-                                  },
-                                );
-                              },
+                            suffixIcon: const Icon(
+                              Icons.calendar_today_outlined,
+                              size: 16,
+                              color: Color.fromRGBO(144, 144, 144, 1),
                             ),
                           ),
                           style: const TextStyle(fontSize: 12),

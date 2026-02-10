@@ -65,33 +65,6 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
       }
     });
   }
-  
-  // Helper function to get display number based on control point type
-  String _getTypeBasedNumber(dynamic typeId) {
-    // Map control point type ID to display number
-    // 1 = Measure → Show 1
-    // 2 = Take a picture → Show 2  
-    // 3 = Visual inspection → Show 3
-    
-    // Handle null or 0
-    if (typeId == null || typeId == 0) {
-      print('WARNING: typeId is null or 0, defaulting to 1');
-      return '1';
-    }
-    
-    // Convert to int if it's a string
-    int typeIdInt;
-    if (typeId is String) {
-      typeIdInt = int.tryParse(typeId) ?? 1;
-    } else if (typeId is int) {
-      typeIdInt = typeId;
-    } else {
-      print('WARNING: typeId is unexpected type: ${typeId.runtimeType}');
-      return '1';
-    }
-    
-    return typeIdInt.toString();
-  }
 
   // Validation type code mapping
   final Map<String, String> validationTypeCodes = {
@@ -1404,28 +1377,6 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                                                     Icon(Icons.drag_indicator, color: const Color(0xFF9CA3AF), size: 16),
                                                     const SizedBox(width: 8),
                                     
-                                    // Order number (based on type)
-                                    Container(
-                                      width: 20,
-                                      height: 20,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFDCFDF7),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          _getTypeBasedNumber(point['typeId']),
-                                          style: const TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w500,
-                                            color: Color(0xff00599A),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    
-                                    const SizedBox(width: 12),
-                                    
                                     // Control point name
                                     Expanded(
                                       child: Text(
@@ -1577,28 +1528,6 @@ class _QCTemplateScreenState extends State<QCTemplateScreen> {
                                                   // Drag handle (disabled for existing templates)
                                                   Icon(Icons.drag_indicator, color: const Color(0xFFE5E7EB), size: 16),
                                                   const SizedBox(width: 8),
-                                                  
-                                                  // Order number (based on type)
-                                                  Container(
-                                                    width: 20,
-                                                    height: 20,
-                                                    decoration: BoxDecoration(
-                                                      color: const Color.fromRGBO(0, 89, 154, 0.1),
-                                                      borderRadius: BorderRadius.circular(10),
-                                                    ),
-                                                    child: Center(
-                                                      child: Text(
-                                                        _getTypeBasedNumber(point['typeId']),
-                                                        style: const TextStyle(
-                                                          fontSize: 11,
-                                                          fontWeight: FontWeight.w500,
-                                                          color: Color(0xff00599A),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  
-                                                  const SizedBox(width: 12),
                                                   
                                                   // Control point name
                                                   Expanded(

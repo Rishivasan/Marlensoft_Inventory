@@ -4,11 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inventory/providers/master_list_provider.dart';
 import 'package:inventory/providers/pagination_provider.dart';
 import 'package:inventory/providers/next_service_provider.dart';
+import 'package:inventory/services/next_service_sync_service.dart';
 import 'package:inventory/widgets/pagination_bar.dart';
 import 'package:inventory/routers/app_router.dart';
 import 'package:inventory/model/master_list_model.dart';
 import 'package:provider/provider.dart' as provider;
+//import 'package:intl/intl.dart';
 import 'package:intl/intl.dart';
+
 
 @RoutePage()
 class MasterListPaginatedScreen extends ConsumerStatefulWidget {
@@ -24,6 +27,49 @@ class _MasterListPaginatedScreenState extends ConsumerState<MasterListPaginatedS
   // Track selected items
   final Set<String> _selectedItems = {};
   bool _selectAll = false;
+  bool _hasInitialSyncCompleted = false; // Track if we've done the initial sync
+
+  @override
+  void initState() {
+    super.initState();
+    // Trigger initial sync of Next Service Due dates
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _performInitialNextServiceSync();
+    });
+  }
+
+  // Perform initial sync of Next Service Due dates from maintenance records
+  Future<void> _performInitialNextServiceSync() async {
+    if (_hasInitialSyncCompleted) return;
+    
+    try {
+      print('DEBUG: Starting initial Next Service Due sync for master list');
+      final syncService = ref.read(nextServiceSyncServiceProvider);
+      
+      // Get current pagination data to sync only visible items first
+      final paginatedDataAsync = ref.read(paginatedMasterListProvider);
+      
+      paginatedDataAsync.whenData((paginationModel) async {
+        if (paginationModel.items.isNotEmpty) {
+          final assetIds = paginationModel.items.map((item) => item.assetId).toList();
+          await syncService.syncNextServiceDueForAssets(assetIds, ref);
+          print('DEBUG: Completed initial sync for ${assetIds.length} visible items');
+          
+          // Mark sync as completed
+          _hasInitialSyncCompleted = true;
+          
+          // Optionally sync all other items in background (don't await)
+          syncService.syncAllAssetsNextServiceDue(ref).then((_) {
+            print('DEBUG: Background sync of all assets completed');
+          }).catchError((e) {
+            print('DEBUG: Background sync failed: $e');
+          });
+        }
+      });
+    } catch (e) {
+      print('DEBUG: Error during initial Next Service Due sync: $e');
+    }
+  }
 
   @override
   void dispose() {
@@ -69,7 +115,6 @@ class _MasterListPaginatedScreenState extends ConsumerState<MasterListPaginatedS
   @override
   Widget build(BuildContext context) {
     final paginatedDataAsync = ref.watch(paginatedMasterListProvider);
-    final paginationState = ref.watch(paginationProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
@@ -95,13 +140,27 @@ class _MasterListPaginatedScreenState extends ConsumerState<MasterListPaginatedS
             Expanded(
               child: paginatedDataAsync.when(
                 data: (paginationModel) {
-                  // Populate NextServiceProvider
+                  // Populate NextServiceProvider and sync Next Service Due dates
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     final nextServiceProvider = provider.Provider.of<NextServiceProvider>(context, listen: false);
                     for (final item in paginationModel.items) {
                       if (item.nextServiceDue != null) {
                         nextServiceProvider.updateNextServiceDate(item.assetId, item.nextServiceDue!);
                       }
+                    }
+                    
+                    // Sync Next Service Due dates for items on this page (if not already done)
+                    if (!_hasInitialSyncCompleted) {
+                      _performInitialNextServiceSync();
+                    } else {
+                      // For subsequent page loads, sync just the new items
+                      final syncService = ref.read(nextServiceSyncServiceProvider);
+                      final assetIds = paginationModel.items.map((item) => item.assetId).toList();
+                      syncService.syncNextServiceDueForAssets(assetIds, ref).then((_) {
+                        print('DEBUG: Synced Next Service Due for page items');
+                      }).catchError((e) {
+                        print('DEBUG: Page sync failed: $e');
+                      });
                     }
                   });
 
@@ -317,10 +376,7 @@ class _MasterListPaginatedScreenState extends ConsumerState<MasterListPaginatedS
             icon: const Icon(Icons.arrow_forward, size: 18),
             onPressed: () {
               context.router.push(
-                ProductDetailRoute(
-                  assetId: item.assetId,
-                  assetType: item.itemType,
-                ),
+                ProductDetailRoute(id: item.refId),
               );
             },
           ),

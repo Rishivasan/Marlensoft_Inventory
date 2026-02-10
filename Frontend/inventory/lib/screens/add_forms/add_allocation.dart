@@ -82,11 +82,67 @@ class _AddAllocationState extends State<AddAllocation> {
   }
 
   Future<void> _selectDate(TextEditingController controller) async {
+    // Determine which field is being selected
+    bool isIssueDate = controller == _issueDateController;
+    bool isExpectedReturnDate = controller == _expectedReturnDateController;
+    bool isActualReturnDate = controller == _actualReturnDateController;
+    
+    // For Expected Return Date and Actual Return Date, validate that Issue Date is selected first
+    if ((isExpectedReturnDate || isActualReturnDate) && _issueDateController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select the issue date first'),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+    
+    // Parse the current date from the controller, fallback to DateTime.now()
+    DateTime initialDate = DateTime.now();
+    if (controller.text.isNotEmpty) {
+      try {
+        final parsedDate = DateTime.parse(controller.text);
+        // Ensure the parsed date is within the valid range
+        final minDate = DateTime(2000);
+        final maxDate = DateTime(2100);
+        if (parsedDate.isAfter(minDate) && parsedDate.isBefore(maxDate)) {
+          initialDate = parsedDate;
+        }
+      } catch (e) {
+        // If parsing fails, use current date
+        initialDate = DateTime.now();
+      }
+    }
+    
+    // Determine the minimum selectable date based on the field type
+    DateTime firstDate = DateTime(2000);
+    
+    // For Expected Return Date and Actual Return Date, they cannot be before the Issue Date
+    if (isExpectedReturnDate || isActualReturnDate) {
+      if (_issueDateController.text.isNotEmpty) {
+        try {
+          final issueDate = DateTime.parse(_issueDateController.text);
+          // Return dates must be on or after the issue date
+          firstDate = issueDate;
+          
+          // If the current initial date is before the issue date, set it to issue date
+          if (initialDate.isBefore(issueDate)) {
+            initialDate = issueDate;
+          }
+        } catch (e) {
+          // If issue date parsing fails, use default range
+          firstDate = DateTime(2000);
+        }
+      }
+    }
+    
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: DateTime(2100),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -100,6 +156,53 @@ class _AddAllocationState extends State<AddAllocation> {
     );
     if (picked != null) {
       controller.text = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+      
+      // If this is the issue date field, validate and handle return dates
+      if (isIssueDate) {
+        // Check if expected return date is already set and is before the new issue date
+        if (_expectedReturnDateController.text.isNotEmpty) {
+          try {
+            final expectedReturnDate = DateTime.parse(_expectedReturnDateController.text);
+            if (expectedReturnDate.isBefore(picked)) {
+              // Clear the expected return date as it's now invalid
+              _expectedReturnDateController.clear();
+              
+              // Show a message to inform the user
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Expected return date cleared as it was before the new issue date'),
+                  backgroundColor: Colors.blue,
+                  duration: Duration(seconds: 3),
+                ),
+              );
+            }
+          } catch (e) {
+            // If parsing fails, just continue
+          }
+        }
+        
+        // Check if actual return date is already set and is before the new issue date
+        if (_actualReturnDateController.text.isNotEmpty) {
+          try {
+            final actualReturnDate = DateTime.parse(_actualReturnDateController.text);
+            if (actualReturnDate.isBefore(picked)) {
+              // Clear the actual return date as it's now invalid
+              _actualReturnDateController.clear();
+              
+              // Show a message to inform the user
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Actual return date cleared as it was before the new issue date'),
+                  backgroundColor: Colors.blue,
+                  duration: Duration(seconds: 3),
+                ),
+              );
+            }
+          } catch (e) {
+            // If parsing fails, just continue
+          }
+        }
+      }
     }
   }
 
@@ -267,6 +370,37 @@ class _AddAllocationState extends State<AddAllocation> {
     );
   }
 
+  // Common InputDecoration matching the maintenance form
+  InputDecoration _inputDecoration({
+    required Widget label,
+    required String hint,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      label: label,
+      hintText: hint,
+      hintStyle: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w400,
+        color: Color.fromRGBO(144, 144, 144, 1),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
+      ),
+      suffixIcon: suffixIcon,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Form(
@@ -319,36 +453,15 @@ class _AddAllocationState extends State<AddAllocation> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 6.0),
-                                child: _requiredLabel("Issue date"),
-                              ),
-                              TextFormField(
+                          child: GestureDetector(
+                            onTap: () => _selectDate(_issueDateController),
+                            child: AbsorbPointer(
+                              child: TextFormField(
                                 controller: _issueDateController,
                                 readOnly: true,
-                                decoration: InputDecoration(
-                                  hintText: "Select the issue date",
-                                  hintStyle: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w400,
-                                    color: Color.fromRGBO(144, 144, 144, 1),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
-                                  ),
+                                decoration: _inputDecoration(
+                                  label: _requiredLabel("Issue date"),
+                                  hint: "Select the issue date",
                                   suffixIcon: const Icon(
                                     Icons.calendar_today,
                                     size: 16,
@@ -356,52 +469,25 @@ class _AddAllocationState extends State<AddAllocation> {
                                   ),
                                 ),
                                 style: const TextStyle(fontSize: 12),
-                                onTap: () => _selectDate(_issueDateController),
                                 validator: (v) => (v == null || v.isEmpty)
                                     ? "The field cannot be empty"
                                     : null,
                               ),
-                            ],
+                            ),
                           ),
                         ),
                         const SizedBox(width: 24),
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 6.0),
-                                child: _requiredLabel("Employee name"),
-                              ),
-                              TextFormField(
-                                controller: _employeeNameController,
-                                decoration: InputDecoration(
-                                  hintText: "Enter the employee name",
-                                  hintStyle: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w400,
-                                    color: Color.fromRGBO(144, 144, 144, 1),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
-                                  ),
-                                ),
-                                style: const TextStyle(fontSize: 12),
-                                validator: (v) => (v == null || v.isEmpty)
-                                    ? "The field cannot be empty"
-                                    : null,
-                              ),
-                            ],
+                          child: TextFormField(
+                            controller: _employeeNameController,
+                            decoration: _inputDecoration(
+                              label: _requiredLabel("Employee name"),
+                              hint: "Enter the employee name",
+                            ),
+                            style: const TextStyle(fontSize: 12),
+                            validator: (v) => (v == null || v.isEmpty)
+                                ? "The field cannot be empty"
+                                : null,
                           ),
                         ),
                       ],
@@ -413,82 +499,30 @@ class _AddAllocationState extends State<AddAllocation> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 6.0),
-                                child: _requiredLabel("Team name"),
-                              ),
-                              TextFormField(
-                                controller: _teamNameController,
-                                decoration: InputDecoration(
-                                  hintText: "Enter the team name",
-                                  hintStyle: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w400,
-                                    color: Color.fromRGBO(144, 144, 144, 1),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
-                                  ),
-                                ),
-                                style: const TextStyle(fontSize: 12),
-                                validator: (v) => (v == null || v.isEmpty)
-                                    ? "The field cannot be empty"
-                                    : null,
-                              ),
-                            ],
+                          child: TextFormField(
+                            controller: _teamNameController,
+                            decoration: _inputDecoration(
+                              label: _requiredLabel("Team name"),
+                              hint: "Enter the team name",
+                            ),
+                            style: const TextStyle(fontSize: 12),
+                            validator: (v) => (v == null || v.isEmpty)
+                                ? "The field cannot be empty"
+                                : null,
                           ),
                         ),
                         const SizedBox(width: 24),
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 6.0),
-                                child: _requiredLabel("Purpose"),
-                              ),
-                              TextFormField(
-                                controller: _purposeController,
-                                decoration: InputDecoration(
-                                  hintText: "Enter the purpose",
-                                  hintStyle: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w400,
-                                    color: Color.fromRGBO(144, 144, 144, 1),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
-                                  ),
-                                ),
-                                style: const TextStyle(fontSize: 12),
-                                validator: (v) => (v == null || v.isEmpty)
-                                    ? "The field cannot be empty"
-                                    : null,
-                              ),
-                            ],
+                          child: TextFormField(
+                            controller: _purposeController,
+                            decoration: _inputDecoration(
+                              label: _requiredLabel("Purpose"),
+                              hint: "Enter the purpose",
+                            ),
+                            style: const TextStyle(fontSize: 12),
+                            validator: (v) => (v == null || v.isEmpty)
+                                ? "The field cannot be empty"
+                                : null,
                           ),
                         ),
                       ],
@@ -500,36 +534,15 @@ class _AddAllocationState extends State<AddAllocation> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 6.0),
-                                child: _requiredLabel("Expected return date"),
-                              ),
-                              TextFormField(
+                          child: GestureDetector(
+                            onTap: () => _selectDate(_expectedReturnDateController),
+                            child: AbsorbPointer(
+                              child: TextFormField(
                                 controller: _expectedReturnDateController,
                                 readOnly: true,
-                                decoration: InputDecoration(
-                                  hintText: "Select the expected return date",
-                                  hintStyle: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w400,
-                                    color: Color.fromRGBO(144, 144, 144, 1),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
-                                  ),
+                                decoration: _inputDecoration(
+                                  label: _requiredLabel("Expected return date"),
+                                  hint: "Select the expected return date",
                                   suffixIcon: const Icon(
                                     Icons.calendar_today,
                                     size: 16,
@@ -537,53 +550,49 @@ class _AddAllocationState extends State<AddAllocation> {
                                   ),
                                 ),
                                 style: const TextStyle(fontSize: 12),
-                                onTap: () => _selectDate(_expectedReturnDateController),
-                                validator: (v) => (v == null || v.isEmpty)
-                                    ? "The field cannot be empty"
-                                    : null,
+                                validator: (v) {
+                                  if (v == null || v.isEmpty) {
+                                    return "The field cannot be empty";
+                                  }
+                                  
+                                  // Validate that expected return date is not before issue date
+                                  if (_issueDateController.text.isNotEmpty) {
+                                    try {
+                                      final issueDate = DateTime.parse(_issueDateController.text);
+                                      final expectedReturnDate = DateTime.parse(v);
+                                      
+                                      if (expectedReturnDate.isBefore(issueDate)) {
+                                        return "Expected return date cannot be before issue date";
+                                      }
+                                    } catch (e) {
+                                      return "Invalid date format";
+                                    }
+                                  }
+                                  
+                                  return null;
+                                },
                               ),
-                            ],
+                            ),
                           ),
                         ),
                         const SizedBox(width: 24),
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 6.0),
-                                child: const Text(
-                                  "Actual return date",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w400,
-                                    color: Color.fromRGBO(88, 88, 88, 1),
-                                  ),
-                                ),
-                              ),
-                              TextFormField(
+                          child: GestureDetector(
+                            onTap: () => _selectDate(_actualReturnDateController),
+                            child: AbsorbPointer(
+                              child: TextFormField(
                                 controller: _actualReturnDateController,
                                 readOnly: true,
-                                decoration: InputDecoration(
-                                  hintText: "Select the actual return date",
-                                  hintStyle: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w400,
-                                    color: Color.fromRGBO(144, 144, 144, 1),
+                                decoration: _inputDecoration(
+                                  label: const Text(
+                                    "Actual return date",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w400,
+                                      color: Color.fromRGBO(88, 88, 88, 1),
+                                    ),
                                   ),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
-                                  ),
+                                  hint: "Select the actual return date",
                                   suffixIcon: const Icon(
                                     Icons.calendar_today,
                                     size: 16,
@@ -591,9 +600,28 @@ class _AddAllocationState extends State<AddAllocation> {
                                   ),
                                 ),
                                 style: const TextStyle(fontSize: 12),
-                                onTap: () => _selectDate(_actualReturnDateController),
+                                validator: (v) {
+                                  // Actual return date is optional, so only validate if it's not empty
+                                  if (v != null && v.isNotEmpty) {
+                                    // Validate that actual return date is not before issue date
+                                    if (_issueDateController.text.isNotEmpty) {
+                                      try {
+                                        final issueDate = DateTime.parse(_issueDateController.text);
+                                        final actualReturnDate = DateTime.parse(v);
+                                        
+                                        if (actualReturnDate.isBefore(issueDate)) {
+                                          return "Actual return date cannot be before issue date";
+                                        }
+                                      } catch (e) {
+                                        return "Invalid date format";
+                                      }
+                                    }
+                                  }
+                                  
+                                  return null;
+                                },
                               ),
-                            ],
+                            ),
                           ),
                         ),
                       ],
@@ -605,63 +633,37 @@ class _AddAllocationState extends State<AddAllocation> {
                       children: [
                         Expanded(
                           flex: 1,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 6.0),
-                                child: _requiredLabel("Status"),
+                          child: DropdownButtonFormField<String>(
+                            value: _selectedStatus.isEmpty ? null : _selectedStatus,
+                            isExpanded: true,
+                            items: _statusOptions
+                                .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                                .toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedStatus = value ?? '';
+                              });
+                            },
+                            hint: const Text(
+                              "Select the status",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color.fromRGBO(144, 144, 144, 1),
                               ),
-                              DropdownButtonFormField<String>(
-                                value: _selectedStatus.isEmpty ? null : _selectedStatus,
-                                isExpanded: true,
-                                items: _statusOptions
-                                    .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-                                    .toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedStatus = value ?? '';
-                                  });
-                                },
-                                hint: const Text(
-                                  "Select the status",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Color.fromRGBO(144, 144, 144, 1),
-                                  ),
-                                ),
-                                decoration: InputDecoration(
-                                  hintText: "Select the status",
-                                  hintStyle: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w400,
-                                    color: Color.fromRGBO(144, 144, 144, 1),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color.fromRGBO(210, 210, 210, 1)),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color.fromRGBO(0, 89, 154, 1), width: 1.2),
-                                  ),
-                                  suffixIcon: const Icon(
-                                    Icons.keyboard_arrow_down,
-                                    size: 16,
-                                    color: Color.fromRGBO(144, 144, 144, 1),
-                                  ),
-                                ),
-                                style: const TextStyle(fontSize: 12, color: Colors.black),
-                                validator: (v) => (v == null || v.isEmpty)
-                                    ? "The field cannot be empty"
-                                    : null,
+                            ),
+                            decoration: _inputDecoration(
+                              label: _requiredLabel("Status"),
+                              hint: "Select the status",
+                              suffixIcon: const Icon(
+                                Icons.keyboard_arrow_down,
+                                size: 16,
+                                color: Color.fromRGBO(144, 144, 144, 1),
                               ),
-                            ],
+                            ),
+                            style: const TextStyle(fontSize: 12, color: Colors.black),
+                            validator: (v) => (v == null || v.isEmpty)
+                                ? "The field cannot be empty"
+                                : null,
                           ),
                         ),
                         const Expanded(flex: 1, child: SizedBox()), // Empty space to maintain alignment
