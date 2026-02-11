@@ -228,18 +228,18 @@ VALUES
         {
             using var connection = _context.CreateConnection();
             
-            //// Check if BrandName column exists
-            //var columnCheckQuery = @"
-            //    SELECT COUNT(*) 
-            //    FROM INFORMATION_SCHEMA.COLUMNS 
-            //    WHERE TABLE_NAME = 'MmdsMaster' 
-            //    AND COLUMN_NAME = 'BrandName'";
+            // Check if BrandName column exists
+            var columnCheckQuery = @"
+                SELECT COUNT(*) 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_NAME = 'MmdsMaster' 
+                AND COLUMN_NAME = 'BrandName'";
             
-         //   var brandNameExists = await connection.QuerySingleAsync<int>(columnCheckQuery) > 0;
+            var brandNameExists = await connection.QuerySingleAsync<int>(columnCheckQuery) > 0;
 
             string query;
-            //if (brandNameExists)
-            //{
+            if (brandNameExists)
+            {
                 // Update with BrandName column - COMPLETE field mapping
                 query = @"
 UPDATE MmdsMaster
@@ -272,43 +272,43 @@ SET
     UpdatedDate = GETDATE(),
     Status = @Status
 WHERE MmdId = @MmdId";
-//            }
-//            else
-//            {
-//                // Update without BrandName column - COMPLETE field mapping
-//                query = @"
-//UPDATE MmdsMaster
-//SET
-//    AccuracyClass = @AccuracyClass,
-//    Vendor = @Vendor,
-//    CalibratedBy = @CalibratedBy,
-//    Specifications = @Specifications,
-//    ModelNumber = @ModelNumber,
-//    SerialNumber = @SerialNumber,
-//    Quantity = @Quantity,
-//    CalibrationCertNo = @CalibrationCertNo,
-//    StorageLocation = @Location,
-//    PoNumber = @PoNumber,
-//    PoDate = @PoDate,
-//    InvoiceNumber = @InvoiceNumber,
-//    InvoiceDate = @InvoiceDate,
-//    TotalCost = @TotalCost,
-//    CalibrationFrequency = @CalibrationFrequency,
-//    LastCalibration = @LastCalibration,
-//    NextCalibration = @NextCalibration,
-//    WarrantyYears = @WarrantyYears,
-//    CalibrationStatus = @CalibrationStatus,
-//    ResponsibleTeam = @ResponsibleTeam,
-//    ManualLink = @ManualLink,
-//    StockMsi = @StockMsi,
-//    Remarks = @Remarks,
-//    UpdatedBy = @UpdatedBy,
-//    UpdatedDate = GETDATE(),
-//    Status = @Status
-//WHERE MmdId = @MmdId";
+            }
+            else
+            {
+                // Update without BrandName column - COMPLETE field mapping
+                query = @"
+UPDATE MmdsMaster
+SET
+    AccuracyClass = @AccuracyClass,
+    Vendor = @Vendor,
+    CalibratedBy = @CalibratedBy,
+    Specifications = @Specifications,
+    ModelNumber = @ModelNumber,
+    SerialNumber = @SerialNumber,
+    Quantity = @Quantity,
+    CalibrationCertNo = @CalibrationCertNo,
+    StorageLocation = @Location,
+    PoNumber = @PoNumber,
+    PoDate = @PoDate,
+    InvoiceNumber = @InvoiceNumber,
+    InvoiceDate = @InvoiceDate,
+    TotalCost = @TotalCost,
+    CalibrationFrequency = @CalibrationFrequency,
+    LastCalibration = @LastCalibration,
+    NextCalibration = @NextCalibration,
+    WarrantyYears = @WarrantyYears,
+    CalibrationStatus = @CalibrationStatus,
+    ResponsibleTeam = @ResponsibleTeam,
+    ManualLink = @ManualLink,
+    StockMsi = @StockMsi,
+    Remarks = @Remarks,
+    UpdatedBy = @UpdatedBy,
+    UpdatedDate = GETDATE(),
+    Status = @Status
+WHERE MmdId = @MmdId";
                 
-//                Console.WriteLine("INFO: Updating MMD without BrandName column (column doesn't exist)");
-//            }
+                Console.WriteLine("INFO: Updating MMD without BrandName column (column doesn't exist)");
+            }
             
             return await connection.ExecuteAsync(query, mmds);
         }
