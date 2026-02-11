@@ -37,13 +37,10 @@ class DeleteService {
         ),
       );
       
-      print('Delete response for $itemId: Status ${response.statusCode}, Data: ${response.data}');
       
       if (response.statusCode == 200 || response.statusCode == 204) {
-        print('Successfully deleted $itemType with ID: $itemId');
         return true;
       } else {
-        print('Failed to delete $itemType with ID: $itemId. Status: ${response.statusCode}');
         return false;
       }
     } on DioException catch (e) {

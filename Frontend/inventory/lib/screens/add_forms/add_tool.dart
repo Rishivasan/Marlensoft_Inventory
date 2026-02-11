@@ -307,7 +307,7 @@ class _AddToolState extends State<AddTool> {
   }
   
   Future<void> _fetchCompleteToolDetails(String toolId) async {
-    print('🔍 DEBUG: Fetching complete Tool details for ID: $toolId using V2 API');
+    print(' DEBUG: Fetching complete Tool details for ID: $toolId using V2 API');
     
     setState(() {
       _isLoadingDetails = true;
@@ -317,10 +317,10 @@ class _AddToolState extends State<AddTool> {
       final apiService = ApiService();
       final completeData = await apiService.getCompleteItemDetailsV2(toolId, 'tool');
       
-      print('📦 DEBUG: Raw API response: $completeData');
+      print(' DEBUG: Raw API response: $completeData');
       
       if (completeData != null) {
-        print('✅ DEBUG: Complete Tool data received from V2 API');
+        print(' DEBUG: Complete Tool data received from V2 API');
         
         final masterData = completeData['MasterData'] != null 
             ? Map<String, dynamic>.from(completeData['MasterData'] as Map) 
@@ -330,29 +330,29 @@ class _AddToolState extends State<AddTool> {
             : null;
         final hasDetailedData = completeData['HasDetailedData'] == true;
         
-        print('🔍 DEBUG: MasterData: $masterData');
-        print('🔍 DEBUG: DetailedData: $detailedData');
-        print('🔍 DEBUG: HasDetailedData: $hasDetailedData');
+        print(' DEBUG: MasterData: $masterData');
+        print(' DEBUG: DetailedData: $detailedData');
+        print(' DEBUG: HasDetailedData: $hasDetailedData');
         
         // Populate all Tool-specific fields
-        print('🔧 DEBUG: About to call setState to populate fields');
+        print(' DEBUG: About to call setState to populate fields');
         setState(() {
-          print('🔧 DEBUG: Inside setState - starting field population');
+          print(' DEBUG: Inside setState - starting field population');
           
           // Always populate basic fields from master data
           if (masterData != null) {
-            print('🔧 DEBUG: Populating master data fields');
+            print(' DEBUG: Populating master data fields');
             _toolIdCtrl.text = masterData['itemID']?.toString() ?? _toolIdCtrl.text;
             _toolNameCtrl.text = masterData['itemName']?.toString() ?? _toolNameCtrl.text;
             _supplierNameCtrl.text = masterData['vendor']?.toString() ?? _supplierNameCtrl.text;
             _storageLocationCtrl.text = masterData['storageLocation']?.toString() ?? _storageLocationCtrl.text;
             _responsiblePersonCtrl.text = masterData['responsibleTeam']?.toString() ?? _responsiblePersonCtrl.text;
-            print('🔧 DEBUG: Master data fields populated');
+            print(' DEBUG: Master data fields populated');
           }
           
           // If we have detailed data, populate all detailed fields
           if (hasDetailedData && detailedData != null) {
-            print('🔧 DEBUG: Populating detailed data fields');
+            print(' DEBUG: Populating detailed data fields');
             
             // Basic Tool fields - using camelCase field names from backend
             // Tool type - show actual database value, add to list if not present
@@ -413,10 +413,10 @@ class _AddToolState extends State<AddTool> {
             _kermAssetCtrl.text = detailedData['kernAsset']?.toString() ?? '';
             _additionalNotesCtrl.text = detailedData['notes']?.toString() ?? '';
             
-            print('✅ DEBUG: All detailed fields populated successfully');
+            print(' DEBUG: All detailed fields populated successfully');
           } else {
             // No detailed data - show message and populate only basic fields
-            print('⚠️ DEBUG: No detailed data found, populating basic fields only');
+            print(' DEBUG: No detailed data found, populating basic fields only');
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -428,19 +428,19 @@ class _AddToolState extends State<AddTool> {
             }
           }
           
-          print('✅ DEBUG: setState completed - all fields should be populated');
+          print(' DEBUG: setState completed - all fields should be populated');
         });
         
         // Recalculate total cost
         _calculateTotalCost();
         
         if (hasDetailedData) {
-          print('✅ DEBUG: Successfully populated all Tool fields using V2 API with detailed data');
+          print(' DEBUG: Successfully populated all Tool fields using V2 API with detailed data');
         } else {
-          print('⚠️ DEBUG: Successfully populated basic Tool fields using V2 API (no detailed data)');
+          print(' DEBUG: Successfully populated basic Tool fields using V2 API (no detailed data)');
         }
       } else {
-        print('❌ DEBUG: No complete Tool data found from V2 API, using basic data only');
+        print(' DEBUG: No complete Tool data found from V2 API, using basic data only');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -451,8 +451,8 @@ class _AddToolState extends State<AddTool> {
         }
       }
     } catch (e, stackTrace) {
-      print('💥 DEBUG: Error fetching complete Tool details from V2 API: $e');
-      print('📋 DEBUG: Stack trace: $stackTrace');
+      print(' DEBUG: Error fetching complete Tool details from V2 API: $e');
+      print(' DEBUG: Stack trace: $stackTrace');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -497,8 +497,7 @@ class _AddToolState extends State<AddTool> {
 
     super.dispose();
   }
-
-  // ✅ Required label style (UI team)
+  //  Required label style (UI team)
   Widget _requiredLabel(String text) {
     return RichText(
       text: TextSpan(
@@ -530,7 +529,7 @@ class _AddToolState extends State<AddTool> {
     );
   }
 
-  // ✅ Common InputDecoration for all fields
+  //  Common InputDecoration for all fields
   InputDecoration _inputDecoration({
     required Widget label,
     required String hint,

@@ -176,7 +176,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
         _loadAllocationData(widget.id);
       }
     } catch (e) {
-      print('DEBUG: Error loading product data: $e');
+    //  print('DEBUG: Error loading product data: $e');
       setState(() {
         productData = _createPlaceholderData(widget.id);
         loading = false;
@@ -189,7 +189,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
   // NEW METHOD: Update Next Service Due from the most recent maintenance record
   Future<void> _updateNextServiceDueFromMaintenance() async {
     if (productData == null) {
-      print('DEBUG: No product data to update Next Service Due');
+    //  print('DEBUG: No product data to update Next Service Due');
       return;
     }
 
@@ -198,9 +198,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
       final syncService = ref.read(nextServiceSyncServiceProvider);
       await syncService.syncNextServiceDueForAsset(productData!.assetId, ref);
       
-      print('DEBUG: Successfully synced Next Service Due for asset: ${productData!.assetId}');
+    //  print('DEBUG: Successfully synced Next Service Due for asset: ${productData!.assetId}');
     } catch (e) {
-      print('DEBUG: Error syncing Next Service Due from maintenance: $e');
+   //   print('DEBUG: Error syncing Next Service Due from maintenance: $e');
       
       // Fallback to the old method if sync service fails
       if (maintenanceRecords.isNotEmpty) {
@@ -228,7 +228,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
               nextServiceDue: nextServiceDueString,
             );
             
-            print('DEBUG: Fallback - Updated reactive state with Next Service Due: $nextServiceDueString');
+          //  print('DEBUG: Fallback - Updated reactive state with Next Service Due: $nextServiceDueString');
           }
         }
       }
@@ -254,11 +254,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
 
   // Helper method to safely refresh master list data
   Future<void> _safeRefreshMasterList() async {
-    print('DEBUG: _safeRefreshMasterList - Called');
+ //   print('DEBUG: _safeRefreshMasterList - Called');
     
     // Prevent multiple simultaneous refreshes
     if (_isRefreshingMasterList) {
-      print('DEBUG: _safeRefreshMasterList - Already refreshing, skipping');
+   //   print('DEBUG: _safeRefreshMasterList - Already refreshing, skipping');
       return;
     }
     
@@ -270,23 +270,23 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
     _isRefreshingMasterList = true;
     
     try {
-      print('DEBUG: _safeRefreshMasterList - Calling forceRefreshMasterListProvider');
+     // print('DEBUG: _safeRefreshMasterList - Calling forceRefreshMasterListProvider');
       await ref.read(forceRefreshMasterListProvider)();
-      print('DEBUG: _safeRefreshMasterList - Successfully refreshed master list');
+     // print('DEBUG: _safeRefreshMasterList - Successfully refreshed master list');
       
       // IMPORTANT: Also invalidate the paginated provider to refresh the Master List table
-      print('DEBUG: _safeRefreshMasterList - Invalidating paginatedMasterListProvider');
+    //  print('DEBUG: _safeRefreshMasterList - Invalidating paginatedMasterListProvider');
       ref.invalidate(paginatedMasterListProvider);
-      print('DEBUG: _safeRefreshMasterList - Paginated provider invalidated');
+     // print('DEBUG: _safeRefreshMasterList - Paginated provider invalidated');
     } catch (e) {
-      print('DEBUG: _safeRefreshMasterList - Error refreshing master list: $e');
+     // print('DEBUG: _safeRefreshMasterList - Error refreshing master list: $e');
     } finally {
       _isRefreshingMasterList = false;
     }
   }
 
   Future<void> _loadMaintenanceData(String assetId) async {
-    print('DEBUG: _loadMaintenanceData called with assetId: $assetId');
+   // print('DEBUG: _loadMaintenanceData called with assetId: $assetId');
     setState(() {
       loadingMaintenance = true;
     });
@@ -818,187 +818,187 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
     );
   }
 
-  Widget _buildProductCard() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Product Image
-          Container(
-            width: 160,
-            height: 160,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF3F4F6),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                'assets/images/under_construction.png',
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Center(
-                    child: Icon(
-                      Icons.image_outlined,
-                      size: 48,
-                      color: Color(0xFF9CA3AF),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          const SizedBox(width: 24),
+  // Widget _buildProductCard() {
+  //   return Container(
+  //     padding: const EdgeInsets.all(24),
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(8),
+  //       border: Border.all(color: const Color(0xFFE5E7EB)),
+  //     ),
+  //     child: Row(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         // Product Image
+  //         Container(
+  //           width: 160,
+  //           height: 160,
+  //           decoration: BoxDecoration(
+  //             color: const Color(0xFFF3F4F6),
+  //             borderRadius: BorderRadius.circular(8),
+  //           ),
+  //           child: ClipRRect(
+  //             borderRadius: BorderRadius.circular(8),
+  //             child: Image.asset(
+  //               'assets/images/under_construction.png',
+  //               fit: BoxFit.cover,
+  //               errorBuilder: (context, error, stackTrace) {
+  //                 return const Center(
+  //                   child: Icon(
+  //                     Icons.image_outlined,
+  //                     size: 48,
+  //                     color: Color(0xFF9CA3AF),
+  //                   ),
+  //                 );
+  //               },
+  //             ),
+  //           ),
+  //         ),
+  //         const SizedBox(width: 24),
 
-          // Product Details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Title Row
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            productData?.name ?? 'Item ${widget.id}',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF111827),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            productData?.assetId ?? widget.id,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF6B7280),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Status Badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _getStatusBadgeColor(
-                          productData?.availabilityStatus,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text(
-                        productData?.availabilityStatus ?? 'In use',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: _getStatusTextColor(
-                            productData?.availabilityStatus,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // Edit Icon
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF3F4F6),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Icon(
-                        Icons.edit_outlined,
-                        size: 16,
-                        color: Color(0xFF6B7280),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
+  //         // Product Details
+  //         Expanded(
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               // Title Row
+  //               Row(
+  //                 children: [
+  //                   Expanded(
+  //                     child: Column(
+  //                       crossAxisAlignment: CrossAxisAlignment.start,
+  //                       children: [
+  //                         Text(
+  //                           productData?.name ?? 'Item ${widget.id}',
+  //                           style: const TextStyle(
+  //                             fontSize: 18,
+  //                             fontWeight: FontWeight.w600,
+  //                             color: Color(0xFF111827),
+  //                           ),
+  //                         ),
+  //                         const SizedBox(height: 4),
+  //                         Text(
+  //                           productData?.assetId ?? widget.id,
+  //                           style: const TextStyle(
+  //                             fontSize: 14,
+  //                             color: Color(0xFF6B7280),
+  //                           ),
+  //                         ),
+  //                       ],
+  //                     ),
+  //                   ),
+  //                   // Status Badge
+  //                   Container(
+  //                     padding: const EdgeInsets.symmetric(
+  //                       horizontal: 12,
+  //                       vertical: 6,
+  //                     ),
+  //                     decoration: BoxDecoration(
+  //                       color: _getStatusBadgeColor(
+  //                         productData?.availabilityStatus,
+  //                       ),
+  //                       borderRadius: BorderRadius.circular(16),
+  //                     ),
+  //                     child: Text(
+  //                       productData?.availabilityStatus ?? 'In use',
+  //                       style: TextStyle(
+  //                         fontSize: 12,
+  //                         fontWeight: FontWeight.w500,
+  //                         color: _getStatusTextColor(
+  //                           productData?.availabilityStatus,
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ),
+  //                   const SizedBox(width: 12),
+  //                   // Edit Icon
+  //                   Container(
+  //                     padding: const EdgeInsets.all(8),
+  //                     decoration: BoxDecoration(
+  //                       color: const Color(0xFFF3F4F6),
+  //                       borderRadius: BorderRadius.circular(6),
+  //                     ),
+  //                     child: const Icon(
+  //                       Icons.edit_outlined,
+  //                       size: 16,
+  //                       color: Color(0xFF6B7280),
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //               const SizedBox(height: 24),
 
-                // Product Info Grid
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildInfoColumn(
-                        'Item Type',
-                        productData?.itemType ?? 'Main article',
-                      ),
-                    ),
-                    Expanded(
-                      child: _buildInfoColumn(
-                        'Type/Category',
-                        productData?.type ?? 'Manufacturing',
-                      ),
-                    ),
-                    Expanded(
-                      child: _buildInfoColumn(
-                        'Asset ID',
-                        productData?.assetId ?? widget.id,
-                      ),
-                    ),
-                    Expanded(
-                      child: _buildInfoColumn(
-                        'Supplier',
-                        productData?.supplier ?? 'Unknown',
-                      ),
-                    ),
-                    Expanded(
-                      child: _buildInfoColumn(
-                        'Location',
-                        productData?.location ?? 'Unknown',
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildInfoColumn(
-                        'Created Date',
-                        productData != null
-                            ? "${productData!.createdDate.year}-${productData!.createdDate.month.toString().padLeft(2, '0')}-${productData!.createdDate.day.toString().padLeft(2, '0')}"
-                            : '2024-01-27',
-                      ),
-                    ),
-                    Expanded(
-                      child: _buildInfoColumn(
-                        'Responsible Team',
-                        productData?.responsibleTeam ?? 'Unknown',
-                      ),
-                    ),
-                    Expanded(
-                      child: _buildInfoColumn(
-                        'Next Service Due',
-                        productData?.nextServiceDue != null
-                            ? "${productData!.nextServiceDue!.year}-${productData!.nextServiceDue!.month.toString().padLeft(2, '0')}-${productData!.nextServiceDue!.day.toString().padLeft(2, '0')}"
-                            : 'N/A',
-                      ),
-                    ),
-                    const Expanded(child: SizedBox()),
-                    const Expanded(child: SizedBox()),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  //               // Product Info Grid
+  //               Row(
+  //                 children: [
+  //                   Expanded(
+  //                     child: _buildInfoColumn(
+  //                       'Item Type',
+  //                       productData?.itemType ?? 'Main article',
+  //                     ),
+  //                   ),
+  //                   Expanded(
+  //                     child: _buildInfoColumn(
+  //                       'Type/Category',
+  //                       productData?.type ?? 'Manufacturing',
+  //                     ),
+  //                   ),
+  //                   Expanded(
+  //                     child: _buildInfoColumn(
+  //                       'Asset ID',
+  //                       productData?.assetId ?? widget.id,
+  //                     ),
+  //                   ),
+  //                   Expanded(
+  //                     child: _buildInfoColumn(
+  //                       'Supplier',
+  //                       productData?.supplier ?? 'Unknown',
+  //                     ),
+  //                   ),
+  //                   Expanded(
+  //                     child: _buildInfoColumn(
+  //                       'Location',
+  //                       productData?.location ?? 'Unknown',
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //               const SizedBox(height: 16),
+  //               Row(
+  //                 children: [
+  //                   Expanded(
+  //                     child: _buildInfoColumn(
+  //                       'Created Date',
+  //                       productData != null
+  //                           ? "${productData!.createdDate.year}-${productData!.createdDate.month.toString().padLeft(2, '0')}-${productData!.createdDate.day.toString().padLeft(2, '0')}"
+  //                           : '2024-01-27',
+  //                     ),
+  //                   ),
+  //                   Expanded(
+  //                     child: _buildInfoColumn(
+  //                       'Responsible Team',
+  //                       productData?.responsibleTeam ?? 'Unknown',
+  //                     ),
+  //                   ),
+  //                   Expanded(
+  //                     child: _buildInfoColumn(
+  //                       'Next Service Due',
+  //                       productData?.nextServiceDue != null
+  //                           ? "${productData!.nextServiceDue!.year}-${productData!.nextServiceDue!.month.toString().padLeft(2, '0')}-${productData!.nextServiceDue!.day.toString().padLeft(2, '0')}"
+  //                           : 'N/A',
+  //                     ),
+  //                   ),
+  //                   const Expanded(child: SizedBox()),
+  //                   const Expanded(child: SizedBox()),
+  //                 ],
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildInfoColumn(String label, String value) {
     return Column(
@@ -1378,140 +1378,140 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
     );
   }
 
-  Widget _buildMaintenanceTab() {
-    return Column(
-      children: [
-        // Search and Add Button Row
-        Container(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: Row(
-            children: [
-              // Search Box
-              Expanded(
-                child: Container(
-                  height: 36,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFFD1D5DB)),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search...',
-                      hintStyle: TextStyle(
-                        color: Color(0xFF9CA3AF),
-                        fontSize: 13,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
+  // Widget _buildMaintenanceTab() {
+  //   return Column(
+  //     children: [
+  //       // Search and Add Button Row
+  //       Container(
+  //         padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+  //         child: Row(
+  //           children: [
+  //             // Search Box
+  //             Expanded(
+  //               child: Container(
+  //                 height: 36,
+  //                 decoration: BoxDecoration(
+  //                   border: Border.all(color: const Color(0xFFD1D5DB)),
+  //                   borderRadius: BorderRadius.circular(6),
+  //                 ),
+  //                 child: const TextField(
+  //                   decoration: InputDecoration(
+  //                     hintText: 'Search...',
+  //                     hintStyle: TextStyle(
+  //                       color: Color(0xFF9CA3AF),
+  //                       fontSize: 13,
+  //                     ),
+  //                     border: InputBorder.none,
+  //                     contentPadding: EdgeInsets.symmetric(
+  //                       horizontal: 12,
+  //                       vertical: 8,
+  //                     ),
+  //                   ),
+  //                 ),
+  //               ),
+  //             ),
+  //             const SizedBox(width: 8),
 
-              // Search Icon Button
-              Container(
-                height: 36,
-                width: 36,
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xFFD1D5DB)),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: IconButton(
-                  onPressed: () {},
-                  icon: const Icon(
-                    Icons.search,
-                    color: Color(0xFF9CA3AF),
-                    size: 18,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
+  //             // Search Icon Button
+  //             Container(
+  //               height: 36,
+  //               width: 36,
+  //               decoration: BoxDecoration(
+  //                 border: Border.all(color: const Color(0xFFD1D5DB)),
+  //                 borderRadius: BorderRadius.circular(6),
+  //               ),
+  //               child: IconButton(
+  //                 onPressed: () {},
+  //                 icon: const Icon(
+  //                   Icons.search,
+  //                   color: Color(0xFF9CA3AF),
+  //                   size: 18,
+  //                 ),
+  //               ),
+  //             ),
+  //             const SizedBox(width: 12),
 
-              // Add Button
-              ElevatedButton(
-                onPressed: () {
-                  // Get the current Next Service Due to pass to the form
-                  final productState = ref.read(productStateByIdProvider(productData?.assetId ?? widget.id));
-                  final currentNextServiceDue = productState?.nextServiceDue ?? 
-                      (productData?.nextServiceDue != null
-                          ? "${productData!.nextServiceDue!.year}-${productData!.nextServiceDue!.month.toString().padLeft(2, '0')}-${productData!.nextServiceDue!.day.toString().padLeft(2, '0')}"
-                          : null);
+  //             // Add Button
+  //             ElevatedButton(
+  //               onPressed: () {
+  //                 // Get the current Next Service Due to pass to the form
+  //                 final productState = ref.read(productStateByIdProvider(productData?.assetId ?? widget.id));
+  //                 final currentNextServiceDue = productState?.nextServiceDue ?? 
+  //                     (productData?.nextServiceDue != null
+  //                         ? "${productData!.nextServiceDue!.year}-${productData!.nextServiceDue!.month.toString().padLeft(2, '0')}-${productData!.nextServiceDue!.day.toString().padLeft(2, '0')}"
+  //                         : null);
                   
-                  DialogPannelHelper().showAddPannel(
-                    context: context,
-                    addingItem: AddMaintenanceService(
-                      assetId: productData?.assetId ?? widget.id,
-                      itemName: productData?.name ?? 'Unknown',
-                      assetType: productData?.itemType ?? 'Unknown',
-                      currentNextServiceDue: currentNextServiceDue, // Pass the current Next Service Due
-                      onServiceAdded: (String? nextServiceDue) async {
-                        print('DEBUG: ProductDetail - Maintenance updated, updating reactive state with Next Service Due: $nextServiceDue');
+  //                 DialogPannelHelper().showAddPannel(
+  //                   context: context,
+  //                   addingItem: AddMaintenanceService(
+  //                     assetId: productData?.assetId ?? widget.id,
+  //                     itemName: productData?.name ?? 'Unknown',
+  //                     assetType: productData?.itemType ?? 'Unknown',
+  //                     currentNextServiceDue: currentNextServiceDue, // Pass the current Next Service Due
+  //                     onServiceAdded: (String? nextServiceDue) async {
+  //                       print('DEBUG: ProductDetail - Maintenance updated, updating reactive state with Next Service Due: $nextServiceDue');
                         
-                        // Check if widget is still mounted before using ref
-                        if (!mounted) return;
+  //                       // Check if widget is still mounted before using ref
+  //                       if (!mounted) return;
                         
-                        // 1. Refresh maintenance data first
-                        _loadMaintenanceData(productData?.assetId ?? widget.id);
+  //                       // 1. Refresh maintenance data first
+  //                       _loadMaintenanceData(productData?.assetId ?? widget.id);
                         
-                        // 2. Get updated product data
-                        await _loadProductData();
+  //                       // 2. Get updated product data
+  //                       await _loadProductData();
                         
-                        // Check if widget is still mounted before using ref
-                        if (!mounted) return;
+  //                       // Check if widget is still mounted before using ref
+  //                       if (!mounted) return;
                         
-                        // 3. FORCE REFRESH MASTER LIST DATA FROM DATABASE (this is key!)
-                        print('DEBUG: Force refreshing master list data from database to get latest Next Service Due');
-                        await _safeRefreshMasterList();
+  //                       // 3. FORCE REFRESH MASTER LIST DATA FROM DATABASE (this is key!)
+  //                       print('DEBUG: Force refreshing master list data from database to get latest Next Service Due');
+  //                       await _safeRefreshMasterList();
                         
-                        // Check if widget is still mounted before using ref
-                        if (!mounted) return;
+  //                       // Check if widget is still mounted before using ref
+  //                       if (!mounted) return;
                         
-                        // 4. Update reactive state immediately for instant UI updates
-                        final assetId = productData?.assetId ?? widget.id;
+  //                       // 4. Update reactive state immediately for instant UI updates
+  //                       final assetId = productData?.assetId ?? widget.id;
                         
-                        // Check if widget is still mounted before using ref
-                        if (!mounted) return;
+  //                       // Check if widget is still mounted before using ref
+  //                       if (!mounted) return;
                         
-                        final updateProductState = ref.read(updateProductStateProvider);
+  //                       final updateProductState = ref.read(updateProductStateProvider);
                         
-                        // Use the Next Service Due directly from form submission
-                        updateProductState(assetId, nextServiceDue: nextServiceDue);
+  //                       // Use the Next Service Due directly from form submission
+  //                       updateProductState(assetId, nextServiceDue: nextServiceDue);
                         
-                        print('DEBUG: ProductDetail - Maintenance updated, refreshed database and updated reactive state');
-                      },
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromRGBO(0, 89, 154, 1),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'Add new service',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ],
-          ),
-        ),
+  //                       print('DEBUG: ProductDetail - Maintenance updated, refreshed database and updated reactive state');
+  //                     },
+  //                   ),
+  //                 );
+  //               },
+  //               style: ElevatedButton.styleFrom(
+  //                 backgroundColor: const Color.fromRGBO(0, 89, 154, 1),
+  //                 foregroundColor: Colors.white,
+  //                 padding: const EdgeInsets.symmetric(
+  //                   horizontal: 12,
+  //                   vertical: 8,
+  //                 ),
+  //                 shape: RoundedRectangleBorder(
+  //                   borderRadius: BorderRadius.circular(6),
+  //                 ),
+  //                 elevation: 0,
+  //               ),
+  //               child: const Text(
+  //                 'Add new service',
+  //                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ),
 
-        // Table
-        Expanded(child: _buildMaintenanceTable()),
-      ],
-    );
-  }
+  //       // Table
+  //       Expanded(child: _buildMaintenanceTable()),
+  //     ],
+  //   );
+  // }
 
   Widget _buildMaintenanceTable() {
     if (loadingMaintenance) {
@@ -1895,123 +1895,123 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
     );
   }
 
-  Widget _buildAllocationTab() {
-    return Column(
-      children: [
-        // Search and Add Button Row
-        Container(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: Row(
-            children: [
-              // Search Box
-              Expanded(
-                child: Container(
-                  height: 36,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFFD1D5DB)),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search...',
-                      hintStyle: TextStyle(
-                        color: Color(0xFF9CA3AF),
-                        fontSize: 13,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
+  // Widget _buildAllocationTab() {
+  //   return Column(
+  //     children: [
+  //       // Search and Add Button Row
+  //       Container(
+  //         padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+  //         child: Row(
+  //           children: [
+  //             // Search Box
+  //             Expanded(
+  //               child: Container(
+  //                 height: 36,
+  //                 decoration: BoxDecoration(
+  //                   border: Border.all(color: const Color(0xFFD1D5DB)),
+  //                   borderRadius: BorderRadius.circular(6),
+  //                 ),
+  //                 child: const TextField(
+  //                   decoration: InputDecoration(
+  //                     hintText: 'Search...',
+  //                     hintStyle: TextStyle(
+  //                       color: Color(0xFF9CA3AF),
+  //                       fontSize: 13,
+  //                     ),
+  //                     border: InputBorder.none,
+  //                     contentPadding: EdgeInsets.symmetric(
+  //                       horizontal: 12,
+  //                       vertical: 8,
+  //                     ),
+  //                   ),
+  //                 ),
+  //               ),
+  //             ),
+  //             const SizedBox(width: 8),
 
-              // Search Icon Button
-              Container(
-                height: 36,
-                width: 36,
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xFFD1D5DB)),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: IconButton(
-                  onPressed: () {},
-                  icon: const Icon(
-                    Icons.search,
-                    color: Color(0xFF9CA3AF),
-                    size: 18,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
+  //             // Search Icon Button
+  //             Container(
+  //               height: 36,
+  //               width: 36,
+  //               decoration: BoxDecoration(
+  //                 border: Border.all(color: const Color(0xFFD1D5DB)),
+  //                 borderRadius: BorderRadius.circular(6),
+  //               ),
+  //               child: IconButton(
+  //                 onPressed: () {},
+  //                 icon: const Icon(
+  //                   Icons.search,
+  //                   color: Color(0xFF9CA3AF),
+  //                   size: 18,
+  //                 ),
+  //               ),
+  //             ),
+  //             const SizedBox(width: 12),
 
-              // Add Button
-              ElevatedButton(
-                onPressed: () {
-                  DialogPannelHelper().showAddPannel(
-                    context: context,
-                    addingItem: AddAllocation(
-                      assetId: productData?.assetId ?? widget.id,
-                      itemName: productData?.name ?? 'Unknown',
-                      assetType: productData?.itemType ?? 'Unknown',
-                      onAllocationAdded: (String submittedStatus) async {
-                        print('DEBUG: ProductDetail - Allocation updated, updating reactive state with status: $submittedStatus');
+  //             // Add Button
+  //             ElevatedButton(
+  //               onPressed: () {
+  //                 DialogPannelHelper().showAddPannel(
+  //                   context: context,
+  //                   addingItem: AddAllocation(
+  //                     assetId: productData?.assetId ?? widget.id,
+  //                     itemName: productData?.name ?? 'Unknown',
+  //                     assetType: productData?.itemType ?? 'Unknown',
+  //                     onAllocationAdded: (String submittedStatus) async {
+  //                       print('DEBUG: ProductDetail - Allocation updated, updating reactive state with status: $submittedStatus');
                         
-                        // Check if widget is still mounted before using ref
-                        if (!mounted) return;
+  //                       // Check if widget is still mounted before using ref
+  //                       if (!mounted) return;
                         
-                        // 1. Refresh allocation data first
-                        _loadAllocationData(productData?.assetId ?? widget.id);
+  //                       // 1. Refresh allocation data first
+  //                       _loadAllocationData(productData?.assetId ?? widget.id);
                         
-                        // 2. FORCE REFRESH MASTER LIST DATA FROM DATABASE (this is key!)
-                        print('DEBUG: Force refreshing master list data from database to get latest allocation status');
-                        await _safeRefreshMasterList();
+  //                       // 2. FORCE REFRESH MASTER LIST DATA FROM DATABASE (this is key!)
+  //                       print('DEBUG: Force refreshing master list data from database to get latest allocation status');
+  //                       await _safeRefreshMasterList();
                         
-                        // 3. Update reactive state immediately for instant UI updates
-                        final assetId = productData?.assetId ?? widget.id;
+  //                       // 3. Update reactive state immediately for instant UI updates
+  //                       final assetId = productData?.assetId ?? widget.id;
                         
-                        // Check if widget is still mounted before using ref
-                        if (!mounted) return;
+  //                       // Check if widget is still mounted before using ref
+  //                       if (!mounted) return;
                         
-                        final updateAvailabilityStatus = ref.read(updateAvailabilityStatusProvider);
+  //                       final updateAvailabilityStatus = ref.read(updateAvailabilityStatusProvider);
                         
-                        // Use the status directly from form submission
-                        updateAvailabilityStatus(assetId, submittedStatus);
+  //                       // Use the status directly from form submission
+  //                       updateAvailabilityStatus(assetId, submittedStatus);
                         
-                        print('DEBUG: ProductDetail - Allocation updated, refreshed database and updated reactive state');
-                      },
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromRGBO(0, 89, 154, 1),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'Add new allocation',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ],
-          ),
-        ),
+  //                       print('DEBUG: ProductDetail - Allocation updated, refreshed database and updated reactive state');
+  //                     },
+  //                   ),
+  //                 );
+  //               },
+  //               style: ElevatedButton.styleFrom(
+  //                 backgroundColor: const Color.fromRGBO(0, 89, 154, 1),
+  //                 foregroundColor: Colors.white,
+  //                 padding: const EdgeInsets.symmetric(
+  //                   horizontal: 12,
+  //                   vertical: 8,
+  //                 ),
+  //                 shape: RoundedRectangleBorder(
+  //                   borderRadius: BorderRadius.circular(6),
+  //                 ),
+  //                 elevation: 0,
+  //               ),
+  //               child: const Text(
+  //                 'Add new allocation',
+  //                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ),
 
-        // Table
-        Expanded(child: _buildAllocationTable()),
-      ],
-    );
-  }
+  //       // Table
+  //       Expanded(child: _buildAllocationTable()),
+  //     ],
+  //   );
+  // }
 
   Widget _buildAllocationTable() {
     if (loadingAllocation) {
@@ -2055,17 +2055,17 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
 
     return Consumer(
       builder: (context, ref, child) {
-        final screenWidth = MediaQuery.of(context).size.width;
-        final columnWidths = {
-          'issueDate': screenWidth * 0.12,
-          'employee': screenWidth * 0.16,
-          'team': screenWidth * 0.14,
-          'purpose': screenWidth * 0.16,
-          'expected': screenWidth * 0.14,
-          'actual': screenWidth * 0.14,
-          'status': screenWidth * 0.10,
-          'action': 50.0,
-        };
+        // final screenWidth = MediaQuery.of(context).size.width;
+        // final columnWidths = {
+        //   'issueDate': screenWidth * 0.12,
+        //   'employee': screenWidth * 0.16,
+        //   'team': screenWidth * 0.14,
+        //   'purpose': screenWidth * 0.16,
+        //   'expected': screenWidth * 0.14,
+        //   'actual': screenWidth * 0.14,
+        //   'status': screenWidth * 0.10,
+        //   'action': 50.0,
+        // };
 
         final sortState = ref.watch(allocationSortProvider);
 
@@ -2368,153 +2368,153 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
     );
   }
 
-  Widget _buildTableHeaderWithFilter(String text, {int flex = 1}) {
-    return Expanded(
-      flex: flex,
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontSize: 11, // Reduced from 12
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF374151),
-              ),
-            ),
-          ),
-          const SizedBox(width: 3), // Reduced from 4
-          SvgPicture.asset(
-            "assets/images/Icon_filter.svg",
-            width: 14, // Reduced from 16
-            height: 14,
-            colorFilter: const ColorFilter.mode(
-              Color(0xFF9CA3AF),
-              BlendMode.srcIn,
-            ),
-          ),
-          const SizedBox(width: 1), // Reduced from 2
-          SvgPicture.asset(
-            "assets/images/Icon_arrowdown.svg",
-            width: 14, // Reduced from 16
-            height: 14,
-            colorFilter: const ColorFilter.mode(
-              Color(0xFF9CA3AF),
-              BlendMode.srcIn,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildTableHeaderWithFilter(String text, {int flex = 1}) {
+  //   return Expanded(
+  //     flex: flex,
+  //     child: Row(
+  //       children: [
+  //         Expanded(
+  //           child: Text(
+  //             text,
+  //             style: const TextStyle(
+  //               fontSize: 11, // Reduced from 12
+  //               fontWeight: FontWeight.w600,
+  //               color: Color(0xFF374151),
+  //             ),
+  //           ),
+  //         ),
+  //         const SizedBox(width: 3), // Reduced from 4
+  //         SvgPicture.asset(
+  //           "assets/images/Icon_filter.svg",
+  //           width: 14, // Reduced from 16
+  //           height: 14,
+  //           colorFilter: const ColorFilter.mode(
+  //             Color(0xFF9CA3AF),
+  //             BlendMode.srcIn,
+  //           ),
+  //         ),
+  //         const SizedBox(width: 1), // Reduced from 2
+  //         SvgPicture.asset(
+  //           "assets/images/Icon_arrowdown.svg",
+  //           width: 14, // Reduced from 16
+  //           height: 14,
+  //           colorFilter: const ColorFilter.mode(
+  //             Color(0xFF9CA3AF),
+  //             BlendMode.srcIn,
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
-  Widget _buildTableHeader(String text, {int flex = 1}) {
-    return Expanded(
-      flex: flex,
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF374151),
-        ),
-      ),
-    );
-  }
+  // Widget _buildTableHeader(String text, {int flex = 1}) {
+  //   return Expanded(
+  //     flex: flex,
+  //     child: Text(
+  //       text,
+  //       style: const TextStyle(
+  //         fontSize: 12,
+  //         fontWeight: FontWeight.w600,
+  //         color: Color(0xFF374151),
+  //       ),
+  //     ),
+  //   );
+  // }
 
-  Widget _buildTableCell(String text, {int flex = 1}) {
-    return Expanded(
-      flex: flex,
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 12, // Reduced from 13
-          color: Color(0xFF111827),
-        ),
-      ),
-    );
-  }
+  // Widget _buildTableCell(String text, {int flex = 1}) {
+  //   return Expanded(
+  //     flex: flex,
+  //     child: Text(
+  //       text,
+  //       style: const TextStyle(
+  //         fontSize: 12, // Reduced from 13
+  //         color: Color(0xFF111827),
+  //       ),
+  //     ),
+  //   );
+  // }
 
-  Widget _buildPagination(int totalItems) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 10,
-      ), // Reduced from 16,12
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(8),
-          bottomRight: Radius.circular(8),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'Show $totalItems entries',
-            style: const TextStyle(
-              fontSize: 12, // Reduced from 14
-              color: Color(0xFF6B7280),
-            ),
-          ),
-          Row(
-            children: [
-              for (int i = 1; i <= (totalItems / 10).ceil() && i <= 5; i++)
-                Container(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 1,
-                  ), // Reduced from 2
-                  child: TextButton(
-                    onPressed: () {},
-                    style: TextButton.styleFrom(
-                      backgroundColor: i == 1
-                          ? const Color(0xFF2563EB)
-                          : Colors.transparent,
-                      foregroundColor: i == 1
-                          ? Colors.white
-                          : const Color(0xFF374151),
-                      minimumSize: const Size(28, 28), // Reduced from 32,32
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    child: Text(
-                      i.toString(),
-                      style: const TextStyle(fontSize: 12), // Reduced from 14
-                    ),
-                  ),
-                ),
-              if (totalItems > 50) ...[
-                const Text(
-                  '...',
-                  style: TextStyle(color: Color(0xFF6B7280), fontSize: 12),
-                ), // Reduced font size
-                TextButton(
-                  onPressed: () {},
-                  child: Text(
-                    ((totalItems / 10).ceil()).toString(),
-                    style: const TextStyle(
-                      color: Color(0xFF374151),
-                      fontSize: 12,
-                    ), // Reduced font size
-                  ),
-                ),
-              ],
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(
-                  Icons.chevron_right,
-                  color: Color(0xFF6B7280),
-                  size: 18,
-                ), // Reduced from default
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildPagination(int totalItems) {
+  //   return Container(
+  //     padding: const EdgeInsets.symmetric(
+  //       horizontal: 12,
+  //       vertical: 10,
+  //     ), // Reduced from 16,12
+  //     decoration: const BoxDecoration(
+  //       border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
+  //       borderRadius: BorderRadius.only(
+  //         bottomLeft: Radius.circular(8),
+  //         bottomRight: Radius.circular(8),
+  //       ),
+  //     ),
+  //     child: Row(
+  //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //       children: [
+  //         Text(
+  //           'Show $totalItems entries',
+  //           style: const TextStyle(
+  //             fontSize: 12, // Reduced from 14
+  //             color: Color(0xFF6B7280),
+  //           ),
+  //         ),
+  //         Row(
+  //           children: [
+  //             for (int i = 1; i <= (totalItems / 10).ceil() && i <= 5; i++)
+  //               Container(
+  //                 margin: const EdgeInsets.symmetric(
+  //                   horizontal: 1,
+  //                 ), // Reduced from 2
+  //                 child: TextButton(
+  //                   onPressed: () {},
+  //                   style: TextButton.styleFrom(
+  //                     backgroundColor: i == 1
+  //                         ? const Color(0xFF2563EB)
+  //                         : Colors.transparent,
+  //                     foregroundColor: i == 1
+  //                         ? Colors.white
+  //                         : const Color(0xFF374151),
+  //                     minimumSize: const Size(28, 28), // Reduced from 32,32
+  //                     shape: RoundedRectangleBorder(
+  //                       borderRadius: BorderRadius.circular(4),
+  //                     ),
+  //                   ),
+  //                   child: Text(
+  //                     i.toString(),
+  //                     style: const TextStyle(fontSize: 12), // Reduced from 14
+  //                   ),
+  //                 ),
+  //               ),
+  //             if (totalItems > 50) ...[
+  //               const Text(
+  //                 '...',
+  //                 style: TextStyle(color: Color(0xFF6B7280), fontSize: 12),
+  //               ), // Reduced font size
+  //               TextButton(
+  //                 onPressed: () {},
+  //                 child: Text(
+  //                   ((totalItems / 10).ceil()).toString(),
+  //                   style: const TextStyle(
+  //                     color: Color(0xFF374151),
+  //                     fontSize: 12,
+  //                   ), // Reduced font size
+  //                 ),
+  //               ),
+  //             ],
+  //             IconButton(
+  //               onPressed: () {},
+  //               icon: const Icon(
+  //                 Icons.chevron_right,
+  //                 color: Color(0xFF6B7280),
+  //                 size: 18,
+  //               ), // Reduced from default
+  //             ),
+  //           ],
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   String _formatDate(DateTime? date) {
     if (date == null) return 'N/A';
@@ -2522,15 +2522,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
   }
 
   // Test function to manually trigger master list refresh
-  Future<void> _testMasterListRefresh() async {
-    print('DEBUG: Manual test - Triggering master list refresh');
-    try {
-      await _safeRefreshMasterList();
-      print('DEBUG: Manual test - Master list refresh completed successfully');
-    } catch (e) {
-      print('DEBUG: Manual test - Master list refresh failed: $e');
-    }
-  }
+  // Future<void> _testMasterListRefresh() async {
+  //   print('DEBUG: Manual test - Triggering master list refresh');
+  //   try {
+  //     await _safeRefreshMasterList();
+  //     print('DEBUG: Manual test - Master list refresh completed successfully');
+  //   } catch (e) {
+  //     print('DEBUG: Manual test - Master list refresh failed: $e');
+  //   }
+  // }
 
   Color _getMaintenanceStatusColor(String status) {
     switch (status.toLowerCase()) {

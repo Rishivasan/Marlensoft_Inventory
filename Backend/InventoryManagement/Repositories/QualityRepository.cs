@@ -1,4 +1,6 @@
-﻿namespace InventoryManagement.Repositories
+﻿
+
+namespace InventoryManagement.Repositories
 {
     using Dapper;
     using InventoryManagement.Models;
@@ -24,6 +26,12 @@
                 commandType: CommandType.StoredProcedure);
         }
 
+        #region GetMaterialsByProduct
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="finalProductId"></param>
+        /// <returns></returns>
         public async Task<IEnumerable<MaterialDto>> GetMaterialsByProduct(int finalProductId)
         {
             using var db = Connection;
@@ -32,6 +40,7 @@
                 new { FinalProductId = finalProductId },
                 commandType: CommandType.StoredProcedure);
         }
+        #endregion
 
         public async Task<IEnumerable<ValidationTypeDto>> GetValidationTypes()
         {
@@ -40,7 +49,15 @@
                 "sp_GetValidationTypes",
                 commandType: CommandType.StoredProcedure);
         }
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="templateName"></param>
+        /// <param name="validationTypeId"></param>
+        /// <param name="finalProductId"></param>
+        /// <param name="materialId"></param>
+        /// <param name="toolsToQualityCheck"></param>
+        /// <returns></returns>
         public async Task<int> CreateQCTemplate(string templateName, int validationTypeId, int finalProductId, int? materialId = null, string? toolsToQualityCheck = null)
         {
             using var db = Connection;

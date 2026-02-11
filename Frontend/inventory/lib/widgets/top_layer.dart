@@ -67,7 +67,7 @@ class _TopLayerState extends ConsumerState<TopLayer> {
   @override
   Widget build(BuildContext context) {
     final selectedItems = ref.watch(selectedItemsProvider);
-    final masterListAsync = ref.watch(masterListProvider);
+    //final masterListAsync = ref.watch(masterListProvider);
     final hasSelection = selectedItems.isNotEmpty;
 
     return Container(

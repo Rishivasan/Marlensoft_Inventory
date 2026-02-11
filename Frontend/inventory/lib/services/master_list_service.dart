@@ -23,9 +23,9 @@ class MasterListService {
           for (final item in items) {
             uniqueItems[item.assetId] = item;
             // Log the Next Service Due for debugging
-            if (item.assetId == 'TL8984') {
-              print('DEBUG: MasterListService - Item TL8984 NextServiceDue: ${item.nextServiceDue}');
-            }
+            // if (item.assetId == 'TL8984') {
+            //   print('DEBUG: MasterListService - Item TL8984 NextServiceDue: ${item.nextServiceDue}');
+            // }
           }
           
           final result = uniqueItems.values.toList();

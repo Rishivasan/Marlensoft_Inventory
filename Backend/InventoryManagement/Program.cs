@@ -72,6 +72,7 @@ builder.Services.AddControllers();
 builder.Services.AddSingleton<DapperContext>();
 
 //  CORS (ALLOW FLUTTER WEB � DEV MODE)
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>

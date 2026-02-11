@@ -6,7 +6,6 @@ import 'package:inventory/providers/pagination_provider.dart';
 
 final masterListServiceProvider = Provider((ref) => MasterListService());
 
-// Use AsyncNotifier for Riverpod 3.x
 class MasterListNotifier extends AsyncNotifier<List<MasterListModel>> {
   @override
   Future<List<MasterListModel>> build() async {

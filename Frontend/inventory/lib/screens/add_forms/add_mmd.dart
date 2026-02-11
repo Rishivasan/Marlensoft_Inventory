@@ -25,7 +25,6 @@ class _AddMmdState extends State<AddMmd> {
   bool _isSubmitting = false; // Add submission state tracking
 
   // Measuring and monitoring device information
-  // -------------------------
   final _assetIdCtrl = TextEditingController();
   final _assetNameCtrl = TextEditingController();
 
@@ -44,9 +43,7 @@ class _AddMmdState extends State<AddMmd> {
   final _calibrationCertificateNumberCtrl = TextEditingController();
   final _locationCtrl = TextEditingController();
 
-  // -------------------------
   // Purchase information
-  // -------------------------
   final _poNumberCtrl = TextEditingController();
   DateTime? selectedPoDate;
 
@@ -57,9 +54,7 @@ class _AddMmdState extends State<AddMmd> {
   final _extraChargesCtrl = TextEditingController();
   final _totalCostCtrl = TextEditingController(text: "0.00");
 
-  // -------------------------
   // Calibration information
-  // -------------------------
   String? selectedCalibrationFrequency;
   DateTime? selectedLastCalibrationDate;
   DateTime? selectedNextCalibrationDate;
@@ -505,10 +500,10 @@ class _AddMmdState extends State<AddMmd> {
         print('DEBUG: MMD - FORCED Status = true for new item');
       }
 
-      print('DEBUG: MMD data prepared: $mmdData');
-      print('DEBUG: selectedCalibrationStatus: "${selectedCalibrationStatus ?? "NULL"}"');
-      print('DEBUG: Final Status value: ${mmdData["Status"]}');
-      print('DEBUG: Status will be set to: ${(selectedCalibrationStatus ?? "Calibrated") == "Calibrated" ? true : false}');
+      // print('DEBUG: MMD data prepared: $mmdData');
+      // print('DEBUG: selectedCalibrationStatus: "${selectedCalibrationStatus ?? "NULL"}"');
+      // print('DEBUG: Final Status value: ${mmdData["Status"]}');
+      // print('DEBUG: Status will be set to: ${(selectedCalibrationStatus ?? "Calibrated") == "Calibrated" ? true : false}');
 
       bool success = false;
       String successMessage = '';
